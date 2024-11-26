@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spellbook</title>
+    <style>
+        @font-face {
+            font-family: 'Magneto';
+            /* Name for the font */
+            src: url('./pixel.ttf') format('truetype');
+            /* Path to the font file */
+            font-weight: normal;
+            /* Optional: Specify weight */
+            font-style: normal;
+            /* Optional: Specify style */
+        }
+
+        body,
+        html {
+            font-family: 'Magneto', sans-serif;
+            /* Fallback to sans-serif if font fails to load */
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            /* Center horizontally */
+            align-items: center;
+            /* Center vertically */
+            overflow: hidden;
+            /* Prevent scrolling */
+            background-color: rgb(24, 24, 24);
+            color: black;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+            /* Center the SVGs horizontally within the container */
+            align-items: center;
+            /* Center the SVGs vertically */
+        }
+
+        img {
+            width: auto;
+            /* Maintain aspect ratio */
+            height: 100%;
+            /* Adjust to fill vertically */
+            object-fit: contain;
+            /* Preserve the SVG's aspect ratio */
+        }
+
+        .svg-overlay {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .text-overlay-line {
+            position: absolute;
+            display: flex;
+            justify-content: left;
+            align-items: center;
+            text-align: left;
+            /* TODO: this when font is updated */
+            /* font-weight: bold; */
+            width: auto;
+            max-width: 100%;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            font-size: calc(0.5rem + 1vw);
+            /* Optional background */
+            /* background-color: rgba(0, 0, 0, 0.5); */
+        }
+
+        .text-overlay-box {
+            position: absolute;
+            display: block;
+            text-align: left;
+            font-size: calc(0.5rem + 1vw);
+            white-space: normal;
+            word-wrap: break-word;
+            word-break: break-word;
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+
+        .font-toggle-button {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            padding: 0.2rem;
+            border: 1px solid #000;
+            cursor: pointer;
+            z-index: 1000;
+            border-radius: 1rem;
+            border-color: #90543c;
+            border-width: 0.1rem;
+            background-color: #bb8854;
+        }
+
+        .no-custom-font {
+            font-family: sans-serif !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <button class="font-toggle-button" style="top: 2rem;" onclick="toggleFont()">Toggle Font</button>
+        <br>
+        <button class="font-toggle-button" style="top: 4rem;" onclick="toggleEditing()">Enable Editing</button>
+        <br>
+        <button class="font-toggle-button" style="top: 6rem;" onclick="exportContent()">Export</button>
+    </div>
+    <div class="container">
+        <div class="svg-overlay">
+            <img src="./spellbook_with_cover.svg" alt="First SVG">
+            <div class="text-overlay-line" id="line1"
+                style="top: 5.8%; left: 87.5%; width: 1rem; height: 5%; color: #9c1414;">
+                lvl
+            </div>
+            <div class="text-overlay-line" id="line2" style="top: 7.8%; left: 53%; width: 35%; height: 5%;">
+                Name
+            </div>
+            <div class="text-overlay-line" id="line3" style="top: 12.5%; left: 53%; width: 35%; height: 5%;">
+                Incantation
+            </div>
+            <div class="text-overlay-line" id="line4" style="top: 17.2%; left: 53%; width: 35%; height: 5%;">
+                Speed
+            </div>
+            <div class="text-overlay-line" id="line5" style="top: 22.0%; left: 53%; width: 35%; height: 5%;">
+                Range
+            </div>
+            <div class="text-overlay-line" id="line6" style="top: 26.8%; left: 53%; width: 35%; height: 5%;">
+                Damage Type
+            </div>
+            <div class="text-overlay-box" id="box1" style="top: 37.2%; left: 16%; width: 78%; height: 56%;">
+                Description
+            </div>
+        </div>
+        <div class="svg-overlay">
+            <img src="./spellbook_with_cover_flipped.svg" alt="Second SVG">
+            <!-- Second text box with a different size -->
+            <div class="text-overlay-box" style="top: 40%; left: 25%; width: 40%; height: 10%;">
+                Dynamic Text 2
+            </div>
+        </div>
+    </div>
+    <script src="spell.js"></script>
+</body>
+
+</html>
