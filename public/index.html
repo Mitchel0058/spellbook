@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spellbook</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+    <div>
+        <button class="font-toggle-button" style="top: 2rem;" onclick="toggleFont()">Toggle Font</button>
+        <br>
+        <button class="font-toggle-button" style="top: 4rem;" onclick="toggleEditing()">Enable Editing</button>
+        <br>
+        <button class="font-toggle-button" style="top: 6rem;" onclick="exportContent()">Export</button>
+        <br>
+        <button class="font-toggle-button" style="top: 8rem;" onclick="previousPage()">Previous Page</button>
+        <br>
+        <button class="font-toggle-button" style="top: 10rem;" onclick="nextPage()">Next Page</button>
+    </div>
+    <div class="container">
+        <div class="svg-overlay first-page">
+            <img src="./spellbook_cover.svg" alt="First SVG">
+            <div class="text-overlay-line" id="Name" data-hint="Name" style="top: 7.8%; left: 53%; width: 35%; height: 5%;">
+                Name
+            </div>
+            <div class="text-overlay-line" id="Incantation" data-hint="Incantation" style="top: 12.5%; left: 53%; width: 35%; height: 5%;">
+                Incantation
+            </div>
+            <div class="text-overlay-line" id="Speed" data-hint="Speed" style="top: 17.2%; left: 53%; width: 35%; height: 5%;">
+                Speed
+            </div>
+            <div class="text-overlay-line" id="Range" data-hint="Range" style="top: 22.0%; left: 53%; width: 35%; height: 5%;">
+                Range
+            </div>
+            <div class="text-overlay-line" id="DamageType" data-hint="Damage Type" style="top: 26.8%; left: 53%; width: 35%; height: 5%;">
+                Damage Type
+            </div>
+            <div class="text-overlay-box" id="Description" data-hint="Description" style="top: 37.2%; left: 16%; width: 78%; height: 56%;">
+                Description
+            </div>
+        </div>
+        <div class="svg-overlay second-page">
+            <img src="./spellbook_cover_flipped.svg" alt="Second SVG">
+            <div class="text-overlay-line" id="Name2" data-hint="Name" style="top: 7.8%; left: 46%; width: 35%; height: 5%;">
+                Name
+            </div>
+            <div class="text-overlay-line" id="Incantation2" data-hint="Incantation" style="top: 12.5%; left: 46%; width: 35%; height: 5%;">
+                Incantation
+            </div>
+            <div class="text-overlay-line" id="Speed2" data-hint="Speed" style="top: 17.2%; left: 46%; width: 35%; height: 5%;">
+                Speed
+            </div>
+            <div class="text-overlay-line" id="Range2" data-hint="Range" style="top: 22.0%; left: 46%; width: 35%; height: 5%;">
+                Range
+            </div>
+            <div class="text-overlay-line" id="DamageType2" data-hint="Damage Type" style="top: 26.8%; left: 46%; width: 35%; height: 5%;">
+                Damage Type
+            </div>
+            <div class="text-overlay-box" id="Description2" data-hint="Description" style="top: 37.2%; left: 16%; width: 78%; height: 56%;">
+                Description
+            </div>
+        </div>
+        <div class="animation-container">
+            <img id="slide-in-animation" src="slide-in.webp" alt="Slide In Animation" style="display: none;">
+            <img id="slide-out-animation" src="slide-out.webp" alt="Slide Out Animation" style="display: none;">
+        </div>
+    </div>
+    <script src="spell.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then((registration) => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, (error) => {
+                    console.log('ServiceWorker registration failed: ', error);
+                });
+        }
+    </script>
+</body>
+
+</html>
