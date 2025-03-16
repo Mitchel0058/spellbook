@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spellbook</title>
-    <!-- <link rel="stylesheet" type="text/css" href="styles.css"> -->
     <link rel="stylesheet" type="text/css" href="spellbook.css">
     <link rel="stylesheet" type="text/css" href="text-overlays.css">
+    <link rel="stylesheet" type="text/css" href="interface.css">
     <link rel="manifest" href="manifest.json">
 </head>
 
@@ -24,8 +24,19 @@
         <button class="font-toggle-button" style="top: 10rem;" onclick="nextPage()">Next Page</button>
     </div>
     <div class="container">
+        <!-- Interface -->
+        <div class="svg-overlay">
+
+
+        </div>
+        <!-- Page 1 -->
         <div class="svg-overlay">
             <img src="./spellbook_cover.svg" alt="First page of DnD book">
+            <button class="interact-icon"></button>
+            <button class="interact-settings"></button>
+            <button class="interact-home"></button>
+            <button class="interact-font"></button>
+            <button class="interact-edit"></button>
             <p class="text-overlay-name">
                 Fireball
                 <span class="scroll-past"></span>
@@ -57,8 +68,14 @@
                 the overlay, demonstrating the flexibility and adaptability of the design.
             </p>
         </div>
+        <!-- Page 2 -->
         <div class="svg-overlay">
-            <img src="./spellbook_cover.svg" alt="First page of DnD book">
+            <img src="./spellbook_cover.svg" alt="Second page of DnD book">
+            <button class="interact-icon"></button>
+            <button class="interact-settings"></button>
+            <button class="interact-home"></button>
+            <button class="interact-font"></button>
+            <button class="interact-edit"></button>
             <p class="text-overlay-name">
                 Name
                 <span class="scroll-past"></span>
@@ -83,62 +100,6 @@
                 Description
             </p>
         </div>
-        <!-- <div class="svg-overlay first-page">
-            <img src="./spellbook_cover.svg" alt="First SVG">
-            <div class="text-overlay-line" id="Name" data-hint="Name"
-                style="top: 7.8%; left: 53%; width: 35%; height: 5%;">
-                Name
-            </div>
-            <div class="text-overlay-line" id="Incantation" data-hint="Incantation"
-                style="top: 12.5%; left: 53%; width: 35%; height: 5%;">
-                Incantation
-            </div>
-            <div class="text-overlay-line" id="Speed" data-hint="Speed"
-                style="top: 17.2%; left: 53%; width: 35%; height: 5%;">
-                Speed
-            </div>
-            <div class="text-overlay-line" id="Range" data-hint="Range"
-                style="top: 22.0%; left: 53%; width: 35%; height: 5%;">
-                Range
-            </div>
-            <div class="text-overlay-line" id="DamageType" data-hint="Damage Type"
-                style="top: 26.8%; left: 53%; width: 35%; height: 5%;">
-                Damage Type
-            </div>
-            <div class="text-overlay-box" id="Description" data-hint="Description"
-                style="top: 37.2%; left: 16%; width: 78%; height: 56%;">
-                Description
-            </div>
-            <img id="ImageURL" class="image-overlay" style="top: 8.5%; left: 19.8%; width: 18%; height: auto;">
-        </div>
-        <div class="svg-overlay second-page">
-            <img src="./spellbook_cover.svg" class="mirrored" alt="First SVG">
-            <div class="text-overlay-line" id="Name2" data-hint="Name"
-                style="top: 7.8%; left: 53%; width: 35%; height: 5%;">
-                Name
-            </div>
-            <div class="text-overlay-line" id="Incantation2" data-hint="Incantation"
-                style="top: 12.5%; left: 53%; width: 35%; height: 5%;">
-                Incantation
-            </div>
-            <div class="text-overlay-line" id="Speed2" data-hint="Speed"
-                style="top: 17.2%; left: 53%; width: 35%; height: 5%;">
-                Speed
-            </div>
-            <div class="text-overlay-line" id="Range2" data-hint="Range"
-                style="top: 22.0%; left: 53%; width: 35%; height: 5%;">
-                Range
-            </div>
-            <div class="text-overlay-line" id="DamageType2" data-hint="Damage Type"
-                style="top: 26.8%; left: 53%; width: 35%; height: 5%;">
-                Damage Type
-            </div>
-            <div class="text-overlay-box" id="Description2" data-hint="Description"
-                style="top: 37.2%; left: 16%; width: 78%; height: 56%;">
-                Description
-            </div>
-            <img id="ImageURL2" class="image-overlay" style="top: 8.5%; left: 19.8%; width: 18%; height: auto;">
-        </div> -->
     </div>
     <script src="spell.js"></script>
     <script>

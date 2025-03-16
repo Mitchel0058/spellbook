@@ -1,0 +1,39 @@
+:is(.interact-icon, .interact-settings, .interact-home, .interact-font, .interact-edit) {
+    position: absolute;
+    cursor: pointer;
+
+    background: transparent;
+    border: none !important;
+    z-index: 9999;
+    width: 6.7%;
+    height: 5%;
+    margin: 0;
+    padding: 0;
+}
+
+.interact-icon {
+    width: 24%;
+    height: 18%;
+    top: 5.3%;
+    left: 17%;
+}
+
+.interact-settings {
+    top: 30%;
+    left: 15%;
+}
+
+.interact-home {
+    top: 30%;
+    left: 22.4%;
+}
+
+.interact-font {
+    top: 30%;
+    left: 29.8%;
+}
+
+.interact-edit {
+    top: 30%;
+    left: 37%;
+}
