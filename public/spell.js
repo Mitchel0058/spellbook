@@ -9,7 +9,8 @@ const defaultValues = {
     Speed: "Speed",
     Range: "Range",
     DamageType: "Damage Type",
-    Description: "Description"
+    Description: "Description",
+    ImageURL: "mini-fireball.svg"
 };
 
 function toggleFont() {
@@ -52,8 +53,13 @@ function loadContent() {
     Object.keys(jsonData).forEach(key => {
         const element = document.getElementById(key);
         if (element) {
-            element.textContent = jsonData[key];
-            element.setAttribute('data-hint', jsonData[key]); // Set hint text
+            if (key === "ImageURL") {
+                element.src = jsonData[key] || "mini-fireball.svg";
+                element.style.display = 'block';
+            } else {
+                element.textContent = jsonData[key];
+                element.setAttribute('data-hint', jsonData[key]); // Set hint text
+            }
         }
     });
     resizeText();
@@ -144,8 +150,13 @@ function loadContentForPage(page, isSecondPage = false) {
                 const elementId = isSecondPage ? `${key}2` : key;
                 const element = document.getElementById(elementId);
                 if (element) {
-                    element.textContent = data[key];
-                    element.setAttribute('data-hint', data[key]); // Set hint text
+                    if (key === "ImageURL") {
+                        element.src = data[key] || "mini-fireball.svg";
+                        element.style.display = 'block';
+                    } else {
+                        element.textContent = data[key];
+                        element.setAttribute('data-hint', data[key]); // Set hint text
+                    }
                 }
             });
             resizeText();

@@ -6,7 +6,8 @@ self.addEventListener('install', (event) => {
                 '/index.html',
                 '/styles.css',
                 '/spell.js',
-                '/spellbook_with_cover.svg'
+                '/spellbook_with_cover.svg',
+                '/mini-fireball.svg',
             ]);
         })
     );
