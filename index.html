@@ -12,7 +12,7 @@
 </head>
 
 <body>
-    <div>
+    <div class="dev-tools">
         <button class="font-toggle-button" style="top: 2rem;" onclick="toggleFont()">Toggle Font</button>
         <br>
         <button class="font-toggle-button" style="top: 4rem;" onclick="toggleEditing()">Enable Editing</button>
@@ -24,85 +24,76 @@
         <button class="font-toggle-button" style="top: 10rem;" onclick="nextPage()">Next Page</button>
     </div>
     <div class="container">
-        <!-- Interface -->
-        <div class="svg-overlay">
-
-
-        </div>
         <!-- Page 1 -->
-        <div class="svg-overlay">
+        <div class="svg-overlay page-1">
             <img src="./spellbook_cover.svg" alt="First page of DnD book">
             <button class="interact-icon"></button>
             <button class="interact-settings"></button>
             <button class="interact-home"></button>
             <button class="interact-font"></button>
             <button class="interact-edit"></button>
-            <p class="text-overlay-name">
-                Fireball
+            <p class="text-overlay-name" id="p1-name">
+                
                 <span class="scroll-past"></span>
             </p>
-            <p class="text-overlay-incant">
-                Ignis a la carte de la flambe
+            <p class="text-overlay-incant" id="p1-incant">
+                
                 <span class="scroll-past"></span>
             </p>
-            <p class="text-overlay-speed">
-                1 reaction
+            <p class="text-overlay-speed" id="p1-speed">
+                
                 <span class="scroll-past"></span>
             </p>
-            <p class="text-overlay-range">
-                120 feet
+            <p class="text-overlay-range" id="p1-range">
+                
                 <span class="scroll-past"></span>
             </p>
-            <p class="text-overlay-type">
-                Bludgeoning
+            <p class="text-overlay-type" id="p1-type">
+                
                 <span class="scroll-past"></span>
             </p>
-            <p class="text-overlay-desc">
-                Description this is a very long description that should be able to wrap around multiple lines and be
-                able to provide detailed information about the spell. It includes various aspects such as the effects of
-                the spell, the duration, and any special conditions that might apply. This description is intended to
-                give the reader a comprehensive understanding of what the spell does and how it can be used in different
-                scenarios. The text should continue to flow naturally, ensuring that all necessary details are covered
-                without overwhelming the reader. Additionally, the formatting should remain consistent, making it easy
-                to read and follow. This extended description serves as an example of how to handle longer text within
-                the overlay, demonstrating the flexibility and adaptability of the design.
+            <p class="text-overlay-desc" id="p1-desc">
+                
             </p>
         </div>
         <!-- Page 2 -->
-        <div class="svg-overlay">
+        <div class="svg-overlay page-2">
             <img src="./spellbook_cover.svg" alt="Second page of DnD book">
             <button class="interact-icon"></button>
             <button class="interact-settings"></button>
             <button class="interact-home"></button>
             <button class="interact-font"></button>
             <button class="interact-edit"></button>
-            <p class="text-overlay-name">
+            <p class="text-overlay-name" id="p2-name">
                 Name
                 <span class="scroll-past"></span>
             </p>
-            <p class="text-overlay-incant">
+            <p class="text-overlay-incant" id="p2-incant">
                 Incantation
                 <span class="scroll-past"></span>
             </p>
-            <p class="text-overlay-speed">
+            <p class="text-overlay-speed" id="p2-speed">
                 Speed
                 <span class="scroll-past"></span>
             </p>
-            <p class="text-overlay-range">
+            <p class="text-overlay-range" id="p2-range">
                 Range
                 <span class="scroll-past"></span>
             </p>
-            <p class="text-overlay-type">
+            <p class="text-overlay-type" id="p2-type">
                 Damage type
                 <span class="scroll-past"></span>
             </p>
-            <p class="text-overlay-desc">
+            <p class="text-overlay-desc" id="p2-desc">
                 Description
             </p>
         </div>
     </div>
-    <script src="spell.js"></script>
-    <script>
+    <!-- <script src="spell.js"></script> -->
+    <script src="app.js"></script>
+
+    <!-- TODO: service worker -->
+    <!-- <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/service-worker.js')
                 .then((registration) => {
@@ -111,7 +102,7 @@
                     console.log('ServiceWorker registration failed: ', error);
                 });
         }
-    </script>
+    </script> -->
 </body>
 
 </html>
