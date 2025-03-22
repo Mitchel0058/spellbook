@@ -82,7 +82,7 @@ function savePageToDB() {
     const request1 = objectStore.put(data1);
 
     request1.onsuccess = (event) => {
-        console.log('Page 1 saved successfully', data1);
+        // console.log('Page 1 saved successfully', data1);
     };
 
     if (isDoublePage) {
