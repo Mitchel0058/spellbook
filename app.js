@@ -1,5 +1,6 @@
 let urlParams = new URLSearchParams(window.location.search);
 let currentPage = parseInt(urlParams.get('page')) || 1;
+// TODO: maybe add an event listener in case the user for example turns the phone sideways
 let isDoublePage = window.innerWidth > window.innerHeight;
 let pageDB;
 let editing = false;
@@ -74,13 +75,14 @@ function savePageToDB() {
         speed: document.getElementById('p1-speed').innerText,
         range: document.getElementById('p1-range').innerText,
         type: document.getElementById('p1-type').innerText,
-        desc: document.getElementById('p1-desc').innerText
+        desc: document.getElementById('p1-desc').innerText,
+        lvl: document.getElementById('p1-lvl').innerText
     };
 
     const request1 = objectStore.put(data1);
 
     request1.onsuccess = (event) => {
-        // console.log('Page 1 saved successfully', data1);
+        console.log('Page 1 saved successfully', data1);
     };
 
     if (isDoublePage) {
@@ -91,7 +93,8 @@ function savePageToDB() {
             speed: document.getElementById('p2-speed').innerText,
             range: document.getElementById('p2-range').innerText,
             type: document.getElementById('p2-type').innerText,
-            desc: document.getElementById('p2-desc').innerText
+            desc: document.getElementById('p2-desc').innerText,
+            lvl: document.getElementById('p2-lvl').innerText
         };
 
         const request2 = objectStore.put(data2);
@@ -110,6 +113,7 @@ function fillPageData(page, prefix) {
     document.getElementById(`${prefix}-range`).innerText = page.range || '';
     document.getElementById(`${prefix}-type`).innerText = page.type || '';
     document.getElementById(`${prefix}-desc`).innerText = page.desc || '';
+    document.getElementById(`${prefix}-lvl`).innerText = page.lvl || 0;
 }
 
 
@@ -181,6 +185,34 @@ function toggleEditing() {
             element.removeEventListener('input', handleInputEvent);
         }
     });
+    const lvlElements = document.querySelectorAll('.interact.lvl');
+    lvlElements.forEach(element => {
+        if (editing) {
+            element.style.display = 'flex';
+        } else {
+            element.style.display = 'none';
+        }
+    });
+}
+
+function lvlUp(prefix) {
+    if (prefix != 'p1' && prefix != 'p2') {
+        console.error('Invalid prefix provided', prefix);
+        return;
+    };
+    const lvlElement = document.getElementById(`${prefix}-lvl`);
+    lvlElement.innerText = parseInt(lvlElement.innerText) + 1;
+    handleInputEvent();
+}
+
+function lvlDown(prefix) {
+    if (prefix != 'p1' && prefix != 'p2') {
+        console.error('Invalid prefix provided', prefix);
+        return;
+    };
+    const lvlElement = document.getElementById(`${prefix}-lvl`);
+    lvlElement.innerText = Math.max(0, parseInt(lvlElement.innerText) - 1);
+    handleInputEvent();
 }
 
 ////// Audio
@@ -188,7 +220,7 @@ function playPageTurn() {
     const pageTurnMp3 = new Audio('pageturn.mp3');
 
     // Random playback speed between 0.9 and 1.1
-    const playbackRate = 0.9 + Math.random() * 0.1;
+    const playbackRate = 0.9 + Math.random() * 0.2;
     pageTurnMp3.playbackRate = playbackRate;
 
     // Use Web Audio API for pitch shifting
@@ -196,7 +228,7 @@ function playPageTurn() {
     const source = audioContext.createMediaElementSource(pageTurnMp3);
     const pitchShift = audioContext.createBiquadFilter();
     pitchShift.type = 'peaking';
-    pitchShift.frequency.value = 1000; // Adjust this value if needed
+    pitchShift.frequency.value = 1000;
     pitchShift.gain.value = (Math.random() * 0.4 - 0.2) * 10; // Random pitch shift between 0.9 and 1.1
 
     source.connect(pitchShift);

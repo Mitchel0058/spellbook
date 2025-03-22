@@ -60,6 +60,23 @@
     left: 53%;
 }
 
+.text-overlay-lvl {
+    position: absolute;
+    font-weight: bold;
+    color: rgb(120, 0, 0);
+    top: 6.6%;
+    right: 9.2%;
+    width: 4%;
+    font-size: 3vmin;
+    line-height: 3vmin;
+    margin: 0;
+    align-content: center;
+    text-align: center;
+    /* background-color: black; */
+}
+
+
+/* DESC */
 .text-overlay-desc {
     position: absolute;
     font-size: 3vmin;

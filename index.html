@@ -35,6 +35,9 @@
             <button class="interact home"></button>
             <button class="interact font" onclick="toggleFont()"></button>
             <button class="interact edit" onclick="toggleEditing()"></button>
+            <button class="interact lvl up" onclick="lvlUp('p1')">+</button>
+            <button class="interact lvl down" onclick="lvlDown('p1')">-</button>
+
             <p class="text-overlay name" id="p1-name">
 
                 <!-- <span class="scroll-past"></span> -->
@@ -45,6 +48,9 @@
             <p class="text-overlay type" id="p1-type"></p>
             <p class="text-overlay-desc" id="p1-desc">
                 Please enable javascript for the application to work.
+            </p>
+            <p class="text-overlay-lvl" id="p1-lvl">
+                0
             </p>
             <div class="page-number" id="p1-page"></div>
         </div>
@@ -58,6 +64,8 @@
             <button class="interact home"></button>
             <button class="interact font"></button>
             <button class="interact edit"></button>
+            <button class="interact lvl up" onclick="lvlUp('p2')">+</button>
+            <button class="interact lvl down" onclick="lvlDown('p2')">-</button>
             <p class="text-overlay name" id="p2-name">
                 Name </p>
             <p class="text-overlay incant" id="p2-incant">
@@ -70,6 +78,9 @@
                 Damage type </p>
             <p class="text-overlay-desc" id="p2-desc">
                 Description
+            </p>
+            <p class="text-overlay-lvl" id="p2-lvl">
+                0
             </p>
             <div class="page-number" id="p2-page"></div>
         </div>
