@@ -33,7 +33,7 @@ function loadPageFromDB() {
 
     request.onsuccess = (event) => {
         const page = event.target.result || {};
-        console.log('Page loaded successfully', currentPage, page);
+        // console.log('Page loaded successfully', currentPage, page);
         fillPageData(page, 'p1');
 
         if (isDoublePage) {
@@ -80,7 +80,7 @@ function savePageToDB() {
     const request1 = objectStore.put(data1);
 
     request1.onsuccess = (event) => {
-        console.log('Page 1 saved successfully', data1);
+        // console.log('Page 1 saved successfully', data1);
     };
 
     if (isDoublePage) {
@@ -97,13 +97,13 @@ function savePageToDB() {
         const request2 = objectStore.put(data2);
 
         request2.onsuccess = (event) => {
-            console.log('Page 2 saved successfully', data2);
+            // console.log('Page 2 saved successfully', data2);
         };
     }
 }
 
 function fillPageData(page, prefix) {
-    console.log('Filling page data', page, prefix);
+    // console.log('Filling page data', page, prefix);
     document.getElementById(`${prefix}-name`).innerText = page.name || '';
     document.getElementById(`${prefix}-incant`).innerText = page.incant || '';
     document.getElementById(`${prefix}-speed`).innerText = page.speed || '';
@@ -115,6 +115,8 @@ function fillPageData(page, prefix) {
 
 // Page Switching
 function nextPage() {
+    playPageTurn();
+
     // TODO: Do animation
     if (window.innerWidth > window.innerHeight) {
         currentPage += 2;
@@ -129,6 +131,9 @@ function nextPage() {
 }
 
 function previousPage() {
+    if (currentPage === 1) return;
+    playPageTurn();
+
     // TODO: Do animation
     if (window.innerWidth > window.innerHeight) {
         currentPage = Math.max(1, currentPage - 2);
@@ -158,7 +163,7 @@ function debounce(func, wait) {
 
 // Updated handleInputEvent function with debounce
 handleInputEvent = debounce((event) => {
-    console.log('Input event', event.target);
+    // console.log('Input event', event.target);
     savePageToDB();
 }, 750);
 
@@ -167,14 +172,39 @@ function toggleEditing() {
     const elements = document.querySelectorAll('.text-overlay, .text-overlay-desc');
     elements.forEach(element => {
         if (editing) {
+            element.classList.toggle('editing', true);
             element.setAttribute('contenteditable', 'true');
             element.addEventListener('input', handleInputEvent);
         } else {
+            element.classList.toggle('editing', false);
             element.removeAttribute('contenteditable');
             element.removeEventListener('input', handleInputEvent);
         }
     });
 }
+
+////// Audio
+function playPageTurn() {
+    const pageTurnMp3 = new Audio('pageturn.mp3');
+
+    // Random playback speed between 0.9 and 1.1
+    const playbackRate = 0.9 + Math.random() * 0.1;
+    pageTurnMp3.playbackRate = playbackRate;
+
+    // Use Web Audio API for pitch shifting
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioContext.createMediaElementSource(pageTurnMp3);
+    const pitchShift = audioContext.createBiquadFilter();
+    pitchShift.type = 'peaking';
+    pitchShift.frequency.value = 1000; // Adjust this value if needed
+    pitchShift.gain.value = (Math.random() * 0.4 - 0.2) * 10; // Random pitch shift between 0.9 and 1.1
+
+    source.connect(pitchShift);
+    pitchShift.connect(audioContext.destination);
+
+    pageTurnMp3.play();
+}
+
 
 window.addEventListener('load', () => {
     openDB();
@@ -187,6 +217,9 @@ function clearDB() {
     const transaction = pageDB.transaction(['pages'], 'readwrite');
     const objectStore = transaction.objectStore('pages');
     const clearRequest = objectStore.clear();
+    if (!confirm('Are you sure you want to clear the database? This will delete all data. This action cannot be undone.')) {
+        return;
+    }
 
     clearRequest.onsuccess = () => {
         console.log('Database cleared successfully');
@@ -196,5 +229,3 @@ function clearDB() {
         console.error(`Clear database error: ${event.target.error?.message}`);
     };
 }
-
-console.log(document.querySelectorAll('.interact'));

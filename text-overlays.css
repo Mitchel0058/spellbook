@@ -12,6 +12,7 @@
 
     -webkit-mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) 85%, rgba(0, 0, 0, 0));
     mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) 85%, rgba(0, 0, 0, 0));
+    align-content: center;
 }
 
 .text-overlay::after {
@@ -20,44 +21,42 @@
     padding-left: 3vmin;
 }
 
-/* webkit scrollbar */
 .text-overlay ::-webkit-scrollbar {
     display: none;
 }
 
-/* Allows sideways scrolling to go slightly further with an extra span */
-.scroll-past {
-    display: inline-block;
-    width: 10%;
+.text-overlay.editing {
+    transition: background-color 0.2s ease-in-out;
+    background-color: #00000010;
 }
 
 .text-overlay.name {
     position: absolute;
-    top: 9%;
+    top: 8%;
     left: 53%;
 }
 
 .text-overlay.incant {
     position: absolute;
-    top: 13.5%;
+    top: 13%;
     left: 53%;
 }
 
 .text-overlay.speed {
     position: absolute;
-    top: 18.5%;
+    top: 17.7%;
     left: 53%;
 }
 
 .text-overlay.range {
     position: absolute;
-    top: 23%;
+    top: 22.5%;
     left: 53%;
 }
 
 .text-overlay.type {
     position: absolute;
-    top: 28%;
+    top: 27.2%;
     left: 53%;
 }
 
@@ -72,10 +71,16 @@
     overflow: auto;
     overflow-x: hidden;
 
+
     -ms-overflow-style: none;
     scrollbar-width: none;
     -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 90%, rgba(0, 0, 0, 0));
     mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 90%, rgba(0, 0, 0, 0));
+}
+
+.text-overlay-desc.editing {
+    transition: background-color 0.2s ease-in-out;
+    background-color: #00000010;
 }
 
 .text-overlay-desc::after {
