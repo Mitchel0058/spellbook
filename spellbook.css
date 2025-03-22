@@ -10,6 +10,10 @@
     }
 }
 
+.no-custom-font {
+    font-family: sans-serif;
+}
+
 body,
 html {
     font-family: 'Magneto', sans-serif;

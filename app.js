@@ -119,7 +119,6 @@ function fillPageData(page, prefix) {
     document.getElementById(`${prefix}-range`).firstChild.nodeValue = page.range || '';
     document.getElementById(`${prefix}-type`).firstChild.nodeValue = page.type || '';
     document.getElementById(`${prefix}-desc`).firstChild.nodeValue = page.desc || '';
-
 }
 
 
@@ -161,24 +160,9 @@ function editPage(editable) {
     }
 }
 
-
-// TODO: remove?
-// function save(name, incant, speed, range, type, desc) {
-//     const names = ['Fireball', 'Ice Shard', 'Lightning Bolt', 'Heal', 'Teleport', 'Shield', 'Invisibility', 'Summon', 'Curse', 'Bless'];
-//     name = names[Math.floor(Math.random() * names.length)];
-
-//     // TODO: incant not testing
-//     let json = {
-//         'page': currentPage,
-//         'name': name,
-//         'incant': 'testing',
-//         'speed': speed,
-//         'range': range,
-//         'type': type,
-//         'desc': desc
-//     }
-//     localStorage.setItem(`page${currentPage}`, JSON.stringify(json));
-// }
+function toggleFont() {
+    document.body.classList.toggle('no-custom-font');
+}
 
 window.addEventListener('load', () => {
     openDB();
