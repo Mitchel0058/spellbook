@@ -3,7 +3,6 @@
     src: url('./pixel.ttf') format('truetype');
 }
 
-/* 0.73 is because it gets wonky when above this but below 1, the page  */
 @media (max-aspect-ratio: 1/1) {
     .page-2 {
         display: none;

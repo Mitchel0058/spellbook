@@ -12,7 +12,7 @@
 </head>
 
 <body>
-    <div class="dev-tools">
+    <!-- <div class="dev-tools">
         <button class="font-toggle-button" style="top: 2rem;" onclick="toggleFont()">Toggle Font</button>
         <br>
         <button class="font-toggle-button" style="top: 4rem;" onclick="toggleEditing()">Enable Editing</button>
@@ -22,71 +22,56 @@
         <button class="font-toggle-button" style="top: 8rem;" onclick="previousPage()">Previous Page</button>
         <br>
         <button class="font-toggle-button" style="top: 10rem;" onclick="nextPage()">Next Page</button>
-    </div>
+    </div> -->
     <div class="container">
         <!-- Page 1 -->
         <div class="svg-overlay page-1">
             <img src="./spellbook_cover.svg" alt="First page of DnD book">
-            <button class="interact-icon"></button>
-            <button class="interact-settings"></button>
-            <button class="interact-home"></button>
-            <button class="interact-font" onclick="toggleFont()"></button>
-            <button class="interact-edit" onclick="toggleEditing()"></button>
-            <p class="text-overlay-name" id="p1-name">
-                test
-                <span class="scroll-past"></span>
-            </p>
-            <p class="text-overlay-incant" id="p1-incant">
+            <!-- Previous Page -->
+            <button class="interact" id="p1-previous" onclick="previousPage()"></button>
+            <button class="interact" id="p1-next" onclick="nextPage()"></button>
+            <button class="interact icon"></button>
+            <button class="interact settings"></button>
+            <button class="interact home"></button>
+            <button class="interact font" onclick="toggleFont()"></button>
+            <button class="interact edit" onclick="toggleEditing()"></button>
+            <p class="text-overlay name" id="p1-name">
 
-                <span class="scroll-past"></span>
+                <!-- <span class="scroll-past"></span> -->
             </p>
-            <p class="text-overlay-speed" id="p1-speed">
-
-                <span class="scroll-past"></span>
-            </p>
-            <p class="text-overlay-range" id="p1-range">
-
-                <span class="scroll-past"></span>
-            </p>
-            <p class="text-overlay-type" id="p1-type">
-
-                <span class="scroll-past"></span>
-            </p>
+            <p class="text-overlay incant" id="p1-incant"></p>
+            <p class="text-overlay speed" id="p1-speed"></p>
+            <p class="text-overlay range" id="p1-range"></p>
+            <p class="text-overlay type" id="p1-type"></p>
             <p class="text-overlay-desc" id="p1-desc">
-
+                Please enable javascript for the application to work.
             </p>
+            <div class="page-number" id="p1-page"></div>
         </div>
         <!-- Page 2 -->
         <div class="svg-overlay page-2">
             <img src="./spellbook_cover.svg" alt="Second page of DnD book">
-            <button class="interact-icon"></button>
-            <button class="interact-settings"></button>
-            <button class="interact-home"></button>
-            <button class="interact-font"></button>
-            <button class="interact-edit"></button>
-            <p class="text-overlay-name" id="p2-name">
-                Name
-                <span class="scroll-past"></span>
-            </p>
-            <p class="text-overlay-incant" id="p2-incant">
-                Incantation
-                <span class="scroll-past"></span>
-            </p>
-            <p class="text-overlay-speed" id="p2-speed">
-                Speed
-                <span class="scroll-past"></span>
-            </p>
-            <p class="text-overlay-range" id="p2-range">
-                Range
-                <span class="scroll-past"></span>
-            </p>
-            <p class="text-overlay-type" id="p2-type">
-                Damage type
-                <span class="scroll-past"></span>
-            </p>
+            <button class="interact" id="p2-previous" onclick="previousPage()"></button>
+            <button class="interact" id="p2-next" onclick="nextPage()"></button>
+            <button class="interact icon"></button>
+            <button class="interact settings"></button>
+            <button class="interact home"></button>
+            <button class="interact font"></button>
+            <button class="interact edit"></button>
+            <p class="text-overlay name" id="p2-name">
+                Name </p>
+            <p class="text-overlay incant" id="p2-incant">
+                Incantation </p>
+            <p class="text-overlay speed" id="p2-speed">
+                Speed </p>
+            <p class="text-overlay range" id="p2-range">
+                Range </p>
+            <p class="text-overlay type" id="p2-type">
+                Damage type </p>
             <p class="text-overlay-desc" id="p2-desc">
                 Description
             </p>
+            <div class="page-number" id="p2-page"></div>
         </div>
     </div>
     <!-- <script src="spell.js"></script> -->

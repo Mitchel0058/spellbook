@@ -1,4 +1,4 @@
-:is(.text-overlay-name, .text-overlay-incant, .text-overlay-speed, .text-overlay-range, .text-overlay-type) {
+.text-overlay {
     position: absolute;
     font-size: 3vmin;
     margin: 0;
@@ -14,38 +14,49 @@
     mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) 85%, rgba(0, 0, 0, 0));
 }
 
+.text-overlay::after {
+    content: '';
+    width: 20%;
+    padding-left: 3vmin;
+}
+
 /* webkit scrollbar */
-:is(.text-overlay-name, .text-overlay-incant, .text-overlay-speed, .text-overlay-range, .text-overlay-type) ::-webkit-scrollbar {
+.text-overlay ::-webkit-scrollbar {
     display: none;
 }
 
 /* Allows sideways scrolling to go slightly further with an extra span */
 .scroll-past {
     display: inline-block;
-    width: 10%; 
+    width: 10%;
 }
 
-.text-overlay-name {
+.text-overlay.name {
+    position: absolute;
     top: 9%;
     left: 53%;
 }
 
-.text-overlay-incant {
+.text-overlay.incant {
+    position: absolute;
     top: 13.5%;
     left: 53%;
 }
 
-.text-overlay-speed {
+.text-overlay.speed {
+    position: absolute;
     top: 18.5%;
     left: 53%;
 }
 
-.text-overlay-range {
+.text-overlay.range {
+    position: absolute;
     top: 23%;
     left: 53%;
 }
 
-.text-overlay-type {
+.text-overlay.type {
+    position: absolute;
     top: 28%;
     left: 53%;
 }
@@ -71,4 +82,11 @@
     content: '';
     display: block;
     height: 50%;
+}
+
+.page-number {
+    position: absolute;
+    bottom: 5%;
+    right: 5%;
+    font-size: 4vmin;
 }

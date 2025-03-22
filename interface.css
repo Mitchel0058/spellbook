@@ -1,4 +1,5 @@
-:is(.interact-icon, .interact-settings, .interact-home, .interact-font, .interact-edit) {
+/* General interact */
+.interact {
     position: absolute;
     cursor: pointer;
 
@@ -11,29 +12,71 @@
     padding: 0;
 }
 
-.interact-icon {
+/* Previous and next page */
+/* Lesson learned: for firefox makes sure to ALWAYS also set top or bottom */
+.interact#p1-previous {
+    width: 12%;
+    height: 100%;
+    left: 0%;
+    top: 0%;
+}
+
+.interact#p2-next {
+    width: 12%;
+    height: 100%;
+    right: 0%;
+    top: 0%;
+}
+
+.interact#p1-next {
+    width: 12%;
+    height: 100%;
+    right: 0%;
+    top: 0%;
+}
+
+.interact#p2-previous {
+    width: 12%;
+    height: 100%;
+    left: 0%;
+    top: 0%;
+}
+
+@media (min-aspect-ratio: 1/1) {
+    .interact#p1-next {
+        display: none;
+    }
+
+    .interact#p2-previous {
+        display: none;
+    }
+}
+
+
+/* Page options */
+.interact.icon {
     width: 24%;
     height: 18%;
     top: 5.3%;
     left: 17%;
 }
 
-.interact-settings {
+.interact.settings {
     top: 30%;
     left: 15%;
 }
 
-.interact-home {
+.interact.home {
     top: 30%;
     left: 22.4%;
 }
 
-.interact-font {
+.interact.font {
     top: 30%;
     left: 29.8%;
 }
 
-.interact-edit {
+.interact.edit {
     top: 30%;
     left: 37%;
 }

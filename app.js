@@ -2,6 +2,7 @@ let urlParams = new URLSearchParams(window.location.search);
 let currentPage = parseInt(urlParams.get('page')) || 1;
 let isDoublePage = window.innerWidth > window.innerHeight;
 let pageDB;
+let editing = false;
 
 function openDB() {
     const request = indexedDB.open("spellPageDB", 1);
@@ -12,13 +13,13 @@ function openDB() {
         pageDB = event.target.result;
         console.log('Database opened successfully');
         loadPageFromDB();
-        savePageToDB();
     };
     request.onupgradeneeded = (event) => {
         pageDB = event.target.result;
         console.log('Database upgrade needed');
         if (!pageDB.objectStoreNames.contains('pages')) {
             pageDB.createObjectStore('pages', { keyPath: 'page' });
+            window.location.reload();
         }
     };
 }
@@ -27,6 +28,8 @@ function loadPageFromDB() {
     const transaction = pageDB.transaction(['pages'], 'readonly');
     const objectStore = transaction.objectStore('pages');
     const request = objectStore.get(currentPage);
+    document.getElementById(`p1-page`).innerHTML = currentPage || '';
+    document.getElementById(`p2-page`).innerHTML = currentPage + 1 || '';
 
     request.onsuccess = (event) => {
         const page = event.target.result || {};
@@ -66,19 +69,13 @@ function savePageToDB() {
 
     const data1 = {
         page: currentPage,
-        name: randomWords[Math.floor(Math.random() * randomWords.length)],
-        incant: randomWords[Math.floor(Math.random() * randomWords.length)],
-        speed: randomWords[Math.floor(Math.random() * randomWords.length)],
-        range: randomWords[Math.floor(Math.random() * randomWords.length)],
-        type: randomWords[Math.floor(Math.random() * randomWords.length)],
-        desc: randomWords[Math.floor(Math.random() * randomWords.length)]
+        name: document.getElementById('p1-name').innerText,
+        incant: document.getElementById('p1-incant').innerText,
+        speed: document.getElementById('p1-speed').innerText,
+        range: document.getElementById('p1-range').innerText,
+        type: document.getElementById('p1-type').innerText,
+        desc: document.getElementById('p1-desc').innerText
     };
-    // name: document.getElementById('p1-name').value,
-    // incant: document.getElementById('p1-incant').value,
-    // speed: document.getElementById('p1-speed').value,
-    // range: document.getElementById('p1-range').value,
-    // type: document.getElementById('p1-type').value,
-    // desc: document.getElementById('p1-desc').value
 
     const request1 = objectStore.put(data1);
 
@@ -89,19 +86,13 @@ function savePageToDB() {
     if (isDoublePage) {
         const data2 = {
             page: currentPage + 1,
-            name: randomWords[Math.floor(Math.random() * randomWords.length)],
-            incant: randomWords[Math.floor(Math.random() * randomWords.length)],
-            speed: randomWords[Math.floor(Math.random() * randomWords.length)],
-            range: randomWords[Math.floor(Math.random() * randomWords.length)],
-            type: randomWords[Math.floor(Math.random() * randomWords.length)],
-            desc: randomWords[Math.floor(Math.random() * randomWords.length)]
+            name: document.getElementById('p2-name').innerText,
+            incant: document.getElementById('p2-incant').innerText,
+            speed: document.getElementById('p2-speed').innerText,
+            range: document.getElementById('p2-range').innerText,
+            type: document.getElementById('p2-type').innerText,
+            desc: document.getElementById('p2-desc').innerText
         };
-        // name: document.getElementById('p2-name').value,
-        // incant: document.getElementById('p2-incant').value,
-        // speed: document.getElementById('p2-speed').value,
-        // range: document.getElementById('p2-range').value,
-        // type: document.getElementById('p2-type').value,
-        // desc: document.getElementById('p2-desc').value
 
         const request2 = objectStore.put(data2);
 
@@ -113,12 +104,12 @@ function savePageToDB() {
 
 function fillPageData(page, prefix) {
     console.log('Filling page data', page, prefix);
-    document.getElementById(`${prefix}-name`).firstChild.nodeValue = page.name || '';
-    document.getElementById(`${prefix}-incant`).firstChild.nodeValue = page.incant || '';
-    document.getElementById(`${prefix}-speed`).firstChild.nodeValue = page.speed || '';
-    document.getElementById(`${prefix}-range`).firstChild.nodeValue = page.range || '';
-    document.getElementById(`${prefix}-type`).firstChild.nodeValue = page.type || '';
-    document.getElementById(`${prefix}-desc`).firstChild.nodeValue = page.desc || '';
+    document.getElementById(`${prefix}-name`).innerText = page.name || '';
+    document.getElementById(`${prefix}-incant`).innerText = page.incant || '';
+    document.getElementById(`${prefix}-speed`).innerText = page.speed || '';
+    document.getElementById(`${prefix}-range`).innerText = page.range || '';
+    document.getElementById(`${prefix}-type`).innerText = page.type || '';
+    document.getElementById(`${prefix}-desc`).innerText = page.desc || '';
 }
 
 
@@ -152,18 +143,58 @@ function previousPage() {
 }
 
 
-function editPage(editable) {
-    // TODO: TF DID I DO 
-    if (editable !== true || null) {
-        console.error('Invalid argument');
-        return;
-    }
-}
-
 function toggleFont() {
     document.body.classList.toggle('no-custom-font');
+}
+
+// Debounce function to delay the execution of a function
+function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+// Updated handleInputEvent function with debounce
+handleInputEvent = debounce((event) => {
+    console.log('Input event', event.target);
+    savePageToDB();
+}, 750);
+
+function toggleEditing() {
+    editing = !editing;
+    const elements = document.querySelectorAll('.text-overlay, .text-overlay-desc');
+    elements.forEach(element => {
+        if (editing) {
+            element.setAttribute('contenteditable', 'true');
+            element.addEventListener('input', handleInputEvent);
+        } else {
+            element.removeAttribute('contenteditable');
+            element.removeEventListener('input', handleInputEvent);
+        }
+    });
 }
 
 window.addEventListener('load', () => {
     openDB();
 });
+
+
+
+// /////////////////////////////
+function clearDB() {
+    const transaction = pageDB.transaction(['pages'], 'readwrite');
+    const objectStore = transaction.objectStore('pages');
+    const clearRequest = objectStore.clear();
+
+    clearRequest.onsuccess = () => {
+        console.log('Database cleared successfully');
+    };
+
+    clearRequest.onerror = (event) => {
+        console.error(`Clear database error: ${event.target.error?.message}`);
+    };
+}
+
+console.log(document.querySelectorAll('.interact'));
