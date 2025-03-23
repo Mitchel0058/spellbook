@@ -81,6 +81,13 @@
     left: 37%;
 }
 
+
+/* Editing */
+.uneditable {
+    all: unset;
+    display: none;
+}
+
 .interact.lvl {
     right: 2%;
     border: 1px solid rgb(120, 0, 0) !important;
@@ -89,13 +96,12 @@
     width: 2.5vmin;
     height: 2.5vmin;
     font-size: 2.5vmin;
-    
+
     display: flex;
     text-align: center;
     justify-content: center;
     align-content: center;
     align-items: center;
-    display: none;
 }
 
 .interact.lvl.up {
@@ -104,4 +110,42 @@
 
 .interact.lvl.down {
     top: 8%;
+}
+
+/* Radio options */
+.interact.radio {
+    background-color: #c08c54;
+    border: 1px outset #8f563b !important;
+    height: 2.5vmin;
+    aspect-ratio: 1 / 1;
+    left: 1.4%;
+    opacity: 0;
+}
+
+.interact.radio.none {
+    top: 9%;
+}
+
+.interact.radio.cover {
+    top: 13%;
+}
+
+.interact.radio.fill {
+    top: 17%;
+}
+
+.interact.radio.label {
+    font-size: calc(2.5vmin - 0.25vmin);
+    left: calc(2% + 2.5vmin);
+    width: 11.5%;
+    line-height: 0;
+    align-content: center;
+    align-items: center;
+    display: flex;
+    opacity: 1;
+}
+
+.interact.radio:checked + .label {
+    background-color: #8f563b;
+    border: 1px outset #c08c54 !important;
 }

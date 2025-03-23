@@ -117,6 +117,7 @@ function fillPageData(page, prefix) {
     document.getElementById(`${prefix}-desc`).innerText = page.desc || '';
     document.getElementById(`${prefix}-lvl`).innerText = page.lvl || 0;
     document.getElementById(`${prefix}-icon`).src = page.icon?.url || '';
+    document.getElementById(`${prefix}-icon`).style.objectFit = page.icon?.objectFit || '';
 }
 
 
@@ -188,14 +189,19 @@ function toggleEditing() {
             element.removeEventListener('input', handleInputEvent);
         }
     });
-    const lvlElements = document.querySelectorAll('.interact.lvl');
-    lvlElements.forEach(element => {
-        if (editing) {
-            element.style.display = 'flex';
-        } else {
-            element.style.display = 'none';
-        }
-    });
+    document.querySelectorAll('.toggle-edit').forEach(element => {
+        element.classList.toggle('uneditable', !editing);
+    })
+}
+
+function setIconFit(prefix, fit) {
+    if (prefix != 'p1' && prefix != 'p2') {
+        console.error('Invalid prefix provided', prefix);
+        return;
+    }
+    const icon = document.getElementById(`${prefix}-icon`);
+    icon.style.objectFit = fit;
+    handleInputEvent();
 }
 
 //////////////// ICON
@@ -214,7 +220,7 @@ function setImage(prefix) {
             reader.onload = (e) => {
                 const img = document.createElement('img');
                 img.src = e.target.result;
-                document.getElementById(`${prefix}-icon`).src = img.src; 
+                document.getElementById(`${prefix}-icon`).src = img.src;
                 // console.log('File selected:', file);
                 savePageToDB();
             };
