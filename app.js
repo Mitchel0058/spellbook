@@ -4,6 +4,41 @@ let currentPage = parseInt(urlParams.get('page')) || 1;
 let isDoublePage = window.innerWidth > window.innerHeight;
 let pageDB;
 let editing = false;
+let pageData = {
+    page: currentPage,
+    name: '',
+    incant: '',
+    speed: '',
+    range: '',
+    type: '',
+    desc: '',
+    lvl: '',
+    icon: {
+        url: '',
+        objectFit: ''
+    }
+};
+
+function populatePageData(prefix) {
+    if (prefix != 'p1' && prefix != 'p2') {
+        console.error('Invalid prefix provided', prefix);
+        return;
+    }
+    return pageData = {
+        page: prefix === 'p1' ? currentPage : currentPage + 1,
+        name: document.getElementById(`${prefix}-name`).innerText,
+        incant: document.getElementById(`${prefix}-incant`).innerText,
+        speed: document.getElementById(`${prefix}-speed`).innerText,
+        range: document.getElementById(`${prefix}-range`).innerText,
+        type: document.getElementById(`${prefix}-type`).innerText,
+        desc: document.getElementById(`${prefix}-desc`).innerText,
+        lvl: document.getElementById(`${prefix}-lvl`).innerText,
+        icon: {
+            url: document.getElementById(`${prefix}-icon`).src,
+            objectFit: document.getElementById(`${prefix}-icon`).style.objectFit || ''
+        }
+    };
+}
 
 function openDB() {
     const request = indexedDB.open("spellPageDB", 1);
@@ -55,49 +90,16 @@ function savePageToDB() {
     const transaction = pageDB.transaction(['pages'], 'readwrite');
     const objectStore = transaction.objectStore('pages');
 
-    const randomWords = [
-        "Mystic of the Enigmatic Magic",
-        "Arcane of the Ancient Arcana",
-        "Ethereal of the Boundless Ether",
-        "Celestial of the Infinite Stars",
-        "Enchanted of the Eternal Enchantment",
-        "Phantom of the Elusive Phantasm",
-        "Spectral of the Haunting Specter",
-        "Astral of the Cosmic Astral Plane",
-        "Divine of the Sacred Divinity",
-        "Fabled of the Legendary Fable"
-    ];
-
-    const data1 = {
-        page: currentPage,
-        name: document.getElementById('p1-name').innerText,
-        incant: document.getElementById('p1-incant').innerText,
-        speed: document.getElementById('p1-speed').innerText,
-        range: document.getElementById('p1-range').innerText,
-        type: document.getElementById('p1-type').innerText,
-        desc: document.getElementById('p1-desc').innerText,
-        lvl: document.getElementById('p1-lvl').innerText
-    };
-
-    const request1 = objectStore.put(data1);
+    const pageData1 = populatePageData('p1');
+    const request1 = objectStore.put(pageData1);
 
     request1.onsuccess = (event) => {
-        // console.log('Page 1 saved successfully', data1);
+        console.log('Page 1 saved successfully', pageData1);
     };
 
     if (isDoublePage) {
-        const data2 = {
-            page: currentPage + 1,
-            name: document.getElementById('p2-name').innerText,
-            incant: document.getElementById('p2-incant').innerText,
-            speed: document.getElementById('p2-speed').innerText,
-            range: document.getElementById('p2-range').innerText,
-            type: document.getElementById('p2-type').innerText,
-            desc: document.getElementById('p2-desc').innerText,
-            lvl: document.getElementById('p2-lvl').innerText
-        };
-
-        const request2 = objectStore.put(data2);
+        const pageData2 = populatePageData('p2');
+        const request2 = objectStore.put(pageData2);
 
         request2.onsuccess = (event) => {
             // console.log('Page 2 saved successfully', data2);
@@ -114,6 +116,7 @@ function fillPageData(page, prefix) {
     document.getElementById(`${prefix}-type`).innerText = page.type || '';
     document.getElementById(`${prefix}-desc`).innerText = page.desc || '';
     document.getElementById(`${prefix}-lvl`).innerText = page.lvl || 0;
+    document.getElementById(`${prefix}-icon`).src = page.icon?.url || '';
 }
 
 
@@ -195,6 +198,34 @@ function toggleEditing() {
     });
 }
 
+//////////////// ICON
+function setImage(prefix) {
+    if (prefix != 'p1' && prefix != 'p2') {
+        console.error('Invalid prefix provided', prefix);
+        return;
+    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                document.getElementById(`${prefix}-icon`).src = img.src; 
+                // console.log('File selected:', file);
+                savePageToDB();
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+    input.click();
+}
+
+
+//////////////// SPELL LVL
 function lvlUp(prefix) {
     if (prefix != 'p1' && prefix != 'p2') {
         console.error('Invalid prefix provided', prefix);

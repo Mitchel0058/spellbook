@@ -30,7 +30,7 @@
             <!-- Previous Page -->
             <button class="interact" id="p1-previous" onclick="previousPage()"></button>
             <button class="interact" id="p1-next" onclick="nextPage()"></button>
-            <button class="interact icon"></button>
+            <button class="interact icon" src="./mini-fireball.svg" onclick="setImage('p1')" onerror="this.src='mini-fireball.svg'"></button>
             <button class="interact settings"></button>
             <button class="interact home"></button>
             <button class="interact font" onclick="toggleFont()"></button>
@@ -38,10 +38,8 @@
             <button class="interact lvl up" onclick="lvlUp('p1')">+</button>
             <button class="interact lvl down" onclick="lvlDown('p1')">-</button>
 
-            <p class="text-overlay name" id="p1-name">
-
-                <!-- <span class="scroll-past"></span> -->
-            </p>
+            <img id="p1-icon" alt="Left page icon" />
+            <p class="text-overlay name" id="p1-name"></p>
             <p class="text-overlay incant" id="p1-incant"></p>
             <p class="text-overlay speed" id="p1-speed"></p>
             <p class="text-overlay range" id="p1-range"></p>
@@ -59,13 +57,14 @@
             <img src="./spellbook_cover.svg" alt="Second page of DnD book">
             <button class="interact" id="p2-previous" onclick="previousPage()"></button>
             <button class="interact" id="p2-next" onclick="nextPage()"></button>
-            <button class="interact icon"></button>
+            <button class="interact icon" src="./mini-fireball.svg" onclick="setImage('p2')"></button>
             <button class="interact settings"></button>
             <button class="interact home"></button>
             <button class="interact font"></button>
             <button class="interact edit"></button>
             <button class="interact lvl up" onclick="lvlUp('p2')">+</button>
             <button class="interact lvl down" onclick="lvlDown('p2')">-</button>
+            <img id="p2-icon" alt="Left page icon" />
             <p class="text-overlay name" id="p2-name">
                 Name </p>
             <p class="text-overlay incant" id="p2-incant">

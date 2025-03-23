@@ -31,35 +31,59 @@
 }
 
 .text-overlay.name {
-    position: absolute;
     top: 8%;
     left: 53%;
 }
 
 .text-overlay.incant {
-    position: absolute;
     top: 13%;
     left: 53%;
 }
 
 .text-overlay.speed {
-    position: absolute;
     top: 17.7%;
     left: 53%;
 }
 
 .text-overlay.range {
-    position: absolute;
     top: 22.5%;
     left: 53%;
 }
 
 .text-overlay.type {
-    position: absolute;
     top: 27.2%;
     left: 53%;
 }
 
+#p1-icon {
+    position: absolute;
+    white-space: nowrap;
+    overflow: hidden;
+    margin: 0;
+    font-size: 0;
+    top: 6.9%;
+    left: 18.9%;
+    height: 14.7%;
+    width: 20.2%;
+    /* object-fit: fill; */
+    /* object-fit: cover; */
+}
+
+#p2-icon {
+    position: absolute;
+    white-space: nowrap;
+    overflow: hidden;
+    margin: 0;
+    font-size: 0;
+    top: 6.9%;
+    left: 18.9%;
+    height: 14.7%;
+    width: 20.2%;
+    /* object-fit: fill; */
+    /* object-fit: cover; */
+}
+
+/* LVL */
 .text-overlay-lvl {
     position: absolute;
     font-weight: bold;
@@ -106,6 +130,7 @@
     height: 50%;
 }
 
+/* PAGE */
 .page-number {
     position: absolute;
     bottom: 5%;
