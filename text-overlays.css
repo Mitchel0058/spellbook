@@ -1,6 +1,6 @@
 .text-overlay {
     position: absolute;
-    font-size: 3vmin;
+    font-size: var(--reactive-font-size);
     margin: 0;
     overflow-x: auto;
     white-space: nowrap;
@@ -90,8 +90,8 @@
     top: 6.6%;
     right: 9.2%;
     width: 4%;
-    font-size: 3vmin;
-    line-height: 3vmin;
+    font-size: var(--reactive-font-size);
+    line-height: var(--reactive-font-size);
     margin: 0;
     align-content: center;
     text-align: center;
@@ -102,7 +102,7 @@
 /* DESC */
 .text-overlay-desc {
     position: absolute;
-    font-size: 3vmin;
+    font-size: var(--reactive-font-size);
     margin: 0;
     top: 36%;
     left: 16%;
@@ -134,5 +134,5 @@
     position: absolute;
     bottom: 5%;
     right: 5%;
-    font-size: 4vmin;
+    font-size: calc(var(--reactive-font-size) + 15%);
 }

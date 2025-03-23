@@ -1,3 +1,7 @@
+:root {
+    --reactive-font-size: 3vmin;
+}
+
 @font-face {
     font-family: 'Magneto';
     src: url('./pixel.ttf') format('truetype');
@@ -6,6 +10,15 @@
 @media (max-aspect-ratio: 1/1) {
     .page-2 {
         display: none;
+    }
+
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        /* fallback */
+        height: 100vh;
+        height: 100dvh;
     }
 }
 
