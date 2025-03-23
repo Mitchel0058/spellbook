@@ -30,7 +30,7 @@
             <!-- Previous Page -->
             <button class="interact" id="p1-previous" onclick="previousPage()"></button>
             <button class="interact" id="p1-next" onclick="nextPage()"></button>
-            <button class="interact icon" src="./mini-fireball.svg" onclick="setImage('p1')"
+            <button class="interact icon" onclick="setImage('p1')"
                 onerror="this.src='mini-fireball.svg'"></button>
             <button class="interact settings"></button>
             <button class="interact home"></button>
@@ -51,7 +51,7 @@
                 <label class="interact radio fill label" for="fill">Fill</label>
             </div>
 
-            <img id="p1-icon" alt="Left page icon" />
+            <img id="p1-icon" onerror="this.src='./mini-fireball.svg'" alt="Left page icon" />
             <p class="text-overlay name" id="p1-name"></p>
             <p class="text-overlay incant" id="p1-incant"></p>
             <p class="text-overlay speed" id="p1-speed"></p>
@@ -88,7 +88,7 @@
                     onclick="setIconFit('p2', 'fill')">
                 <label class="interact radio fill label" for="p2-fill">Fill</label>
             </div>
-            <img id="p2-icon" alt="Left page icon" />
+            <img id="p2-icon" onerror="this.src='./mini-fireball.svg'" alt="Left page icon" />
             <p class="text-overlay name" id="p2-name">
                 Name </p>
             <p class="text-overlay incant" id="p2-incant">
