@@ -30,7 +30,8 @@
             <!-- Previous Page -->
             <button class="interact" id="p1-previous" onclick="previousPage()"></button>
             <button class="interact" id="p1-next" onclick="nextPage()"></button>
-            <button class="interact icon" onclick="setImage('p1')" onerror="this.src='assets/imgs/mini-fireball.svg'"></button>
+            <button class="interact icon" onclick="setImage('p1')"
+                onerror="this.src='assets/imgs/mini-fireball.svg'"></button>
             <a href="settings">
                 <button class="interact settings"></button>
             </a>
@@ -44,8 +45,8 @@
                 <button class="interact lvl up" onclick="lvlUp('p1')">+</button>
                 <button class="interact lvl down" onclick="lvlDown('p1')">-</button>
                 <input class="interact radio none" type="radio" name="object fit" value="none" id="none"
-                    onclick="setIconFit('p1', '')" checked>
-                <label class="interact radio none label" for="none">None</label>
+                    onclick="setIconFit('p1', 'contain')" checked>
+                <label class="interact radio none label" for="none">Curb</label>
                 <input class="interact radio cover" type="radio" name="object fit" value="cover" id="cover"
                     onclick="setIconFit('p1', 'cover')">
                 <label class="interact radio cover label" for="cover">Cover</label>
@@ -81,6 +82,7 @@
                 <button class="interact home"></button>
             </a>
             <button class="interact font"></button>
+            <!-- Editing -->
             <button class="interact edit" onclick="toggleEditing()"></button>
             <div class="toggle-edit uneditable">
                 <button class="interact lvl up" onclick="lvlUp('p2')">+</button>
@@ -95,6 +97,7 @@
                     onclick="setIconFit('p2', 'fill')">
                 <label class="interact radio fill label" for="p2-fill">Fill</label>
             </div>
+
             <img id="p2-icon" onerror="this.src='assets/imgs/mini-fireball.svg'" alt="Left page icon" />
             <p class="text-overlay name" id="p2-name">
                 Name </p>
@@ -115,8 +118,7 @@
             <div class="page-number" id="p2-page"></div>
         </div>
     </div>
-    <!-- <script src="spell.js"></script> -->
-    <script src="js/app.js"></script>
+    <script src="js/pages.js"></script>
 
     <!-- TODO: service worker -->
     <!-- <script>
