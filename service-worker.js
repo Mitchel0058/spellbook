@@ -2,12 +2,13 @@ self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open('v1').then((cache) => {
             return cache.addAll([
-                '/',
-                '/index.html',
-                '/styles.css',
-                '/spell.js',
-                '/spellbook_with_cover.svg',
-                '/mini-fireball.svg',
+                // TODO: this working
+                // '/',
+                // '/index.html',
+                // '/styles.css',
+                // '/spell.js',
+                // '/spellbook_with_cover.svg',
+                // '/mini-fireball.svg',
             ]);
         })
     );

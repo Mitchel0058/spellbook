@@ -4,7 +4,7 @@
 
 @font-face {
     font-family: 'Magneto';
-    src: url('./pixel.ttf') format('truetype');
+    src: url('../assets/fonts/pixel.ttf') format('truetype');
 }
 
 @media (max-aspect-ratio: 1/1) {

@@ -254,7 +254,7 @@ function lvlDown(prefix) {
 
 ////// Audio
 function playPageTurn() {
-    const pageTurnMp3 = new Audio('pageturn.mp3');
+    const pageTurnMp3 = new Audio('assets/sounds/pageturn.mp3');
 
     // Random playback speed between 0.9 and 1.1
     const playbackRate = 0.9 + Math.random() * 0.2;
