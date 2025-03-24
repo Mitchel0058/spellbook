@@ -26,97 +26,15 @@
     <div class="container">
         <!-- Page 1 -->
         <div class="svg-overlay page-1">
-            <img src="assets/imgs/spellbook_cover.svg" alt="First page of DnD book">
-            <!-- Previous Page -->
-            <button class="interact" id="p1-previous" onclick="previousPage()"></button>
-            <button class="interact" id="p1-next" onclick="nextPage()"></button>
-            <button class="interact icon" onclick="setImage('p1')" onerror="this.src='assets/imgs/mini-fireball.svg'"></button>
-            <a href="settings">
-                <button class="interact settings"></button>
-            </a>
-            <a href="./">
-                <button class="interact home"></button>
-            </a>
-            <button class="interact font" onclick="toggleFont()"></button>
-            <!-- Editing -->
-            <button class="interact edit" onclick="toggleEditing()"></button>
-            <div class="toggle-edit uneditable">
-                <button class="interact lvl up" onclick="lvlUp('p1')">+</button>
-                <button class="interact lvl down" onclick="lvlDown('p1')">-</button>
-                <input class="interact radio none" type="radio" name="object fit" value="none" id="none"
-                    onclick="setIconFit('p1', '')" checked>
-                <label class="interact radio none label" for="none">None</label>
-                <input class="interact radio cover" type="radio" name="object fit" value="cover" id="cover"
-                    onclick="setIconFit('p1', 'cover')">
-                <label class="interact radio cover label" for="cover">Cover</label>
-                <input class="interact radio fill" type="radio" name="object fit" value="fill" id="fill"
-                    onclick="setIconFit('p1', 'fill')">
-                <label class="interact radio fill label" for="fill">Fill</label>
-            </div>
-
-            <img id="p1-icon" onerror="this.src='assets/imgs/mini-fireball.svg'" alt="Left page icon" />
-            <p class="text-overlay name" id="p1-name"></p>
-            <p class="text-overlay incant" id="p1-incant"></p>
-            <p class="text-overlay speed" id="p1-speed"></p>
-            <p class="text-overlay range" id="p1-range"></p>
-            <p class="text-overlay type" id="p1-type"></p>
-            <p class="text-overlay-desc" id="p1-desc">
-                Please enable javascript for the application to work.
-            </p>
-            <p class="text-overlay-lvl" id="p1-lvl">
-                0
-            </p>
-            <div class="page-number" id="p1-page"></div>
+            <img class="page-img" src="assets/imgs/spellbook_cover_case.svg" alt="First page of DnD book">
         </div>
         <!-- Page 2 -->
-        <div class="svg-overlay page-2">
+        <!-- <div class="svg-overlay page-2">
             <img src="assets/imgs/spellbook_cover.svg" alt="Second page of DnD book">
-            <button class="interact" id="p2-previous" onclick="previousPage()"></button>
-            <button class="interact" id="p2-next" onclick="nextPage()"></button>
-            <button class="interact icon" src="assets/imgs/mini-fireball.svg" onclick="setImage('p2')"></button>
-            <a href="settings">
-                <button class="interact settings"></button>
-            </a>
-            <a href="">
-                <button class="interact home"></button>
-            </a>
-            <button class="interact font"></button>
-            <button class="interact edit" onclick="toggleEditing()"></button>
-            <div class="toggle-edit uneditable">
-                <button class="interact lvl up" onclick="lvlUp('p2')">+</button>
-                <button class="interact lvl down" onclick="lvlDown('p2')">-</button>
-                <input class="interact radio none" type="radio" name="p2 object fit" value="none2" id="p2-none"
-                    onclick="setIconFit('p2', '')" checked>
-                <label class="interact radio none label" for="p2-none">None</label>
-                <input class="interact radio cover" type="radio" name="p2 object fit" value="cover2" id="p2-cover"
-                    onclick="setIconFit('p2', 'cover')">
-                <label class="interact radio cover label" for="p2-cover">Cover</label>
-                <input class="interact radio fill" type="radio" name="p2 object fit" value="fill2" id="p2-fill"
-                    onclick="setIconFit('p2', 'fill')">
-                <label class="interact radio fill label" for="p2-fill">Fill</label>
-            </div>
-            <img id="p2-icon" onerror="this.src='assets/imgs/mini-fireball.svg'" alt="Left page icon" />
-            <p class="text-overlay name" id="p2-name">
-                Name </p>
-            <p class="text-overlay incant" id="p2-incant">
-                Incantation </p>
-            <p class="text-overlay speed" id="p2-speed">
-                Speed </p>
-            <p class="text-overlay range" id="p2-range">
-                Range </p>
-            <p class="text-overlay type" id="p2-type">
-                Damage type </p>
-            <p class="text-overlay-desc" id="p2-desc">
-                Description
-            </p>
-            <p class="text-overlay-lvl" id="p2-lvl">
-                0
-            </p>
-            <div class="page-number" id="p2-page"></div>
-        </div>
+        </div> -->
     </div>
     <!-- <script src="spell.js"></script> -->
-    <script src="js/app.js"></script>
+    <!-- <script src="js/app.js"></script> -->
 
     <!-- TODO: service worker -->
     <!-- <script>
