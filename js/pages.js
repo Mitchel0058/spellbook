@@ -187,6 +187,8 @@ function toggleEditing() {
             element.classList.toggle('editing', false);
             element.removeAttribute('contenteditable');
             element.removeEventListener('input', handleInputEvent);
+            // Fixes the scroll getting stuck below the address bar on mobile
+            window.scrollTo(0, 1);
         }
     });
     document.querySelectorAll('.toggle-edit').forEach(element => {
