@@ -26,6 +26,10 @@
         display: none;
     }
 
+    .page-flip{
+        object-fit: inherit !important;
+    }
+
     body {
         display: flex;
         justify-content: center;

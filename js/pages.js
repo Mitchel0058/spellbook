@@ -3,12 +3,20 @@ let currentPage = parseInt(urlParams.get('page')) || 1;
 // TODO: maybe add an event listener in case the user for example turns the phone sideways
 let isDoublePage = window.innerWidth > window.innerHeight;
 let pageDB;
-// Preloaded images
 let editing = false;
-const pageFlipImgDouble = new Image();
-pageFlipImgDouble.src = 'assets/imgs/spellbook_cover_flip_ani.webp';
-const pageFlipImgDoubleReverse = new Image();
-pageFlipImgDoubleReverse.src = 'assets/imgs/spellbook_cover_flip_ani_reverse.webp';
+// Preloaded images
+const flipImgDouble = new Image();
+flipImgDouble.src = 'assets/imgs/spellbook_cover_flip_ani.webp';
+flipImgDouble.duration = 700;
+const flipImgDoubleReverse = new Image();
+flipImgDoubleReverse.src = 'assets/imgs/spellbook_cover_flip_ani_reverse.webp';
+flipImgDoubleReverse.duration = 700;
+const flipImgSingle = new Image();
+flipImgSingle.src = 'assets/imgs/spellbook_cover_flip_ani_single.webp';
+flipImgSingle.duration = 600;
+const flipImgSingleReverse = new Image();
+flipImgSingleReverse.src = 'assets/imgs/spellbook_cover_flip_ani_single_reverse.webp';
+flipImgSingleReverse.duration = 500;
 
 // The page data object
 let pageData = {
@@ -130,55 +138,70 @@ function fillPageData(page, prefix) {
 
 // Page Switching
 function nextPage() {
-    playPageTurn();
+    playPageTurnSound();
 
-    // TODO: Do animation
-    playPageFlipAnimation();
+    const duration = isDoublePage ? flipImgDouble.duration : flipImgSingle.duration;
+    playPageFlipAnimation(false, duration);
 
-    if (window.innerWidth > window.innerHeight) {
-        currentPage += 2;
-        loadPageFromDB();
-    } else {
-        currentPage++;
-        loadPageFromDB();
-    }
-    const urlParams = new URLSearchParams(window.location.search);
-    urlParams.set('page', currentPage);
-    window.history.replaceState({}, '', `${window.location.pathname}?${urlParams}`);
+    setTimeout(() => {
+        if (window.innerWidth > window.innerHeight) {
+            currentPage += 2;
+            loadPageFromDB();
+        } else {
+            currentPage++;
+            loadPageFromDB();
+        }
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('page', currentPage);
+        window.history.replaceState({}, '', `${window.location.pathname}?${urlParams}`);
+    }, duration);
 }
 
 function previousPage() {
     if (currentPage === 1) return;
-    playPageTurn();
+    playPageTurnSound();
 
-    // TODO: Do animation
-    playPageFlipAnimation(true);
-    if (window.innerWidth > window.innerHeight) {
-        currentPage = Math.max(1, currentPage - 2);
-        loadPageFromDB();
-    } else {
-        currentPage = Math.max(1, currentPage - 1);
-        loadPageFromDB();
-    }
-    const urlParams = new URLSearchParams(window.location.search);
-    urlParams.set('page', currentPage);
-    window.history.replaceState({}, '', `${window.location.pathname}?${urlParams}`);
+    const duration = isDoublePage ? flipImgDoubleReverse.duration : flipImgSingleReverse.duration;
+    playPageFlipAnimation(true, duration);
+    setTimeout(() => {
+        if (window.innerWidth > window.innerHeight) {
+            currentPage = Math.max(1, currentPage - 2);
+            loadPageFromDB();
+        } else {
+            currentPage = Math.max(1, currentPage - 1);
+            loadPageFromDB();
+        }
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('page', currentPage);
+        window.history.replaceState({}, '', `${window.location.pathname}?${urlParams}`);
+    }, duration);
 }
 
-function playPageFlipAnimation(reverse = false) {
+function playPageFlipAnimation(reverse = false, duration = 700) {
     const pageFlipContainer = document.querySelector('.container');
     const pageFlipElement = document.createElement('img');
 
     pageFlipElement.classList.add('page-flip');
     pageFlipElement.style.display = 'flex';
-    pageFlipElement.src = reverse ? pageFlipImgDoubleReverse.src : pageFlipImgDouble.src;
+
+    // Append a unique query string to the image src to prevent caching
+    // Otherwise on mobile the animation would sync with each identical img
+    // And thus only play once
+    const timestamp = new Date().getTime();
+    if (isDoublePage) {
+        pageFlipElement.src = reverse
+            ? `${flipImgDoubleReverse.src}?t=${timestamp}`
+            : `${flipImgDouble.src}?t=${timestamp}`;
+    } else {
+        pageFlipElement.src = reverse
+            ? `${flipImgSingleReverse.src}?t=${timestamp}`
+            : `${flipImgSingle.src}?t=${timestamp}`;
+    }
     pageFlipContainer.appendChild(pageFlipElement);
 
-    const animationDuration = 600;
     setTimeout(() => {
         pageFlipContainer.removeChild(pageFlipElement);
-        console.log('Page flip animation finished');
-    }, animationDuration);
+    }, duration);
 }
 
 
@@ -281,7 +304,7 @@ function lvlDown(prefix) {
 }
 
 ////// Audio
-function playPageTurn() {
+function playPageTurnSound() {
     const pageTurnMp3 = new Audio('assets/sounds/pageturn.mp3');
 
     // Random playback speed between 0.9 and 1.1
