@@ -71,51 +71,51 @@
         </div>
         <!-- Page 2 -->
         <div class="svg-overlay page-2">
-            <img class="page-img" src="assets/imgs/spellbook_cover.svg" alt="Second page of DnD book">
+            <img class="page-img" src="assets/imgs/spellbook_cover_right_page.svg" alt="Second page of DnD book">
             <button class="interact" id="p2-previous" onclick="previousPage()"></button>
             <button class="interact" id="p2-next" onclick="nextPage()"></button>
-            <button class="interact icon" onclick="setImage('p2')"></button>
+            <button class="interact icon p2-left" onclick="setImage('p2')"></button>
             <a href="settings.html">
-                <button class="interact settings"></button>
+                <button class="interact settings p2-left"></button>
             </a>
             <a href="">
-                <button class="interact home"></button>
+                <button class="interact home p2-left"></button>
             </a>
-            <button class="interact font"></button>
+            <button class="interact font p2-left"></button>
             <!-- Editing -->
-            <button class="interact edit" onclick="toggleEditing()"></button>
+            <button class="interact edit p2-left" onclick="toggleEditing()"></button>
             <div class="toggle-edit uneditable">
-                <button class="interact lvl up" onclick="lvlUp('p2')">+</button>
-                <button class="interact lvl down" onclick="lvlDown('p2')">-</button>
-                <input class="interact radio none" type="radio" name="p2 object fit" value="none2" id="p2-none"
+                <button class="interact lvl up p2-left" onclick="lvlUp('p2')">+</button>
+                <button class="interact lvl down p2-left" onclick="lvlDown('p2')">-</button>
+                <input class="interact radio none p2-left" type="radio" name="p2 object fit" value="none2" id="p2-none"
                     onclick="setIconFit('p2', 'contain')">
-                <label class="interact radio none label" for="p2-none">Curb</label>
-                <input class="interact radio cover" type="radio" name="p2 object fit" value="cover2" id="p2-cover"
+                <label class="interact radio none label p2-left" for="p2-none">Curb</label>
+                <input class="interact radio cover p2-left" type="radio" name="p2 object fit" value="cover2" id="p2-cover"
                     onclick="setIconFit('p2', 'cover')">
-                <label class="interact radio cover label" for="p2-cover">Cover</label>
-                <input class="interact radio fill" type="radio" name="p2 object fit" value="fill2" id="p2-fill"
+                <label class="interact radio cover label p2-left" for="p2-cover">Cover</label>
+                <input class="interact radio fill p2-left" type="radio" name="p2 object fit" value="fill2" id="p2-fill"
                     onclick="setIconFit('p2', 'fill')">
-                <label class="interact radio fill label" for="p2-fill">Fill</label>
+                <label class="interact radio fill label p2-left" for="p2-fill">Fill</label>
             </div>
 
-            <img id="p2-icon" onerror="this.src='assets/imgs/mini-fireball.svg'" alt="Left page icon" />
-            <p class="text-overlay name" id="p2-name">
+            <img id="p2-icon" class="p2-left" onerror="this.src='assets/imgs/mini-fireball.svg'" alt="Left page icon" />
+            <p class="text-overlay name p2-left" id="p2-name">
                 Name </p>
-            <p class="text-overlay incant" id="p2-incant">
+            <p class="text-overlay incant p2-left" id="p2-incant">
                 Incantation </p>
-            <p class="text-overlay speed" id="p2-speed">
+            <p class="text-overlay speed p2-left" id="p2-speed">
                 Speed </p>
-            <p class="text-overlay range" id="p2-range">
+            <p class="text-overlay range p2-left" id="p2-range">
                 Range </p>
-            <p class="text-overlay type" id="p2-type">
+            <p class="text-overlay type p2-left" id="p2-type">
                 Damage type </p>
-            <p class="text-overlay-desc" id="p2-desc">
+            <p class="text-overlay-desc p2-left" id="p2-desc">
                 Description
             </p>
-            <p class="text-overlay-lvl" id="p2-lvl">
+            <p class="text-overlay-lvl p2-left" id="p2-lvl">
                 0
             </p>
-            <div class="page-number" id="p2-page"></div>
+            <div class="page-number p2-left" id="p2-page"></div>
         </div>
     </div>
     <script src="js/pages.js"></script>
