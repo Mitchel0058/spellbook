@@ -3,12 +3,6 @@ self.addEventListener('install', (event) => {
         caches.open('v1').then((cache) => {
             return cache.addAll([
                 // TODO: this working
-                // '/',
-                // '/index.html',
-                // '/styles.css',
-                // '/spell.js',
-                // '/spellbook_with_cover.svg',
-                // '/mini-fireball.svg',
             ]);
         })
     );

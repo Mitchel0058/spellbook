@@ -64,6 +64,18 @@ html {
     max-height: 100svh;
 }
 
+.page-flip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    object-fit: contain;
+    display: none;
+    pointer-events: none; 
+}
+
 .container {
     display: flex;
     width: 100%;
@@ -85,7 +97,6 @@ html {
     top: 1rem;
     left: 1rem;
     padding: 0.2rem;
-    z-index: 1000;
     cursor: pointer;
 
     border: 1px solid #000;

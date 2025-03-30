@@ -3,7 +3,14 @@ let currentPage = parseInt(urlParams.get('page')) || 1;
 // TODO: maybe add an event listener in case the user for example turns the phone sideways
 let isDoublePage = window.innerWidth > window.innerHeight;
 let pageDB;
+// Preloaded images
 let editing = false;
+const pageFlipImgDouble = new Image();
+pageFlipImgDouble.src = 'assets/imgs/spellbook_cover_flip_ani.webp';
+const pageFlipImgDoubleReverse = new Image();
+pageFlipImgDoubleReverse.src = 'assets/imgs/spellbook_cover_flip_ani_reverse.webp';
+
+// The page data object
 let pageData = {
     page: currentPage,
     name: '',
@@ -116,7 +123,7 @@ function fillPageData(page, prefix) {
     document.getElementById(`${prefix}-type`).innerText = page.type || '';
     document.getElementById(`${prefix}-desc`).innerText = page.desc || '';
     document.getElementById(`${prefix}-lvl`).innerText = page.lvl || 0;
-    document.getElementById(`${prefix}-icon`).src = page.icon?.url || '';
+    document.getElementById(`${prefix}-icon`).src = page.icon?.url || 'assets/imgs/mini-fireball.svg';
     document.getElementById(`${prefix}-icon`).style.objectFit = page.icon?.objectFit || '';
 }
 
@@ -126,6 +133,8 @@ function nextPage() {
     playPageTurn();
 
     // TODO: Do animation
+    playPageFlipAnimation();
+
     if (window.innerWidth > window.innerHeight) {
         currentPage += 2;
         loadPageFromDB();
@@ -143,6 +152,7 @@ function previousPage() {
     playPageTurn();
 
     // TODO: Do animation
+    playPageFlipAnimation(true);
     if (window.innerWidth > window.innerHeight) {
         currentPage = Math.max(1, currentPage - 2);
         loadPageFromDB();
@@ -153,6 +163,22 @@ function previousPage() {
     const urlParams = new URLSearchParams(window.location.search);
     urlParams.set('page', currentPage);
     window.history.replaceState({}, '', `${window.location.pathname}?${urlParams}`);
+}
+
+function playPageFlipAnimation(reverse = false) {
+    const pageFlipContainer = document.querySelector('.container');
+    const pageFlipElement = document.createElement('img');
+
+    pageFlipElement.classList.add('page-flip');
+    pageFlipElement.style.display = 'flex';
+    pageFlipElement.src = reverse ? pageFlipImgDoubleReverse.src : pageFlipImgDouble.src;
+    pageFlipContainer.appendChild(pageFlipElement);
+
+    const animationDuration = 600;
+    setTimeout(() => {
+        pageFlipContainer.removeChild(pageFlipElement);
+        console.log('Page flip animation finished');
+    }, animationDuration);
 }
 
 
