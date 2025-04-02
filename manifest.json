@@ -1,16 +1,27 @@
 {
-    "name": "Spellbook",
-    "short_name": "Spell",
-    "start_url": ".",
-    "display": "standalone",
-    "background_color": "#ffffff",
-    "description": "A dnd spellbook ",
-    "icons": [
-      {
-        "src": "spellbook_with_cover.svg",
-        "sizes": "192x192",
-        "type": "image/svg"
-      }
-    ]
-  }
-  
+  "name": "Spellbook",
+  "short_name": "Spell",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "TODO": "Add a proper theme color",
+  "theme_color": "#000000",
+  "description": "A dnd spellbook ",
+  "icons": [
+    {
+      "src": "./assets/imgs/spellbook_cover_case.svg",
+      "sizes": "192x192",
+      "type": "image/svg"
+    },
+    {
+      "src": "./assets/imgs/spellbook_cover_case.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "./assets/imgs/spellbook_cover_case.svg",
+      "sizes": "1024x1024",
+      "type": "image/svg+xml"
+    }
+  ]
+}
