@@ -2,9 +2,9 @@ const CACHE_NAME = 'spellbook-cache-v1';
 const ASSETS_TO_CACHE = [
     './', // Cache the root
     './index.html', // Cache the main HTML file
-    '/pages.html', // Cache the pages HTML file
-    '/settings.html', // Cache the settings HTML file
-    '/favicon.ico', // Cache the favicon
+    './pages.html', // Cache the pages HTML file
+    './settings.html', // Cache the settings HTML file
+    './favicon.ico', // Cache the favicon
     './manifest.json', // Cache the manifest
     './css/spellbook.css', // Cache CSS files
     './css/interface.css',
