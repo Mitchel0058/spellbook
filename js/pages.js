@@ -140,8 +140,13 @@ function fillPageData(page, prefix) {
 function nextPage() {
     playPageTurnSound();
 
-    const duration = isDoublePage ? flipImgDouble.duration : flipImgSingle.duration;
-    playPageFlipAnimation(false, duration);
+    let duration = 0;
+    if (settings.animation) {
+        duration = isDoublePage ? flipImgDouble.duration : flipImgSingle.duration;
+        playPageFlipAnimation(false, duration);
+    } else {
+        duration = 0;
+    }
 
     setTimeout(() => {
         if (window.innerWidth > window.innerHeight) {
@@ -161,8 +166,14 @@ function previousPage() {
     if (currentPage === 1) return;
     playPageTurnSound();
 
-    const duration = isDoublePage ? flipImgDoubleReverse.duration : flipImgSingleReverse.duration;
-    playPageFlipAnimation(true, duration);
+    let duration = 0;
+    if (settings.animation) {
+        duration = isDoublePage ? flipImgDouble.duration : flipImgSingle.duration;
+        playPageFlipAnimation(true, duration);
+    } else {
+        duration = 0;
+    }
+    
     setTimeout(() => {
         if (window.innerWidth > window.innerHeight) {
             currentPage = Math.max(1, currentPage - 2);
