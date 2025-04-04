@@ -29,17 +29,30 @@
         <div class="svg-overlay page-1">
             <img class="page-img" src="assets/imgs/spellbook_cover.svg" alt="First page of DnD book">
             <button class="interact" id="p1-next" onclick="nextPage()"></button>
+            <!-- Nav -->
+            <a href="settings.html">
+                <button class="interact settings"></button>
+            </a>
+            <a href="./">
+                <button class="interact home"></button>
+            </a>
+            <button class="interact font" onclick="toggleFont()"></button>
 
-            <div class="settings">
+            <div class="settingsBlock">
                 <label for="font_addition">Font Addition:
-                    <input class="settings-input" type="number" id="font_addition" onchange="updateFontAddition(this.value)"></label>
+                    <input class="settings-input" type="number" id="font_addition"
+                        onchange="updateFontAddition(this.value)"></label>
                 <label for="page_fit">Page Fit:
-                    <input class="settings-input" type="checkbox" id="page_fit" onchange="updatePageFit(this.checked)"></label>
+                    <input class="settings-input" type="checkbox" id="page_fit"
+                        onchange="updatePageFit(this.checked)"></label>
                 <label for="animation">Animation:
-                    <input class="settings-input" type="checkbox" id="animation" checked onchange="updateAnimation(this.checked)"></label>
+                    <input class="settings-input" type="checkbox" id="animation" checked
+                        onchange="updateAnimation(this.checked)"></label>
                 <label for="local_font">Local Font:
-                    <input class="settings-input" type="text" id="local_font" placeholder="Enter font name"
-                        onchange="updateLocalFont(this.value)"></label>
+                    <input class="settings-input" type="file" id="local_font" accept=".ttf,.otf,.woff,.woff2"
+                        onchange="updateLocalFont(this.files[0])">
+                    <button class="remove-font-button" onclick="removeLocalFont()">X</button>
+                </label>
                 <label for="current_spellbook_db">Select Spellbook DB:</label>
                 <!-- <input type="text" id="current_spellbook_db" placeholder="Enter database name"
                     onchange="updateCurrentSpellbookDB(this.value)"> -->

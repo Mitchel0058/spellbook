@@ -1,5 +1,5 @@
 /* Settings */
-.settings {
+.settingsBlock {
     overflow-y: auto;
     font-size: var(--reactive-font-size);
 
@@ -13,10 +13,19 @@
     height: 50%;
     width: 75%;
     gap: 5%;
+
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+
 }
 
+.settingsBlock ::-webkit-scrollbar {
+    display: none;
+}
+
+
 @media (max-aspect-ratio: 1/1) {
-    
+
     .settings-input {
         font-size: var(--reactive-font-size);
     }
