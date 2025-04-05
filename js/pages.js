@@ -39,6 +39,8 @@ function populatePageData(prefix) {
         console.error('Invalid prefix provided', prefix);
         return;
     }
+    // getTextWithAccurateLineBreaks(document.getElementById(`${prefix}-desc`));
+
     return pageData = {
         page: prefix === 'p1' ? currentPage : currentPage + 1,
         name: document.getElementById(`${prefix}-name`).innerText,
@@ -46,13 +48,28 @@ function populatePageData(prefix) {
         speed: document.getElementById(`${prefix}-speed`).innerText,
         range: document.getElementById(`${prefix}-range`).innerText,
         type: document.getElementById(`${prefix}-type`).innerText,
-        desc: document.getElementById(`${prefix}-desc`).innerText,
+        desc: getTextWithAccurateLineBreaks(document.getElementById(`${prefix}-desc`)),
         lvl: document.getElementById(`${prefix}-lvl`).innerText,
         icon: {
             url: document.getElementById(`${prefix}-icon`).src,
             objectFit: document.getElementById(`${prefix}-icon`).style.objectFit || ''
         }
     };
+}
+
+/**
+ * For linebreak fixes 
+ *
+ */
+function getTextWithAccurateLineBreaks(el) {
+    const clonedElement = el.cloneNode(true);
+    clonedElement.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+    clonedElement.querySelectorAll('div').forEach(div => {
+        const newline = document.createTextNode('\n');
+        div.parentNode.insertBefore(newline, div);
+    });
+
+    return clonedElement.innerText;
 }
 
 function openDB() {
@@ -173,7 +190,7 @@ function previousPage() {
     } else {
         duration = 0;
     }
-    
+
     setTimeout(() => {
         if (window.innerWidth > window.innerHeight) {
             currentPage = Math.max(1, currentPage - 2);

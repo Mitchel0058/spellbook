@@ -1,4 +1,4 @@
-const CACHE_NAME = 'spellbook-cache-v0.1';
+const CACHE_NAME = 'spellbook-cache-v0.1.1';
 const ASSETS_TO_CACHE = [
     './', // Cache the root
     './index.html', // Cache the main HTML file
