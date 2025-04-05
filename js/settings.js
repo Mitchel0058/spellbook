@@ -13,12 +13,11 @@ let settings = {
 const settingsProxy = new Proxy(settings, {
     set(target, property, value, save = true) {
         target[property] = value;
-        console.log(`Setting ${property} updated to ${value}`);
 
         if (save) {
             handleSettingsEvent();
+            applySettings();
         }
-        applySettings();
 
         return true;
     }
@@ -42,7 +41,6 @@ let settingsDB = null;
 function openSettingsDB() {
     const request = indexedDB.open("Settings", 1);
     request.onerror = (event) => {
-        console.error(`Database error: ${event.target.error?.message}`);
     };
     request.onsuccess = (event) => {
         settingsDB = event.target.result;
@@ -56,7 +54,7 @@ function openSettingsDB() {
                     }
                 }
             }
-            console.log('Settings loaded successfully', settingsProxy);
+            applySettings();
             if (window.location.pathname.endsWith('settings.html')) {
                 initializeSettingsPage(settingsProxy);
             }
@@ -65,7 +63,6 @@ function openSettingsDB() {
     request.onupgradeneeded = (event) => {
         settingsDB = event.target.result;
 
-        console.log('Database upgrade needed', settingsDB);
         const db = event.target.result;
         if (!db.objectStoreNames.contains("settings")) {
             const objectStore = db.createObjectStore("settings", { keyPath: "id" });
@@ -79,14 +76,13 @@ function openSettingsDB() {
 
 function saveSettingsToDB() {
     if (!settingsDB) {
-        console.error('Database has not been opened yet');
         return;
     }
 
     const request = settingsDB.transaction(['settings'], 'readwrite').objectStore('settings').put({ id: 1, ...settingsProxy });
 
     request.onsuccess = (event) => {
-        console.log('Settings saved successfully', settingsProxy);
+        // console.log('Settings saved successfully', settingsProxy);
     };
 }
 
@@ -127,7 +123,6 @@ function applyFontSize() {
     const root = document.documentElement;
     const newFontSize = window.defaultFontSize + settingsProxy.font_addition / 10;
     root.style.setProperty('--reactive-font-size', `${newFontSize}vh`);
-    console.log('Font size updated', newFontSize);
 }
 
 function applyLocalFont() {
@@ -167,7 +162,6 @@ function updateAnimation(checked) {
 
 function updateLocalFont(font) {
     settingsProxy.local_font = font;
-    console.log('Local font updated', font);
 
     const file = font;
     if (!file) {
@@ -186,7 +180,6 @@ function updateLocalFont(font) {
     const reader = new FileReader();
     reader.onload = function (event) {
         settingsProxy.local_font = event.target.result;
-        console.log('Font loaded', settingsProxy.local_font);
         const blob = new Blob([event.target.result]);
         const fontUrl = URL.createObjectURL(blob);
 
