@@ -3,7 +3,7 @@
   "short_name": "Spell",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#000000",
   "TODO": "Add a proper theme color",
   "theme_color": "#000000",
   "description": "A dnd spellbook ",
@@ -22,7 +22,7 @@
   "screenshots": [
     {
       "src": "./assets/imgs/spellbook_cover_case_2x.svg",
-      "sizes": "138x190",
+      "sizes": "276x380",
       "type": "image/svg",
       "label": "The cover of the spellbook"
     }
