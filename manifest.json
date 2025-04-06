@@ -21,9 +21,9 @@
   ],
   "screenshots": [
     {
-      "src": "./assets/imgs/spellbook_cover_case_2x.svg",
-      "sizes": "276x380",
-      "type": "image/svg",
+      "src": "./assets/imgs/cover_512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
       "label": "The cover of the spellbook"
     }
   ]
