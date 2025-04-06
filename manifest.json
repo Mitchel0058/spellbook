@@ -9,9 +9,9 @@
   "description": "A dnd spellbook ",
   "icons": [
     {
-      "src": "./assets/imgs/cover_192.png",
+      "src": "./assets/imgs/cover_192.svg",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/svg+xml"
     },
     {
       "src": "./assets/imgs/cover_512.svg",
