@@ -63,11 +63,13 @@ function populatePageData(prefix) {
  */
 function getTextWithAccurateLineBreaks(el) {
     const clonedElement = el.cloneNode(true);
-    clonedElement.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
     clonedElement.querySelectorAll('div').forEach(div => {
-        const newline = document.createTextNode('\n');
-        div.parentNode.insertBefore(newline, div);
+        if (div.previousSibling?.nodeValue !== '\n') {
+            const newline = document.createTextNode('\n');
+            div.parentNode.insertBefore(newline, div);
+        }
     });
+    // clonedElement.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
 
     return clonedElement.innerText;
 }
