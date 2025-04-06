@@ -3,27 +3,27 @@
   "short_name": "Spell",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#000000",
+  "background_color": "#ffffff",
   "TODO": "Add a proper theme color",
   "theme_color": "#000000",
   "description": "A dnd spellbook ",
   "icons": [
     {
-      "src": "./assets/imgs/cover_192.webp",
+      "src": "./assets/imgs/cover_192.png",
       "sizes": "192x192",
-      "type": "image/webp"
+      "type": "image/png"
     },
     {
-      "src": "./assets/imgs/cover_512.webp",
+      "src": "./assets/imgs/cover_512.svg",
       "sizes": "512x512",
-      "type": "image/webp"
+      "type": "image/svg+xml"
     }
   ],
   "screenshots": [
     {
-      "src": "./assets/imgs/cover_512.webp",
-      "sizes": "512x512",
-      "type": "image/webp",
+      "src": "./assets/imgs/spellbook_cover_case_2x.svg",
+      "sizes": "138x190",
+      "type": "image/svg",
       "label": "The cover of the spellbook"
     }
   ]
