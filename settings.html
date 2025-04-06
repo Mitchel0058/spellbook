@@ -39,6 +39,11 @@
             <button class="interact font" onclick="toggleFont()"></button>
 
             <div class="settingsBlock">
+                <div>
+                    <button class="settings-input" type="number" id="exportDB" onclick="exportSpellPageDB()">Export
+                        spellbook</button>
+                    <input class="settings-input" type="file" id="fileInput" accept=".json" onchange="importSpellPageDB(this.files[0])">
+                </div>
                 <label for="font_addition">Font Addition:
                     <input class="settings-input" type="number" id="font_addition"
                         onchange="updateFontAddition(this.value)"></label>

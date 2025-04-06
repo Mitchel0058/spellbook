@@ -206,6 +206,113 @@ function removeLocalFont() {
     document.body.style.fontFamily = '';
 }
 
+/**
+ * Exports all data from the "spellPages" object store in the IndexedDB database "spellPageDB"
+ * as a downloadable JSON file. The file is named "spellPageDB.json".
+ *
+ * This function opens the IndexedDB database, retrieves all records from the "spellPages"
+ * object store, converts the data to JSON format, and creates a downloadable file for the user.
+ */
+function exportSpellPageDB() {
+    const request = indexedDB.open("spellPageDB", 1);
+
+    request.onsuccess = (event) => {
+        const db = event.target.result;
+        const transaction = db.transaction(["pages"], "readonly");
+        const objectStore = transaction.objectStore("pages");
+        const getAllRequest = objectStore.getAll();
+
+        getAllRequest.onsuccess = (event) => {
+            const allData = event.target.result;
+            const jsonData = JSON.stringify(allData, null, 2);
+
+            // Create a downloadable JSON file
+            const blob = new Blob([jsonData], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "spellPageDB.json";
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        getAllRequest.onerror = (event) => {
+            console.error("Failed to retrieve data from spellPageDB:", event.target.error);
+        };
+    };
+
+    request.onerror = (event) => {
+        console.error("Failed to open spellPageDB:", event.target.error);
+    };
+}
+
+/**
+ * Imports data from a JSON file into the "spellPages" object store in the IndexedDB database "spellPageDB".
+ *
+ * This function allows the user to upload a JSON file, parses its contents, and saves the data into the database.
+ */
+function importSpellPageDB(pageJSON) {
+    let pageDB;
+    const request = indexedDB.open("spellPageDB", 1);
+    request.onerror = (event) => {
+        console.error(`Database error: ${event.target.error?.message}`);
+    };
+    request.onsuccess = (event) => {
+        pageDB = event.target.result;
+    };
+    request.onupgradeneeded = (event) => {
+        pageDB = event.target.result;
+        if (!pageDB.objectStoreNames.contains('pages')) {
+            pageDB.createObjectStore('pages', { keyPath: 'page' });
+            window.location.reload();
+        }
+    };
+
+    const file = pageJSON
+    if (!file) {
+        alert("Please select a file to import.");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const jsonData = JSON.parse(e.target.result);
+            document.getElementById('fileInput').value = '';
+
+            if (!Array.isArray(jsonData)) {
+                alert("Invalid file format. The JSON file must contain an array of objects.");
+                return;
+            }
+            if (!confirm("This will overwrite all existing data in the spellbook. Do you want to continue?")) {
+                return
+            }
+
+            const transaction = pageDB.transaction(['pages'], 'readwrite');
+            const objectStore = transaction.objectStore('pages');
+
+            jsonData.forEach((record) => {
+                objectStore.put(record);
+            });
+
+            transaction.oncomplete = () => {
+                alert("Data imported successfully!");
+            };
+
+            transaction.onerror = (event) => {
+                console.error("Error importing data:", event.target.error);
+                alert("Failed to import data. Please check the console for details.");
+            };
+        } catch (error) {
+            console.error("Error parsing JSON file:", error);
+            alert("Invalid JSON file. Please check the file format.");
+        }
+    };
+
+    reader.readAsText(file);
+};
+
+
 openSettingsDB();
 
 document.addEventListener('DOMContentLoaded', () => {
