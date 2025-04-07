@@ -1,6 +1,8 @@
 :root {
     --reactive-font-size: 3vmin;
+    --text-red: rgb(120, 0, 0);
 }
+
 
 @font-face {
     font-family: 'Magneto';

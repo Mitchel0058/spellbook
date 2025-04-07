@@ -14,6 +14,11 @@ let pageData = {
         objectFit: ''
     }
 };
+let isReorderMode = false;
+let draggedButton = null;
+let pagesData = [];
+let draggedIndex = null;
+
 
 function openPageDB() {
     const request = indexedDB.open("spellPageDB", 1);
@@ -22,7 +27,7 @@ function openPageDB() {
     };
     request.onsuccess = (event) => {
         pageDB = event.target.result;
-        console.log('Database opened successfully', pageDB);
+        // console.log('Database opened successfully', pageDB);
         getAllPages();
     };
     request.onupgradeneeded = (event) => {
@@ -46,9 +51,9 @@ function getAllPages() {
 
     request.onsuccess = (event) => {
         const pages = event.target.result;
-        console.log('Pages retrieved successfully', pages);
+        // console.log('Pages retrieved successfully', pages);
         document.fonts.ready.then(() => {
-            displayPageNames(pages); 
+            displayPageNames(pages);
         });
     };
 
@@ -57,41 +62,116 @@ function getAllPages() {
     };
 }
 
-function displayPageNames(pages) {
-    const overviewContainer = document.getElementById('overview-container');
-    overviewContainer.innerHTML = ''; // Clear existing content
 
-    pages.forEach(page => {
-        // Create button element
+function displayPageNames(pages) {
+    pagesData = pages;
+    pagesData.forEach((page, index) => {
+        page.page = index + 1;
+    });
+
+    const overviewContainer = document.getElementById('overview-container');
+    overviewContainer.innerHTML = '';
+
+    pagesData.forEach((page, index) => {
         const button = document.createElement('button');
         button.style.font = 'inherit';
         button.className = 'overview-block';
-        button.setAttribute('onclick', `goToPage(${page.page})`);
+        button.draggable = isReorderMode;
+        button.dataset.index = index;
 
-        // Create img element
+        if (isReorderMode) {
+            document.getElementById('overview-container').classList.toggle('reorder-container', isReorderMode);
+
+            button.classList.toggle('reorder-mode', isReorderMode);
+            button.addEventListener('dragstart', (e) => {
+                draggedIndex = parseInt(e.currentTarget.dataset.index);
+                e.dataTransfer.effectAllowed = 'move';
+                e.currentTarget.classList.add('dragging');
+            });
+
+            button.addEventListener('dragend', (e) => {
+                e.currentTarget.classList.remove('dragging');
+                draggedIndex = null;
+            });
+
+            button.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+
+            button.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const targetIndex = parseInt(e.currentTarget.dataset.index);
+                if (draggedIndex !== null && draggedIndex !== targetIndex) {
+                    const movedItem = pagesData[draggedIndex];
+                    pagesData.splice(draggedIndex, 1);
+                    pagesData.splice(targetIndex, 0, movedItem);
+                    displayPageNames(pagesData);
+                }
+            });
+        } else {
+            document.getElementById('overview-container').classList.toggle('reorder-container', isReorderMode);
+            button.classList.toggle('reorder-mode', isReorderMode);
+            button.setAttribute('onclick', `goToPage(${page.page})`);
+        }
+
         const img = document.createElement('img');
         img.className = 'overview-icon';
-        img.src = page.icon?.url || 'assets/imgs/mini-fireball.svg';
+        img.src = (page.icon && page.icon.url) ? page.icon.url : 'assets/imgs/mini-fireball.svg';
         img.onerror = function () {
             this.src = 'assets/imgs/mini-fireball.svg';
         };
         img.alt = 'Overview icon';
-        img.style.objectFit = page.icon?.objectFit || '';
+        img.style.objectFit = (page.icon && page.icon.objectFit) ? page.icon.objectFit : '';
 
-        // Create div element for text
         const textDiv = document.createElement('div');
         textDiv.className = 'overview-text';
         textDiv.textContent = `${page.page}) ${page.name}` || '';
 
-        // Append img and textDiv to button
         button.appendChild(img);
         button.appendChild(textDiv);
-
-        // Append button to overviewContainer
         overviewContainer.appendChild(button);
     });
-    applyLocalFont();
+
+    if (settings.local_font) {
+        applyLocalFont();
+    }
 }
+
+
+function toggleReorderMode() {
+    isReorderMode = !isReorderMode;
+    const btn = document.getElementById('toggle-reorder-btn');
+    displayPageNames(pagesData);
+
+    if (!isReorderMode) {
+        saveToIndexedDB(pagesData);
+    }
+}
+
+function saveToIndexedDB(pages) {
+    if (!pageDB) {
+        console.error('Database not initialized.');
+        return;
+    }
+
+    const transaction = pageDB.transaction(['pages'], 'readwrite');
+    const objectStore = transaction.objectStore('pages');
+
+    pages.forEach((page, index) => {
+        // Update the page number to reflect new order 
+        page.page = index + 1;
+        objectStore.put(page);
+    });
+
+    transaction.oncomplete = () => {
+        // console.log('All pages saved successfully');
+    };
+
+    transaction.onerror = (event) => {
+        console.error('Error saving reordered pages:', event.target.error);
+    };
+}
+
 
 function goToPage(pageNumber) {
     window.location.href = `pages.html?page=${pageNumber}`;

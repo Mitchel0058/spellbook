@@ -86,7 +86,7 @@
 .text-overlay-lvl {
     position: absolute;
     font-weight: bold;
-    color: rgb(120, 0, 0);
+    color: var(--text-red);
     top: 6.6%;
     right: 9.2%;
     width: 4%;
