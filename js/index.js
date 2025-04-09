@@ -148,9 +148,9 @@ function displayPageNames(pages) {
         // Icon
         const img = document.createElement('img');
         img.className = 'overview-icon';
-        img.src = (page.icon && page.icon.url) ? page.icon.url : 'assets/imgs/mini-fireball.svg';
+        img.src = (page.icon && page.icon.url) ? page.icon.url : 'assets/imgs/fireball.webp';
         img.onerror = function () {
-            this.src = 'assets/imgs/mini-fireball.svg';
+            this.src = 'assets/imgs/fireball.webp';
         };
         img.alt = 'Overview icon';
         img.style.objectFit = (page.icon && page.icon.objectFit) ? page.icon.objectFit : '';

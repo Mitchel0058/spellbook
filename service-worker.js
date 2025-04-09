@@ -1,4 +1,4 @@
-const CACHE_NAME = 'spellbook-cache-v0.1.1';
+const CACHE_NAME = 'spellbook-cache-v0.1.2';
 const ASSETS_TO_CACHE = [
     './', // Cache the root
     './index.html', // Cache the main HTML file
@@ -12,7 +12,7 @@ const ASSETS_TO_CACHE = [
     './js/pages.js', // Cache JavaScript files
     './app.js',
     './assets/fonts/pixel.ttf', // Cache font files
-    './assets/imgs/mini-fireball.svg', // Cache image files
+    './assets/imgs/fireball.webp', // Cache image files
     './assets/imgs/spellbook_cover_case.svg',
     './assets/imgs/spellbook_cover_flip_ani_reverse.webp',
     './assets/imgs/spellbook_cover_flip_ani_single_reverse.webp',

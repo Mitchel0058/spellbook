@@ -150,7 +150,7 @@ function fillPageData(page, prefix) {
     document.getElementById(`${prefix}-type`).innerText = page.type || '';
     document.getElementById(`${prefix}-desc`).innerText = page.desc || '';
     document.getElementById(`${prefix}-lvl`).innerText = page.lvl || 0;
-    document.getElementById(`${prefix}-icon`).src = page.icon?.url || 'assets/imgs/mini-fireball.svg';
+    document.getElementById(`${prefix}-icon`).src = page.icon?.url || 'assets/imgs/fireball.webp';
     document.getElementById(`${prefix}-icon`).style.objectFit = page.icon?.objectFit || '';
 }
 
