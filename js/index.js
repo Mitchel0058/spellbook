@@ -18,6 +18,7 @@ let isReorderMode = false;
 let draggedButton = null;
 let pagesData = [];
 let draggedIndex = null;
+let selectedIndex = null; // For non-chrome touch devices, use tap-to-swap instead of drag-and-drop
 
 
 function openPageDB() {
@@ -62,6 +63,13 @@ function getAllPages() {
     };
 }
 
+function isTouchDevice() {
+    return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+}
+
+function isNonChrome() {
+    return !/chrome|chromium|crios/i.test(navigator.userAgent);
+}
 
 function displayPageNames(pages) {
     pagesData = pages;
@@ -72,48 +80,72 @@ function displayPageNames(pages) {
     const overviewContainer = document.getElementById('overview-container');
     overviewContainer.innerHTML = '';
 
+    const isMobile = isTouchDevice();
+    const useTapToSwap = isMobile && isNonChrome();
+
     pagesData.forEach((page, index) => {
         const button = document.createElement('button');
         button.style.font = 'inherit';
         button.className = 'overview-block';
-        button.draggable = isReorderMode;
         button.dataset.index = index;
 
         if (isReorderMode) {
-            document.getElementById('overview-container').classList.toggle('reorder-container', isReorderMode);
+            document.getElementById('overview-container').classList.toggle('reorder-container', true);
+            button.classList.toggle('reorder-mode', true);
 
-            button.classList.toggle('reorder-mode', isReorderMode);
-            button.addEventListener('dragstart', (e) => {
-                draggedIndex = parseInt(e.currentTarget.dataset.index);
-                e.dataTransfer.effectAllowed = 'move';
-                e.currentTarget.classList.add('dragging');
-            });
+            if (useTapToSwap) {
+                // Tap-to-select swap for Firefox / non-Chrome
+                button.addEventListener('click', () => {
+                    if (selectedIndex === null) {
+                        selectedIndex = index;
+                        button.classList.add('selected');
+                    } else if (selectedIndex === index) {
+                        selectedIndex = null;
+                        button.classList.remove('selected');
+                    } else {
+                        // Swap items
+                        [pagesData[selectedIndex], pagesData[index]] = [pagesData[index], pagesData[selectedIndex]];
+                        selectedIndex = null;
+                        displayPageNames(pagesData);
+                    }
+                });
+            } else {
+                // Drag-and-drop for Chrome
+                button.draggable = true;
 
-            button.addEventListener('dragend', (e) => {
-                e.currentTarget.classList.remove('dragging');
-                draggedIndex = null;
-            });
+                button.addEventListener('dragstart', (e) => {
+                    draggedIndex = parseInt(e.currentTarget.dataset.index);
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.currentTarget.classList.add('dragging');
+                });
 
-            button.addEventListener('dragover', (e) => {
-                e.preventDefault();
-            });
+                button.addEventListener('dragend', (e) => {
+                    e.currentTarget.classList.remove('dragging');
+                    draggedIndex = null;
+                });
 
-            button.addEventListener('drop', (e) => {
-                e.preventDefault();
-                const targetIndex = parseInt(e.currentTarget.dataset.index);
-                if (draggedIndex !== null && draggedIndex !== targetIndex) {
-                    const movedItem = pagesData[draggedIndex];
-                    pagesData.splice(draggedIndex, 1);
-                    pagesData.splice(targetIndex, 0, movedItem);
-                    displayPageNames(pagesData);
-                }
-            });
+                button.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                });
+
+                button.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const targetIndex = parseInt(e.currentTarget.dataset.index);
+                    if (draggedIndex !== null && draggedIndex !== targetIndex) {
+                        const movedItem = pagesData[draggedIndex];
+                        pagesData.splice(draggedIndex, 1);
+                        pagesData.splice(targetIndex, 0, movedItem);
+                        displayPageNames(pagesData);
+                    }
+                });
+            }
         } else {
-            document.getElementById('overview-container').classList.toggle('reorder-container', isReorderMode);
-            button.classList.toggle('reorder-mode', isReorderMode);
+            document.getElementById('overview-container').classList.toggle('reorder-container', false);
+            button.classList.toggle('reorder-mode', false);
             button.setAttribute('onclick', `goToPage(${page.page})`);
         }
 
+        // Icon
         const img = document.createElement('img');
         img.className = 'overview-icon';
         img.src = (page.icon && page.icon.url) ? page.icon.url : 'assets/imgs/mini-fireball.svg';
@@ -123,6 +155,7 @@ function displayPageNames(pages) {
         img.alt = 'Overview icon';
         img.style.objectFit = (page.icon && page.icon.objectFit) ? page.icon.objectFit : '';
 
+        // Text
         const textDiv = document.createElement('div');
         textDiv.className = 'overview-text';
         textDiv.textContent = `${page.page}) ${page.name}` || '';
@@ -136,6 +169,7 @@ function displayPageNames(pages) {
         applyLocalFont();
     }
 }
+
 
 
 function toggleReorderMode() {

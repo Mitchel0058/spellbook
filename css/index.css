@@ -29,6 +29,10 @@
     cursor: grabbing !important;
 }
 
+.overview-block.selected {
+    border: 2px dashed var(--text-red) !important;
+}
+
 .reorder-mode {
     border: 1px solid black !important;
     border-bottom: 0 !important;
