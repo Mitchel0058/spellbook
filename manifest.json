@@ -1,12 +1,11 @@
 {
   "name": "Spellbook",
-  "short_name": "Spell",
+  "short_name": "Spellbook",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#000000",
-  "TODO": "Add a proper theme color",
   "theme_color": "#000000",
-  "description": "A dnd spellbook ",
+  "description": "A dnd inspired spellbook",
   "icons": [
     {
       "src": "./assets/imgs/cover_192.webp",
