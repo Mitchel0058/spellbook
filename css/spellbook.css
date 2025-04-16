@@ -116,3 +116,13 @@ html {
     border-width: 0.1rem;
     background-color: #bb8854;
 }
+
+
+.fade-container {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.fade-in {
+    opacity: 1;
+}

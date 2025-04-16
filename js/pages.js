@@ -16,7 +16,7 @@ flipImgSingle.src = 'assets/imgs/spellbook_cover_flip_ani_single.webp';
 flipImgSingle.duration = 600;
 const flipImgSingleReverse = new Image();
 flipImgSingleReverse.src = 'assets/imgs/spellbook_cover_flip_ani_single_reverse.webp';
-flipImgSingleReverse.duration = 500;
+flipImgSingleReverse.duration = 400;
 
 // The page data object
 let pageData = {
@@ -94,26 +94,38 @@ function openDB() {
     };
 }
 
-function loadPageFromDB() {
+function loadSinglePageFromDB(prefix) {
+    if (prefix != 'p1' && prefix != 'p2') {
+        console.error('Invalid prefix provided', prefix);
+        return;
+    }
+    // if (prefix === 'p2' && !isDoublePage) return;
+
+    const pageNumber = prefix === 'p1' ? currentPage : currentPage + 1;
     const transaction = pageDB.transaction(['pages'], 'readonly');
     const objectStore = transaction.objectStore('pages');
-    const request = objectStore.get(currentPage);
-    document.getElementById(`p1-page`).innerHTML = currentPage || '';
-    document.getElementById(`p2-page`).innerHTML = currentPage + 1 || '';
+    const request = objectStore.get(pageNumber);
+    document.getElementById(`${prefix}-page`).innerHTML = pageNumber || '';
 
     request.onsuccess = (event) => {
         const page = event.target.result || {};
-        // console.log('Page loaded successfully', currentPage, page);
-        fillPageData(page, 'p1');
-
-        if (isDoublePage) {
-            const request2 = objectStore.get(currentPage + 1);
-            request2.onsuccess = (event) => {
-                const page2 = event.target.result || {};
-                fillPageData(page2, 'p2');
-            };
-        }
+        fillPageData(page, prefix);
     };
+
+    request.onerror = (event) => {
+        console.error(`Failed to load page ${pageNumber}: ${event.target.error?.message}`);
+    };
+}
+
+function loadPageFromDB() {
+    document.getElementById(`p1-page`).innerHTML = currentPage || '';
+    document.getElementById(`p2-page`).innerHTML = currentPage + 1 || '';
+
+    loadSinglePageFromDB('p1');
+
+    if (isDoublePage) {
+        loadSinglePageFromDB('p2');
+    }
 }
 
 function savePageToDB() {
@@ -141,23 +153,106 @@ function savePageToDB() {
     }
 }
 
+// TODO: make duration a setting
+function fadeInElement(el, duration = 800) {
+    if (!el) return;
+
+    // Clear previous transition to avoid stacking
+    el.style.transition = 'none';
+    el.style.opacity = '0';
+
+    // Force style to apply (reflow)
+    el.getBoundingClientRect();
+
+    // Now enable transition
+    el.style.transition = `opacity ${duration}ms ease-in`;
+
+    // Finally trigger fade in
+    requestAnimationFrame(() => {
+        el.style.opacity = '1';
+    });
+}
+
+
+
 function fillPageData(page, prefix) {
-    // console.log('Filling page data', page, prefix);
-    document.getElementById(`${prefix}-name`).innerText = page.name || '';
-    document.getElementById(`${prefix}-incant`).innerText = page.incant || '';
-    document.getElementById(`${prefix}-speed`).innerText = page.speed || '';
-    document.getElementById(`${prefix}-range`).innerText = page.range || '';
-    document.getElementById(`${prefix}-type`).innerText = page.type || '';
-    document.getElementById(`${prefix}-desc`).innerText = page.desc || '';
-    document.getElementById(`${prefix}-lvl`).innerText = page.lvl || 0;
-    document.getElementById(`${prefix}-icon`).src = page.icon?.url || 'assets/imgs/fireball.webp';
-    document.getElementById(`${prefix}-icon`).style.objectFit = page.icon?.objectFit || '';
+    const fillAndFade = (id, value, isText = true) => {
+        const el = document.getElementById(`${prefix}-${id}`);
+        if (el) {
+            // Immediately hide it before changing content
+            el.style.opacity = '0';
+            el.style.transition = 'none';
+
+            // Set the content
+            if (isText) {
+                el.innerText = value || '';
+            } else {
+                el.src = value;
+            }
+
+            // Fade in
+            fadeInElement(el);
+        }
+    };
+
+    fillAndFade('name', page.name);
+    fillAndFade('incant', page.incant);
+    fillAndFade('speed', page.speed);
+    fillAndFade('range', page.range);
+    fillAndFade('type', page.type);
+    fillAndFade('desc', page.desc);
+    fillAndFade('lvl', page.lvl || 0);
+
+    const iconEl = document.getElementById(`${prefix}-icon`);
+    if (iconEl) {
+        iconEl.style.opacity = '0';
+        iconEl.style.transition = 'none';
+
+        iconEl.src = page.icon?.url || 'assets/imgs/fireball.webp';
+        iconEl.style.objectFit = page.icon?.objectFit || '';
+
+        fadeInElement(iconEl);
+    }
+}
+
+
+
+function unloadPage(prefix) {
+    if (prefix != 'p1' && prefix != 'p2') {
+        console.error('Invalid prefix provided', prefix);
+        return;
+    }
+    const element = document.getElementById(`${prefix}-container`);
+    if (element) {
+        element.style.transition = 'opacity 0.5s ease';
+        element.style.opacity = '0';
+        setTimeout(() => {
+            element.style.opacity = '1';
+        }, 500);
+    }
+    document.getElementById(`${prefix}-name`).innerText = '';
+    document.getElementById(`${prefix}-incant`).innerText = '';
+    document.getElementById(`${prefix}-speed`).innerText = '';
+    document.getElementById(`${prefix}-range`).innerText = '';
+    document.getElementById(`${prefix}-type`).innerText = '';
+    document.getElementById(`${prefix}-desc`).innerText = '';
+    document.getElementById(`${prefix}-lvl`).innerText = '';
+    document.getElementById(`${prefix}-icon`).src = 'assets/imgs/empty.webp';
+    document.getElementById(`${prefix}-icon`).style.objectFit = '';
 }
 
 
 // Page Switching
 function nextPage() {
     playPageTurnSound();
+    if (window.innerWidth > window.innerHeight) {
+        currentPage += 2;
+    } else {
+        currentPage++;
+    }
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('page', currentPage);
+    window.history.replaceState({}, '', `${window.location.pathname}?${urlParams}`);
 
     let duration = 0;
     if (settings.animation) {
@@ -167,17 +262,11 @@ function nextPage() {
         duration = 0;
     }
 
+    loadSinglePageFromDB('p2');
+
     setTimeout(() => {
-        if (window.innerWidth > window.innerHeight) {
-            currentPage += 2;
-            loadPageFromDB();
-        } else {
-            currentPage++;
-            loadPageFromDB();
-        }
-        const urlParams = new URLSearchParams(window.location.search);
-        urlParams.set('page', currentPage);
-        window.history.replaceState({}, '', `${window.location.pathname}?${urlParams}`);
+        unloadPage('p1');
+        loadSinglePageFromDB('p1');
     }, duration);
 }
 
@@ -193,17 +282,20 @@ function previousPage() {
         duration = 0;
     }
 
+    if (window.innerWidth > window.innerHeight) {
+        currentPage = Math.max(1, currentPage - 2);
+    } else {
+        currentPage = Math.max(1, currentPage - 1);
+    }
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('page', currentPage);
+    window.history.replaceState({}, '', `${window.location.pathname}?${urlParams}`);
+
+    loadSinglePageFromDB('p1');
+
     setTimeout(() => {
-        if (window.innerWidth > window.innerHeight) {
-            currentPage = Math.max(1, currentPage - 2);
-            loadPageFromDB();
-        } else {
-            currentPage = Math.max(1, currentPage - 1);
-            loadPageFromDB();
-        }
-        const urlParams = new URLSearchParams(window.location.search);
-        urlParams.set('page', currentPage);
-        window.history.replaceState({}, '', `${window.location.pathname}?${urlParams}`);
+        unloadPage('p2');
+        loadSinglePageFromDB('p2');
     }, duration);
 }
 
