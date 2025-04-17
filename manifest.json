@@ -3,8 +3,8 @@
   "short_name": "Spellbook",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#200404",
+  "theme_color": "#200404",
   "description": "A dnd inspired spellbook",
   "icons": [
     {
