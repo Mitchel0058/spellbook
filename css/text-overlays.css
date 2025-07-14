@@ -110,6 +110,7 @@
     height: 56%;
     overflow: auto;
     overflow-x: hidden;
+    white-space: pre-wrap;
 
 
     -ms-overflow-style: none;

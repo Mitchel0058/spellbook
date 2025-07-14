@@ -48,7 +48,12 @@ function populatePageData(prefix) {
         speed: document.getElementById(`${prefix}-speed`).innerText,
         range: document.getElementById(`${prefix}-range`).innerText,
         type: document.getElementById(`${prefix}-type`).innerText,
-        desc: getTextWithAccurateLineBreaks(document.getElementById(`${prefix}-desc`)),
+        // TODO: fix linebreaks
+        desc:
+            // getTextWithAccurateLineBreaks(
+            document.getElementById(`${prefix}-desc`).innerHTML
+        // )
+        ,
         lvl: document.getElementById(`${prefix}-lvl`).innerText,
         icon: {
             url: document.getElementById(`${prefix}-icon`).src,
@@ -137,6 +142,7 @@ function savePageToDB() {
     const objectStore = transaction.objectStore('pages');
 
     const pageData1 = populatePageData('p1');
+    console.log(pageData1);
     const request1 = objectStore.put(pageData1);
 
     request1.onsuccess = (event) => {
@@ -176,7 +182,7 @@ function fadeInElement(el, duration = 800) {
 
 
 function fillPageData(page, prefix) {
-    const fillAndFade = (id, value, isText = true) => {
+    const fillAndFade = (id, value, isText = true, isDesc = false) => {
         const el = document.getElementById(`${prefix}-${id}`);
         if (el) {
             // Immediately hide it before changing content
@@ -186,6 +192,8 @@ function fillPageData(page, prefix) {
             // Set the content
             if (isText) {
                 el.innerText = value || '';
+            } if (isDesc) {
+                el.innerHTML = value || '';
             } else {
                 el.src = value;
             }
@@ -200,7 +208,7 @@ function fillPageData(page, prefix) {
     fillAndFade('speed', page.speed);
     fillAndFade('range', page.range);
     fillAndFade('type', page.type);
-    fillAndFade('desc', page.desc);
+    fillAndFade('desc', page.desc, false, true);
     fillAndFade('lvl', page.lvl || 0);
 
     const iconEl = document.getElementById(`${prefix}-icon`);
@@ -236,7 +244,7 @@ function unloadPage(prefix) {
     document.getElementById(`${prefix}-range`).innerText = '';
     document.getElementById(`${prefix}-type`).innerText = '';
     document.getElementById(`${prefix}-desc`).innerText = '';
-    document.getElementById(`${prefix}-lvl`).innerText = '';
+    document.getElementById(`${prefix}-lvl`).innerText = 0;
     document.getElementById(`${prefix}-icon`).src = 'assets/imgs/empty.webp';
     document.getElementById(`${prefix}-icon`).style.objectFit = '';
 }
@@ -411,7 +419,7 @@ function lvlUp(prefix) {
         return;
     };
     const lvlElement = document.getElementById(`${prefix}-lvl`);
-    lvlElement.innerText = parseInt(lvlElement.innerText) + 1;
+    lvlElement.innerText = isNaN(parseInt(lvlElement.innerText)) ? 0 : parseInt(lvlElement.innerText) + 1;
     handleInputEvent();
 }
 
@@ -421,7 +429,7 @@ function lvlDown(prefix) {
         return;
     };
     const lvlElement = document.getElementById(`${prefix}-lvl`);
-    lvlElement.innerText = Math.max(0, parseInt(lvlElement.innerText) - 1);
+    lvlElement.innerText = isNaN(parseInt(lvlElement.innerText)) ? 0 : Math.max(0, parseInt(lvlElement.innerText) - 1);
     handleInputEvent();
 }
 

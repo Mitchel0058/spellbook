@@ -1,8 +1,15 @@
+/* 
+    One pixel is:
+    0.7246% of the width of the screen
+    0.5263% of the height of the screen
+*/
+
 :root {
     --reactive-font-size: 3vmin;
     --text-red: rgb(120, 0, 0);
+    --pixel-width: 0.7246%;
+    --pixel-height: 0.5263%;
 }
-
 
 @font-face {
     font-family: 'Magneto';

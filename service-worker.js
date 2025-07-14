@@ -1,4 +1,4 @@
-const CACHE_NAME = 'spellbook-cache-v0.1.5';
+const CACHE_NAME = 'spellbook-cache-v0.1.6';
 const ASSETS_TO_CACHE = [
     './', // Cache the root
     './index.html', // Cache the main HTML file
@@ -20,6 +20,7 @@ const ASSETS_TO_CACHE = [
     './assets/imgs/spellbook_cover_flip_ani.webp',
     './assets/imgs/spellbook_cover_right_page.svg',
     './assets/imgs/spellbook_cover.svg',
+    './assets/imgs/spellbook_title.svg',
     './assets/sounds/pageturn.mp3' // Cache sound files
 ];
 
