@@ -5,6 +5,11 @@
     --unit-height: 0.5263%;
 }
 
+@font-face {
+    font-family: 'Magneto';
+    src: url('assets/fonts/pixel.ttf') format('truetype');
+}
+
 .container {
     display: flex;
     width: 100%;

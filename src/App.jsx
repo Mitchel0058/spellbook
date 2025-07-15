@@ -5,7 +5,6 @@ import Settings from './components/Settings'
 import Spells from './components/Spells'
 import { SettingsProvider } from './context/SettingsContext'
 import { SettingsDB, SpellbookDB } from './utils/db'
-// import './css/spellbook.css';
 import './css/root.css'
 
 export default function App() {
@@ -15,13 +14,6 @@ export default function App() {
                 // Initialize the spellbook database
                 const currentSpellbook = await SpellbookDB.getCurrentSpellbookName();
                 console.log('Current spellbook:', currentSpellbook);
-
-                // Load all spells and notes
-                const allSpells = await SpellbookDB.getAllSpells();
-                console.log('All spells:', allSpells);
-
-                const allNotes = await SpellbookDB.getAllNotes();
-                console.log('All notes:', allNotes);
             } catch (error) {
                 console.error('Error loading data:', error);
             }
