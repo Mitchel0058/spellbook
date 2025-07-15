@@ -191,7 +191,7 @@ export class SpellbookDB {
     static SPELLS_STORE = 'spells';
     static NOTES_STORE = 'notes';
     static VERSION = 1;
-    
+
     static activeDB = null;
     static activeDBName = null;
 
@@ -246,7 +246,7 @@ export class SpellbookDB {
     static async switchSpellbook(dbName) {
         // Update the current spellbook in settings
         await SettingsDB.set(settingsOptions.CURRENT_SPELLBOOK_DB, dbName);
-        
+
         // Close and reopen with the new name
         await this.init(dbName);
     }
@@ -282,7 +282,7 @@ export class SpellbookDB {
             spellbookList.push(dbName);
             await SettingsDB.set('spellbookList', spellbookList);
         }
-        
+
         // Switch to the new spellbook
         await this.switchSpellbook(dbName);
     }
@@ -298,12 +298,12 @@ export class SpellbookDB {
         if (dbName === currentName) {
             throw new Error('Cannot delete the currently active spellbook');
         }
-        
+
         // Remove from the list
         const spellbookList = await this.listAllSpellbooks();
         const updatedList = spellbookList.filter(name => name !== dbName);
         await SettingsDB.set('spellbookList', updatedList);
-        
+
         // Delete the database
         await window.indexedDB.deleteDatabase(dbName);
     }
@@ -356,7 +356,16 @@ export class SpellbookDB {
     static async getSpellByPage(page) {
         const db = await this.init();
         const spell = await db.get(this.SPELLS_STORE, page);
-        return spell || null;
+
+        if (!spell) return null;
+
+        // Process icon URL if it's a Blob/File
+        if (spell[spellOptions.ICONURL] instanceof Blob) {
+            // Create an object URL for the blob
+            spell._iconObjectUrl = URL.createObjectURL(spell[spellOptions.ICONURL]);
+        }
+
+        return spell;
     }
 
     /**
@@ -366,9 +375,18 @@ export class SpellbookDB {
      */
     static async saveSpell(spell) {
         const db = await this.init();
-        this.validateSpell(spell);
-        await db.put(this.SPELLS_STORE, spell);
-        return spell[spellOptions.PAGE];
+
+        // Create a copy of the spell without the _iconObjectUrl property
+        const spellToSave = { ...spell };
+
+        // Remove the _iconObjectUrl property before validation and saving
+        if ('_iconObjectUrl' in spellToSave) {
+            delete spellToSave._iconObjectUrl;
+        }
+
+        this.validateSpell(spellToSave);
+        await db.put(this.SPELLS_STORE, spellToSave);
+        return spellToSave[spellOptions.PAGE];
     }
 
     /**
@@ -387,7 +405,16 @@ export class SpellbookDB {
      */
     static async getAllSpells() {
         const db = await this.init();
-        return db.getAll(this.SPELLS_STORE);
+        const spells = await db.getAll(this.SPELLS_STORE);
+
+        // Process any blob image data to create object URLs
+        return spells.map(spell => {
+            if (spell[spellOptions.ICONURL] instanceof Blob) {
+                // Create an object URL for the blob
+                spell._iconObjectUrl = URL.createObjectURL(spell[spellOptions.ICONURL]);
+            }
+            return spell;
+        });
     }
 
     /**
@@ -543,10 +570,10 @@ export class SpellbookDB {
      */
     static async importSpellbookData(data) {
         const db = await this.init();
-        
+
         // Start a transaction for both stores
         const tx = db.transaction([this.SPELLS_STORE, this.NOTES_STORE], 'readwrite');
-        
+
         // Import spells
         if (data.spells && Array.isArray(data.spells)) {
             for (const spell of data.spells) {
@@ -558,7 +585,7 @@ export class SpellbookDB {
                 }
             }
         }
-        
+
         // Import notes
         if (data.notes && Array.isArray(data.notes)) {
             for (const note of data.notes) {
@@ -570,7 +597,7 @@ export class SpellbookDB {
                 }
             }
         }
-        
+
         // Complete the transaction
         await tx.done;
     }
@@ -586,5 +613,54 @@ export class SpellbookDB {
             name: this.activeDBName,
             exportDate: new Date().toISOString()
         };
+    }
+
+    /**
+     * Convert a File object to base64 string
+     * @param {File} file - The file to convert
+     * @returns {Promise<string>} - Base64 string representation of the file
+     */
+    static async fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    /**
+     * Save an image to a spell
+     * @param {number} page - The page number of the spell
+     * @param {File} imageFile - The image file to save
+     * @returns {Promise<string>} - Object URL to reference the stored blob
+     */
+    static async saveSpellImage(page, imageFile) {
+        try {
+            // Get current spell or create a new one
+            let spell = await this.getSpellByPage(page);
+
+            if (!spell) {
+                // Create new spell if it doesn't exist
+                spell = this.createEmptySpell(page);
+            }
+
+            // Store the raw blob/file in IndexedDB
+            spell[spellOptions.ICONURL] = imageFile;
+
+            // Remove any existing _iconObjectUrl before saving
+            if ('_iconObjectUrl' in spell) {
+                delete spell._iconObjectUrl;
+            }
+
+            // Save the updated spell
+            await this.saveSpell(spell);
+
+            // Create and return an object URL for immediate display
+            return URL.createObjectURL(imageFile);
+        } catch (error) {
+            console.error('Error saving spell image:', error);
+            throw error;
+        }
     }
 }

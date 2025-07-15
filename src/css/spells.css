@@ -69,6 +69,26 @@
     mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 90%, rgba(0, 0, 0, 0));
 }
 
+.editable {
+    font-size: var(--reactive-font-size) !important;
+    padding: 0;
+    border: none;
+    color: black;
+    font: inherit;
+    background: #0001;
+
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+}
+
+input[type=number] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
 .textarea {
     font-size: var(--reactive-font-size) !important;
     padding: 0;
@@ -76,6 +96,17 @@
     color: black;
     font: inherit;
     background: #0001;
+}
+
+.pageNumber {
+    position: absolute;
+    font-size: var(--reactive-font-size);
+    width: calc(var(--unit-width) * 15);
+    height: calc(var(--unit-height) * 15);
+    left: calc(var(--unit-width) * 120);
+    bottom: calc(var(--unit-height) * 6);
+    place-content: center;
+    text-align: center;
 }
 
 .icon {
@@ -112,4 +143,17 @@
     height: calc(var(--unit-height) * 9);
     left: calc(var(--unit-width) * 51);
     top: calc(var(--unit-height) * 57);
+}
+
+.right-page-offset {
+    margin-left: calc(var(--unit-width) * -8) !important;
+}
+
+.page-transition-animation {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 9998;
 }

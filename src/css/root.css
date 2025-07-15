@@ -41,11 +41,18 @@ html {
     max-height: 100svh;
 }
 
-.page-switch {
+.next-page {
     width: calc(var(--unit-width) * 16);
     height: 100%;
     top: 0%;
     right: 0%;
+}
+
+.previous-page {
+    width: calc(var(--unit-width) * 16);
+    height: 100%;
+    top: 0%;
+    left: 0%;
 }
 
 .interact {

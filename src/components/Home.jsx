@@ -69,7 +69,7 @@ export default function Home() {
                             {settings[settingsOptions.CURRENT_SPELLBOOK_DB]}
                         </div>
                         {!isDoublePage && (
-                            <Link to="/spells" className="interact page-switch"></Link>
+                            <Link to="/spells" className="interact next-page"></Link>
                             // <button
                             //     className="interact"
                             //     id="p1-next"
@@ -102,7 +102,7 @@ export default function Home() {
                     {isDoublePage && (
                         <Page pageType={PageType.SPELLRIGHT}>
                             {isDoublePage && (
-                                <Link to="/spells" className="interact page-switch"></Link>
+                                <Link to="/spells" className="interact next-page"></Link>
                                 // <button
                                 //     className="interact"
                                 //     id="p2-next"
