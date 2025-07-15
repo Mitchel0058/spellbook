@@ -4,10 +4,11 @@
 export const PageType = {
     COVER: 'cover',
     TITLE: 'title',
-    CONTENTS: 'contents',
-    TEXT: 'text',
-    ILLUSTRATION: 'illustration',
-    INDEX: 'index'
+    SPELL: 'spell',
+    SPELLRIGHT: 'spell-right',
+    // TEXT: 'text',
+    // ILLUSTRATION: 'illustration',
+    // INDEX: 'index'
 };
 
 /**
@@ -16,8 +17,9 @@ export const PageType = {
 export const pageImages = {
     [PageType.COVER]: 'spellbook_cover.svg',
     [PageType.TITLE]: 'spellbook_title.svg',
-    [PageType.CONTENTS]: 'spellbook_contents.svg',
-    [PageType.TEXT]: 'spellbook_text.svg',
-    [PageType.ILLUSTRATION]: 'spellbook_illustration.svg',
-    [PageType.INDEX]: 'spellbook_index.svg'
+    [PageType.SPELL]: 'spellbook_spell.svg',
+    [PageType.SPELLRIGHT]: 'spellbook_spell_right.svg',
+    // [PageType.TEXT]: 'spellbook_text.svg',
+    // [PageType.ILLUSTRATION]: 'spellbook_illustration.svg',
+    // [PageType.INDEX]: 'spellbook_index.svg'
 };

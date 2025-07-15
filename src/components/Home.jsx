@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'preact/hooks';
-import '../css/index.css';
+import '../css/home.css';
 import Page from './Page';
 import { PageType } from '../constants/pageTypes';
+import { useSettings } from '../context/SettingsContext';
+import { settingsOptions } from '../constants/settingsOptions';
+import SpellsOverview from './SpellsOverview';
+import { Link } from 'wouter';
 
 export default function Home() {
     const [loading, setLoading] = useState(true);
     const [isDoublePage, setIsDoublePage] = useState(window.innerWidth > window.innerHeight);
+    const { settings, loading: settingsLoading } = useSettings();
 
     // Double page detection based on window size
     useEffect(() => {
@@ -16,13 +21,25 @@ export default function Home() {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Simulate loading time
+    // Combined loading effect that waits for both timeout and settings
     useEffect(() => {
+        let timeoutPassed = false;
+        let settingsLoaded = false;
+
+        // Timer for simulated loading
         const timer = setTimeout(() => {
-            setLoading(false);
+            timeoutPassed = true;
+            if (settingsLoaded) setLoading(false);
         }, 2000);
+
+        // Check when settings are loaded
+        if (!settingsLoading) {
+            settingsLoaded = true;
+            if (timeoutPassed) setLoading(false);
+        }
+
         return () => clearTimeout(timer);
-    }, []);
+    }, [settings, settingsLoading]);
 
     const handlePageNavigation = () => {
         // Implement your page navigation logic here
@@ -43,17 +60,21 @@ export default function Home() {
         <>
             {loading ? (
                 <div className="svg-overlay">
-                    <img className="page-img" src={"assets/img/spellbook_cover_case.svg"} alt="Cover of DnD book" />
+                    <img className="page-img" src={"assets/img/spellbook_cover.svg"} alt="Cover of DnD book" />
                 </div>
             ) : (
                 <>
                     <Page pageType={PageType.TITLE}>
+                        <div className='text-overlay' id="title">
+                            {settings[settingsOptions.CURRENT_SPELLBOOK_DB]}
+                        </div>
                         {!isDoublePage && (
-                            <button
-                                className="interact"
-                                id="p1-next"
-                                onClick={handlePageNavigation}
-                            />
+                            <Link to="/spells" className="interact page-switch"></Link>
+                            // <button
+                            //     className="interact"
+                            //     id="p1-next"
+                            //     onClick={handlePageNavigation}
+                            // />
                         )}
                         <button
                             id="toggle-reorder-btn"
@@ -61,31 +82,32 @@ export default function Home() {
                         >
                             ☰
                         </button>
-                        <div id="overview-container">
+                        <SpellsOverview />
+                        {/* <div id="overview-container">
                             <button
                                 className="overview-block"
                                 onClick={goToPage}
                             >
-                                {/* <img
+                                <img
                                     className="overview-icon"
                                     src="assets/imgs/fireball.webp"
                                     onError={(e) => e.target.src = 'assets/imgs/fireball.webp'}
                                     alt="Overview icon"
-                                /> */}
-                                <div className="overview-text">Overview</div>
+                                />
                             </button>
-                        </div>
+                        </div> */}
                     </Page >
 
                     {/* Page 2 */}
                     {isDoublePage && (
-                        <Page pageType="right">
+                        <Page pageType={PageType.SPELLRIGHT}>
                             {isDoublePage && (
-                                <button
-                                    className="interact"
-                                    id="p2-next"
-                                    onClick={handlePageNavigation}
-                                />
+                                <Link to="/spells" className="interact page-switch"></Link>
+                                // <button
+                                //     className="interact"
+                                //     id="p2-next"
+                                //     onClick={handlePageNavigation}
+                                // />
                             )}
                         </Page>
                     )}

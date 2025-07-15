@@ -1,8 +1,8 @@
 :root {
     --reactive-font-size: 3vh;
     --text-red: rgb(120, 0, 0);
-    --pixel-width: 0.7246%;
-    --pixel-height: 0.5263%;
+    --unit-width: 0.7246%;
+    --unit-height: 0.5263%;
 }
 
 .container {
@@ -34,4 +34,54 @@ html {
     /* TODO: option to not stretch to fill the page */
     height: 100vh;
     max-height: 100svh;
+}
+
+.page-switch {
+    width: calc(var(--unit-width) * 16);
+    height: 100%;
+    top: 0%;
+    right: 0%;
+}
+
+.interact {
+    position: absolute;
+    cursor: pointer;
+    background: transparent;
+    border: none !important;
+    z-index: 9999;
+    margin: 0;
+    padding: 0;
+}
+
+.text-overlay {
+    position: absolute;
+    font-size: var(--reactive-font-size);
+    margin: 0;
+    overflow-x: auto;
+    white-space: nowrap;
+
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+
+    /* TODO: gradient on the left */
+
+    -webkit-mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) 85%, rgba(0, 0, 0, 0));
+    mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) 85%, rgba(0, 0, 0, 0));
+    align-content: center;
+
+    &::after {
+        content: '';
+        width: 20%;
+        padding-left: 3vh;
+    }
+
+    /* &::before {
+        content: '';
+        width: 20%;
+        padding-right: 3vh;
+    } */
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
 }

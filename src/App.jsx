@@ -3,6 +3,7 @@ import { useEffect } from 'preact/hooks'
 import Home from './components/Home'
 import Settings from './components/Settings'
 import Spells from './components/Spells'
+import { SettingsProvider } from './context/SettingsContext'
 import { SettingsDB, SpellbookDB } from './utils/db'
 // import './css/spellbook.css';
 import './css/root.css'
@@ -11,10 +12,6 @@ export default function App() {
     useEffect(() => {
         const loadData = async () => {
             try {
-                // Load settings
-                const settings = await SettingsDB.getAll();
-                console.log('Settings loaded:', settings);
-
                 // Initialize the spellbook database
                 const currentSpellbook = await SpellbookDB.getCurrentSpellbookName();
                 console.log('Current spellbook:', currentSpellbook);
@@ -34,12 +31,15 @@ export default function App() {
     }, []);
 
     return (
-        <div className="container">
-            <Switch>
-                <Route path="/settings" component={Settings} />
-                <Route path="/spells" component={Spells} />
-                <Route path="/" component={Home} />
-            </Switch>
-        </div>
+        <SettingsProvider>
+            <div className="container">
+                <Switch>
+                    <Route path="/settings" component={Settings} />
+                    <Route path="/spells" component={Spells} />
+                    <Route path="/" component={Home} />
+                </Switch>
+            </div>
+        </SettingsProvider>
     )
 }
+
