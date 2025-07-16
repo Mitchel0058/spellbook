@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'preact/hooks';
-import '../css/index.css';
 import '../css/settings.css';
 
 export default function Settings() {

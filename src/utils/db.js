@@ -437,6 +437,37 @@ export class SpellbookDB {
         return Math.max(...spells.map(spell => spell[spellOptions.PAGE]));
     }
 
+    /**
+     * Swap the pages of two spells
+     * @param {number} pageA - The page number of the first spell
+     * @param {number} pageB - The page number of the second spell
+     * @returns {Promise<boolean>} - Whether the swap was successful
+     */
+    static async swapSpellPages(pageA, pageB) {
+        try {
+            const spellA = await this.getSpellByPage(pageA);
+            const spellB = await this.getSpellByPage(pageB);
+            
+            if (!spellA || !spellB) {
+                return false;
+            }
+            
+            // Swap the page numbers
+            const tempPage = spellA[spellOptions.PAGE];
+            spellA[spellOptions.PAGE] = spellB[spellOptions.PAGE];
+            spellB[spellOptions.PAGE] = tempPage;
+            
+            // Save both spells with their new page numbers
+            await this.saveSpell(spellA);
+            await this.saveSpell(spellB);
+            
+            return true;
+        } catch (error) {
+            console.error('Error swapping spell pages:', error);
+            return false;
+        }
+    }
+
     /* NOTE METHODS */
 
     /**

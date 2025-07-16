@@ -10,3 +10,17 @@
 
     font-size: calc(var(--reactive-font-size) * 2);
 }
+
+#toggle-reorder-btn {
+    position: absolute;
+    top: calc(var(--unit-height) * 43);
+    right: calc(var(--unit-width) * 10);
+    width: calc(var(--unit-width) * 9);
+    height: calc(var(--unit-height) * 9);
+    margin: 0;
+    padding: 0;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: var(--reactive-font-size);
+}

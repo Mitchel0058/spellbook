@@ -43,3 +43,16 @@
     margin-right: calc(var(--unit-width) * 1);
     object-fit: contain;
 }
+
+.reorder-mode .spell-item.selected {
+    background-color: #0001;
+}
+
+.reorder-mode .spell-item.disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.reorder-instructions {
+    text-align: center;
+}
