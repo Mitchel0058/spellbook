@@ -506,6 +506,59 @@ export default function Spells() {
         navigateToPage(currentPage - (isDoublePage ? 2 : 1));
     };
 
+    // Delete spell function
+    const deleteSpell = async (isNextSpell = false) => {
+        try {
+            const pageToDelete = isNextSpell ? currentPage + 1 : currentPage;
+
+            // Confirm deletion
+            if (!confirm(`Are you sure you want to delete the spell: ${spells[pageToDelete][spellOptions.NAME]}?`)) {
+                return;
+            }
+
+            // Delete the spell
+            await SpellbookDB.deleteSpellByPage(pageToDelete);
+
+            // Get all remaining spells
+            let remainingSpells = await SpellbookDB.getAllSpells();
+
+            // Shift all page numbers that are greater than the deleted page
+            for (const spell of remainingSpells) {
+                if (spell[spellOptions.PAGE] > pageToDelete) {
+                    // Shift page number down by one
+                    spell[spellOptions.PAGE] -= 1;
+                    await SpellbookDB.saveSpell(spell);
+                }
+            }
+
+            // Update the spells state with the adjusted spells
+            // Fetch fresh data after all updates
+            const updatedSpells = await SpellbookDB.getAllSpells();
+            setSpells(updatedSpells);
+
+            // If we're on the last page and deleted it, go to the previous page
+            const highestPage = updatedSpells.length > 0
+                ? Math.max(...updatedSpells.map(s => s[spellOptions.PAGE]))
+                : -1;
+
+            if (currentPage > highestPage && currentPage > 0) {
+                navigateToPage(currentPage - 1);
+            } else {
+                // Otherwise just refresh the current page view
+                setCurrentSpell(null);
+                if (isNextSpell) {
+                    setNextSpell(null);
+                }
+            }
+
+            // Show confirmation
+            alert(`Spell deleted successfully!`);
+        } catch (error) {
+            console.error('Error deleting spell:', error);
+            alert('Error deleting spell. Please try again.');
+        }
+    };
+
     return (
         <>
             <Page pageType={PageType.SPELL}>
@@ -535,6 +588,7 @@ export default function Spells() {
                 <Link to='/' className='interact home-button'></Link>
                 <button className='interact font-button'></button>
                 <button className='interact edit-button' onClick={toggleEditMode}></button>
+                {editMode && <button className="interact delete-button" onClick={() => deleteSpell(false)}>X</button>}
                 <button className="interact previous-page" onClick={handlePreviousPage}></button>
                 {!isDoublePage && <button className="interact next-page" onClick={handlePageSwitch}></button>}
 
@@ -601,6 +655,7 @@ export default function Spells() {
                     <button className='interact settings-button right-page-offset'></button>
                     <Link to='/' className='interact home-button right-page-offset'></Link>
                     <button className='interact font-button right-page-offset'></button>
+                    {editMode && <button className="interact delete-button right-page-offset" onClick={() => deleteSpell(true)}>X</button>}
                     <button className='interact edit-button right-page-offset' onClick={toggleEditMode}></button>
                     {isDoublePage && <button className="interact next-page" onClick={handlePageSwitch}></button>}
 

@@ -1,6 +1,7 @@
 :root {
     --reactive-font-size: 3vh;
     --text-red: rgb(120, 0, 0);
+    --dark-red: rgb(80, 0, 0);
     --unit-width: 0.7246%;
     --unit-height: 0.5263%;
 }

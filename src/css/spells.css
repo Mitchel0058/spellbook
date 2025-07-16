@@ -48,6 +48,7 @@
     bottom: calc(var(--unit-height) * 167);
     place-content: center;
     text-align: center;
+    border-radius: 100%;
 }
 
 .description {
@@ -143,6 +144,16 @@ input[type=number] {
     height: calc(var(--unit-height) * 9);
     left: calc(var(--unit-width) * 51);
     top: calc(var(--unit-height) * 57);
+}
+
+.delete-button {
+    width: calc(var(--unit-width) * 9);
+    height: calc(var(--unit-height) * 9);
+    left: calc(var(--unit-width) * 118);
+    bottom: calc(var(--unit-height) * 158);
+    font-size: var(--reactive-font-size);
+    color: var(--dark-red);
+    font-weight: bold;
 }
 
 .right-page-offset {
