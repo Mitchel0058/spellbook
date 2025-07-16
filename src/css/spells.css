@@ -76,12 +76,12 @@
     color: black;
     font: inherit;
     background: #0001;
+}
 
-    &::-webkit-inner-spin-button,
-    &::-webkit-outer-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
+.editable::-webkit-inner-spin-button,
+.editable::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 input[type=number] {
@@ -152,8 +152,15 @@ input[type=number] {
 .page-transition-animation {
     position: absolute;
     width: 100%;
-    height: 100%;
+    height: 100vh;
     top: 0;
     left: 0;
     z-index: 9998;
+}
+
+/* Mobile */
+@media (max-aspect-ratio: 1/1) {
+    .page-transition-animation {
+        width: unset;
+    }
 }

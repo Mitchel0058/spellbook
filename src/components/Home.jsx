@@ -51,11 +51,6 @@ export default function Home() {
         console.log('Toggle reorder mode');
     };
 
-    const goToPage = () => {
-        // Implement your go to page logic here
-        console.log('Go to page');
-    };
-
     return (
         <>
             {loading ? (
@@ -68,6 +63,7 @@ export default function Home() {
                         <div className='text-overlay' id="title">
                             {settings[settingsOptions.CURRENT_SPELLBOOK_DB]}
                         </div>
+                        <SpellsOverview />
                         {!isDoublePage && (
                             <Link to="/spells" className="interact next-page"></Link>
                             // <button
@@ -82,7 +78,6 @@ export default function Home() {
                         >
                             ☰
                         </button>
-                        <SpellsOverview />
                         {/* <div id="overview-container">
                             <button
                                 className="overview-block"

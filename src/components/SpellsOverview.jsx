@@ -1,5 +1,8 @@
 import { SpellbookDB } from "../utils/db";
 import { useState, useEffect } from 'preact/hooks';
+import '../css/spellsOverview.css';
+import { spellOptions } from "../constants/spellOptions";
+import { Link } from "wouter";
 
 export default function SpellsOverview({ onSpellClick }) {
     const [spells, setSpells] = useState([]);
@@ -19,15 +22,21 @@ export default function SpellsOverview({ onSpellClick }) {
     return (
         <div className="spells-overview">
             {spells.map((spell, index) => (
-                <div
-                    key={index}
-                    className="spell-item"
-                    onClick={() => onSpellClick(spell)}
-                >
-                    <h3>{spell.name}</h3>
-                    <p>{spell.description}</p>
-                </div>
+                <Link to={`/spells?page=${spell[spellOptions.PAGE]}`} key={index} className="spell-item">
+                    <div className="spell-content">
+                        <img
+                            className='small-icon'
+                            src={spell && (spell._iconObjectUrl || spell[spellOptions.ICONURL])
+                                ? (spell._iconObjectUrl || spell[spellOptions.ICONURL])
+                                : 'assets/img/fireball.webp'}
+                            alt=""
+                        />
+                        <div>{spell[spellOptions.PAGE] + 1}&#41;{spell[spellOptions.NAME]}</div>
+                    </div>
+                    <div>{spell[spellOptions.LVL]}</div>
+                </Link>
             ))}
+            <div className='spells-overview-after' />
         </div>
     );
 }
