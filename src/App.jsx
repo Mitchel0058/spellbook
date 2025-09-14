@@ -4,7 +4,6 @@ import Home from './components/Home'
 import Settings from './components/Settings'
 import Spells from './components/Spells'
 import { SettingsProvider } from './context/SettingsContext'
-import { FontProvider, useFont } from './context/FontContext'
 import { SettingsDB, SpellbookDB } from './utils/db'
 import './css/root.css'
 
@@ -34,15 +33,13 @@ export default function App() {
 
     return (
         <SettingsProvider>
-            <FontProvider>
-                <div className="container">
-                    <Switch>
-                        <Route path="/settings" component={Settings} />
-                        <Route path="/spells" component={Spells} />
-                        <Route path="/" component={Home} />
-                    </Switch>
-                </div>
-            </FontProvider>
+            <div className="container">
+                <Switch>
+                    <Route path="/settings" component={Settings} />
+                    <Route path="/spells" component={Spells} />
+                    <Route path="/" component={Home} />
+                </Switch>
+            </div>
         </SettingsProvider>
     )
 }

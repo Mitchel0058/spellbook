@@ -6,7 +6,6 @@ import { useSettings } from '../context/SettingsContext';
 import { settingsOptions } from '../constants/settingsOptions';
 import { Link } from 'wouter';
 import { SpellbookDB } from '../utils/db';
-import { useFont } from '../context/FontContext';
 
 export default function Settings() {
     const [isDoublePage, setIsDoublePage] = useState(window.innerWidth > window.innerHeight);
@@ -126,7 +125,7 @@ export default function Settings() {
         loadFont();
     }, []);
 
-    const { loadCustomFont } = useFont();
+    const { loadCustomFont } = useSettings();
     const handleFontUpload = async (event) => {
         const file = event.target.files[0];
         if (!file) return;
@@ -174,6 +173,7 @@ export default function Settings() {
         const newValue = parseInt(value) || 0;
         setFontAddition(newValue);
         await updateSetting(settingsOptions.FONTADDITION, newValue);
+        await loadCustomFont();
     };
 
     const handleAnimationToggle = async (checked) => {
@@ -298,7 +298,7 @@ export default function Settings() {
                         />
                     </label>
                     <label>
-                        Animation:
+                        Animations:
                         <input
                             type='checkbox'
                             checked={settings[settingsOptions.ANIMATION]}
