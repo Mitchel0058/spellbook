@@ -200,6 +200,8 @@ export class SpellbookDB {
      * @param {string} dbName - The name of the spellbook database
      * @returns {Promise<IDBDatabase>}
      */
+    static SETTINGS_STORE = 'spellbookSettings';
+
     static async init(dbName = null) {
         // If no dbName is provided, get the current spellbook name from settings
         if (!dbName) {
@@ -232,6 +234,11 @@ export class SpellbookDB {
                 notesStore.createIndex('pageIndex', noteOptions.PAGE, { unique: true });
                 notesStore.createIndex('dateIndex', noteOptions.DATE, { unique: false });
             }
+
+            // Create the spellbook settings store if it doesn't exist
+            if (!db.objectStoreNames.contains(this.SETTINGS_STORE)) {
+                db.createObjectStore(this.SETTINGS_STORE, { keyPath: 'key' });
+            }
         });
 
         this.activeDBName = dbName;
@@ -249,6 +256,52 @@ export class SpellbookDB {
 
         // Close and reopen with the new name
         await this.init(dbName);
+    }
+
+    /**
+     * Rename a spellbook database
+     * @param {string} oldName - Current name of the spellbook
+     * @param {string} newName - New name for the spellbook
+     * @returns {Promise<void>}
+     */
+    static async renameSpellbook(oldName, newName) {
+        // Export current data
+        const data = await this.exportSpellbookData();
+
+        // Create new DB with the new name
+        await this.createNewSpellbook(newName);
+
+        // Import data to new DB
+        await this.importSpellbookData(data);
+
+        // Delete old DB
+        await this.deleteSpellbook(oldName);
+
+        // Update spellbook list
+        const spellbookList = await this.listAllSpellbooks();
+        const updatedList = spellbookList.map(name => name === oldName ? newName : name);
+        await SettingsDB.set(settingsOptions.SPELLBOOK_LIST, updatedList);
+
+        // Switch to new DB
+        await this.switchSpellbook(newName);
+    }
+
+    /**
+     * Generate a unique name for an imported spellbook
+     * @param {string} baseName - The original name to start with
+     * @returns {Promise<string>} - A unique name for the spellbook
+     */
+    static async generateUniqueSpellbookName(baseName) {
+        const spellbookList = await this.listAllSpellbooks();
+        let newName = baseName;
+        let counter = 1;
+
+        while (spellbookList.includes(newName)) {
+            newName = `${baseName} (${counter})`;
+            counter++;
+        }
+
+        return newName;
     }
 
     /**
@@ -318,17 +371,19 @@ export class SpellbookDB {
      */
     static validateSpell(spell) {
         const validKeys = Object.values(spellOptions);
+        const allowedExtraKeys = ['_iconObjectUrl']; // Allow this key but don't require it
+        const optionalKeys = [spellOptions.ICONURL, spellOptions.ICONOBJECTURL, spellOptions.ICONOBJECTFIT];
 
-        // Check that all required properties exist
+        // Check that all required properties exist except optional ones
         for (const key of validKeys) {
-            if (spell[key] === undefined) {
+            if (!optionalKeys.includes(key) && spell[key] === undefined) {
                 throw new Error(`Missing required spell property: ${key}`);
             }
         }
 
         // Check for invalid properties
         for (const key in spell) {
-            if (!validKeys.includes(key)) {
+            if (!validKeys.includes(key) && !allowedExtraKeys.includes(key)) {
                 throw new Error(`Invalid spell property: ${key}`);
             }
         }
@@ -447,20 +502,20 @@ export class SpellbookDB {
         try {
             const spellA = await this.getSpellByPage(pageA);
             const spellB = await this.getSpellByPage(pageB);
-            
+
             if (!spellA || !spellB) {
                 return false;
             }
-            
+
             // Swap the page numbers
             const tempPage = spellA[spellOptions.PAGE];
             spellA[spellOptions.PAGE] = spellB[spellOptions.PAGE];
             spellB[spellOptions.PAGE] = tempPage;
-            
+
             // Save both spells with their new page numbers
             await this.saveSpell(spellA);
             await this.saveSpell(spellB);
-            
+
             return true;
         } catch (error) {
             console.error('Error swapping spell pages:', error);
@@ -609,8 +664,35 @@ export class SpellbookDB {
         if (data.spells && Array.isArray(data.spells)) {
             for (const spell of data.spells) {
                 try {
-                    this.validateSpell(spell);
-                    await tx.objectStore(this.SPELLS_STORE).put(spell);
+                    // Create a clean spell object without _iconObjectUrl
+                    const { _iconObjectUrl, ...cleanSpell } = spell;
+
+                    // Convert base64 icon data back to File/Blob if it exists
+                    if (cleanSpell[spellOptions.ICONURL] && cleanSpell[spellOptions.ICONURL].data) {
+                        const base64Data = cleanSpell[spellOptions.ICONURL].data;
+                        const iconData = base64Data.split(',')[1];
+                        const byteCharacters = atob(iconData);
+                        const byteArrays = [];
+
+                        for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+                            const slice = byteCharacters.slice(offset, offset + 512);
+                            const byteNumbers = new Array(slice.length);
+                            for (let i = 0; i < slice.length; i++) {
+                                byteNumbers[i] = slice.charCodeAt(i);
+                            }
+                            const byteArray = new Uint8Array(byteNumbers);
+                            byteArrays.push(byteArray);
+                        }
+
+                        cleanSpell[spellOptions.ICONURL] = new File(
+                            byteArrays,
+                            cleanSpell[spellOptions.ICONURL].name || 'image.png',
+                            { type: cleanSpell[spellOptions.ICONURL].type || 'image/png' }
+                        );
+                    }
+
+                    this.validateSpell(cleanSpell);
+                    await tx.objectStore(this.SPELLS_STORE).put(cleanSpell);
                 } catch (error) {
                     console.error(`Error importing spell:`, error);
                 }
@@ -638,12 +720,65 @@ export class SpellbookDB {
      * @returns {Promise<Object>} - Object containing all spells and notes
      */
     static async exportSpellbookData() {
+        const fontData = await this.getFont();
+        const spells = await this.getAllSpells();
+
+        // Convert Blob/File icons to base64
+        const processedSpells = await Promise.all(spells.map(async spell => {
+            const cleanSpell = { ...spell };
+            if (cleanSpell[spellOptions.ICONURL] instanceof Blob) {
+                cleanSpell[spellOptions.ICONURL] = {
+                    data: await this.fileToBase64(cleanSpell[spellOptions.ICONURL]),
+                    type: cleanSpell[spellOptions.ICONURL].type,
+                    name: cleanSpell[spellOptions.ICONURL].name
+                };
+            }
+            delete cleanSpell._iconObjectUrl;
+            return cleanSpell;
+        }));
+
         return {
-            spells: await this.getAllSpells(),
+            spells: processedSpells,
             notes: await this.getAllNotes(),
             name: this.activeDBName,
-            exportDate: new Date().toISOString()
+            exportDate: new Date().toISOString(),
+            font: fontData
         };
+    }
+
+    /**
+     * Save font data for the current spellbook
+     * @param {Object} fontData - Object containing font data and name
+     * @returns {Promise<void>}
+     */
+    static async saveFont(fontData) {
+        const db = await this.init();
+        await db.put(this.SETTINGS_STORE, {
+            key: 'font',
+            data: fontData.data,
+            name: fontData.name
+        });
+    }
+
+    /**
+     * Get font data for the current spellbook
+     * @returns {Promise<Object>} - Font data object or null if no font is set
+     */
+    static async getFont() {
+        const db = await this.init();
+        if (!db.objectStoreNames.contains(this.SETTINGS_STORE)) {
+            return null;
+        }
+        return await db.get(this.SETTINGS_STORE, 'font');
+    }
+
+    /**
+     * Remove font data for the current spellbook
+     * @returns {Promise<void>}
+     */
+    static async removeFont() {
+        const db = await this.init();
+        await db.delete(this.SETTINGS_STORE, 'font');
     }
 
     /**

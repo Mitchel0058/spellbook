@@ -584,7 +584,7 @@ export default function Spells() {
                     {currentPage + 1}
                 </div>
 
-                <button className='interact settings-button'></button>
+                <Link to='/settings' className='interact settings-button'></Link>
                 <Link to='/' className='interact home-button'></Link>
                 <button className='interact font-button'></button>
                 <button className='interact edit-button' onClick={toggleEditMode}></button>

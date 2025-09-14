@@ -3,8 +3,10 @@ export const settingsOptions = {
     FONTADDITION: 'fontAddition',
     PAGEFIT: 'pageFit',
     ANIMATION: 'animation',
-    // LOCALFONT: 'localFont',
-    CURRENT_SPELLBOOK_DB: 'currentSpellbookDb'
+    CURRENT_SPELLBOOK_DB: 'currentSpellbookDb',
+    SPELLBOOK_LIST: 'spellbookList',
+    CUSTOM_FONT: 'customFont',
+    CUSTOM_FONT_NAME: 'customFontName'
 }
 
 /**
@@ -15,6 +17,8 @@ export const DEFAULT_SETTINGS = {
     [settingsOptions.FONTADDITION]: 0,
     [settingsOptions.PAGEFIT]: false,
     [settingsOptions.ANIMATION]: true,
-    // [settingsOptions.LOCALFONT]: null,
     [settingsOptions.CURRENT_SPELLBOOK_DB]: 'Spellbook',
+    [settingsOptions.SPELLBOOK_LIST]: ['Spellbook'],
+    [settingsOptions.CUSTOM_FONT]: null,
+    [settingsOptions.CUSTOM_FONT_NAME]: null
 };

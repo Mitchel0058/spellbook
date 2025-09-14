@@ -1,26 +1,21 @@
 #title {
-    /* 80 units */
-    width: 57.968%;
-    /* height: 8.4208%; */
+    width: calc(var(--unit-width) * 80);
     height: auto;
-    /* 33 units */
-    left: 23.9118%;
-    /* 158 units, 32 from top */
-    bottom: 83.1584%;
-
+    left: calc(var(--unit-width) * 33);
+    bottom: calc(var(--unit-height) * 158);
     font-size: calc(var(--reactive-font-size) * 2);
 }
 
-#toggle-reorder-btn {
-    position: absolute;
+.home__edit-button {
     top: calc(var(--unit-height) * 43);
     right: calc(var(--unit-width) * 10);
     width: calc(var(--unit-width) * 9);
     height: calc(var(--unit-height) * 9);
-    margin: 0;
-    padding: 0;
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-    font-size: var(--reactive-font-size);
+}
+
+.home__settings-button {
+    top: calc(var(--unit-height) * 13);
+    right: calc(var(--unit-width) * 10);
+    width: calc(var(--unit-width) * 9);
+    height: calc(var(--unit-height) * 9);
 }

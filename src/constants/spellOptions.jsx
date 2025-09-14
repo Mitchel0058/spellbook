@@ -9,6 +9,7 @@ export const spellOptions = {
     LVL: 'lvl',
     ICONURL: 'iconUrl',
     ICONOBJECTFIT: 'iconObjectFit',
+    ICONOBJECTURL: 'iconObjectUrl',
 }
 
 export const DEFAULT_SPELL_OPTIONS = {

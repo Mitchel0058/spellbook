@@ -67,7 +67,8 @@ export default function Home() {
                         {!isDoublePage && (
                             <Link to="/spells" className="interact next-page"></Link>
                         )}
-                        <button id="toggle-reorder-btn" onClick={toggleReorderMode} />
+                        <button class="interact home__edit-button" onClick={toggleReorderMode} />
+                        <Link to='/settings' class="interact home__settings-button" />
                     </Page >
 
                     {/* Page 2 */}
