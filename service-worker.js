@@ -11,7 +11,7 @@ const ASSETS_TO_CACHE = [
     './css/text-overlays.css',
     './js/pages.js', // Cache JavaScript files
     './app.js',
-    './assets/fonts/pixel.ttf', // Cache font files
+    './assets/fonts/MagicSchoolOne.ttf', // Cache font files
     './assets/imgs/fireball.webp', // Cache image files
     './assets/imgs/spellbook_cover_case.svg',
     './assets/imgs/spellbook_cover_flip_ani_reverse.webp',

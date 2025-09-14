@@ -12,10 +12,10 @@ export function FontProvider({ children }) {
                 const fontFace = new FontFace('SpellbookFont', `url(${fontData.data})`);
                 await fontFace.load();
                 document.fonts.add(fontFace);
-                document.body.style.fontFamily = 'SpellbookFont, Magneto, sans-serif';
+                document.body.style.fontFamily = 'SpellbookFont, MagicSchool, sans-serif';
             } else {
                 // Reset to default font if no custom font
-                document.body.style.fontFamily = 'Magneto, sans-serif';
+                document.body.style.fontFamily = 'MagicSchool, sans-serif';
             }
         } catch (error) {
             console.error('Error loading font:', error);

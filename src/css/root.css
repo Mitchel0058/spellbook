@@ -7,8 +7,8 @@
 }
 
 @font-face {
-    font-family: 'Magneto';
-    src: url('assets/fonts/pixel.ttf') format('truetype');
+    font-family: 'MagicSchool';
+    src: url('assets/fonts/MagicSchoolOne.ttf') format('truetype');
 }
 
 .container {
@@ -21,7 +21,7 @@
 
 body,
 html {
-    font-family: SpellbookFont, Magneto, sans-serif;
+    font-family: SpellbookFont, MagicSchool, sans-serif;
     max-height: 100vh;
     margin: 0;
     padding: 0;

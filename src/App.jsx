@@ -22,7 +22,7 @@ export default function App() {
                     const fontFace = new FontFace('SpellbookFont', `url(${fontData.data})`);
                     await fontFace.load();
                     document.fonts.add(fontFace);
-                    document.body.style.fontFamily = 'SpellbookFont, Magneto, sans-serif';
+                    document.body.style.fontFamily = 'SpellbookFont, MagicSchool, sans-serif';
                 }
             } catch (error) {
                 console.error('Error loading data:', error);
