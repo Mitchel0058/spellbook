@@ -657,6 +657,11 @@ export class SpellbookDB {
     static async importSpellbookData(data) {
         const db = await this.init();
 
+        // Import font if available
+        if (data.font) {
+            await this.saveFont(data.font);
+        }
+
         // Start a transaction for both stores
         const tx = db.transaction([this.SPELLS_STORE, this.NOTES_STORE], 'readwrite');
 
@@ -736,6 +741,11 @@ export class SpellbookDB {
             delete cleanSpell._iconObjectUrl;
             return cleanSpell;
         }));
+
+        // Process font data to base64 if it's a Blob/File
+        if (fontData && fontData.data instanceof Blob) {
+            fontData.data = await this.fileToBase64(fontData.data);
+        }
 
         return {
             spells: processedSpells,

@@ -6,6 +6,7 @@ import { useSettings } from '../context/SettingsContext';
 import { settingsOptions } from '../constants/settingsOptions';
 import { Link } from 'wouter';
 import { SpellbookDB } from '../utils/db';
+import { useFont } from '../context/FontContext';
 
 export default function Settings() {
     const [isDoublePage, setIsDoublePage] = useState(window.innerWidth > window.innerHeight);
@@ -26,6 +27,7 @@ export default function Settings() {
 
     useEffect(() => {
         refreshData();
+        loadCustomFont();
     }, [needsRefresh]);
 
     useEffect(() => {
@@ -124,6 +126,7 @@ export default function Settings() {
         loadFont();
     }, []);
 
+    const { loadCustomFont } = useFont();
     const handleFontUpload = async (event) => {
         const file = event.target.files[0];
         if (!file) return;
@@ -137,6 +140,7 @@ export default function Settings() {
                 };
                 await SpellbookDB.saveFont(fontData);
                 setCurrentFont(fontData);
+                await loadCustomFont();
             };
             reader.readAsDataURL(file);
         } catch (error) {
@@ -148,6 +152,7 @@ export default function Settings() {
         try {
             await SpellbookDB.removeFont();
             setCurrentFont(null);
+            await loadCustomFont();
         } catch (error) {
             console.error('Failed to remove font:', error);
         }
@@ -197,26 +202,12 @@ export default function Settings() {
                     Settings
                 </div>
                 <div className='settings__container'>
-                    <div>Spellbook Settings</div>
-                    {/* Settings for the currently selected spellbook */}
                     <div>
-                        <button onClick={handleExportSpellbook}>Export Spellbook</button>
-                        <input
-                            type="file"
-                            accept=".spellbook,.json"
-                            onChange={handleImportSpellbookSelect}
-                        />
-                        {importData && (
-                            <div>
-                                <p>Import "{importData.name || 'Unnamed Spellbook'}"?</p>
-                                <button onClick={handleImportConfirm}>Confirm Import</button>
-                                <button onClick={() => {
-                                    setImportData(null);
-                                    setImportFile(null);
-                                }}>Cancel</button>
-                            </div>
-                        )}
+                        Spellbook Settings
+                        {/* TODO: change hr look with css */}
+                        <hr />
                     </div>
+                    {/* Settings for the currently selected spellbook */}
                     <label>
                         Name
                         <input
@@ -258,17 +249,46 @@ export default function Settings() {
                             ))}
                         </div>
                     </div>
-                    <label>
-                        Create new spellbook
+                    <div>
+                        <label for="newSpellbookName">
+                            Create new spellbook
+                        </label>
                         <input
                             type='text'
+                            id="newSpellbookName"
                             value={newSpellbookName}
                             onChange={(e) => setNewSpellbookName(e.target.value)}
                         />
                         <button className='interact' onClick={handleCreateNewSpellbook}>Create</button>
-                    </label>
+                    </div>
+                    <div>
+                        <label for="exportSpellbook">Export Spellbook</label>
+                        <br />
+                        <button id="exportSpellbook" onClick={handleExportSpellbook}>Export</button>
+                        <br />
+                        <label for="importSpellbook">Import Spellbook</label>
+                        <input
+                            type="file"
+                            accept=".spellbook,.json"
+                            id="importSpellbook"
+                            onChange={handleImportSpellbookSelect}
+                        />
+                        {importData && (
+                            <div>
+                                <p>Import "{importData.name || 'Unnamed Spellbook'}"?</p>
+                                <button onClick={handleImportConfirm}>Confirm Import</button>
+                                <button onClick={() => {
+                                    setImportData(null);
+                                    setImportFile(null);
+                                }}>Cancel</button>
+                            </div>
+                        )}
+                    </div>
 
-                    <div>General Settings</div>
+                    <div>
+                        General Settings
+                        <hr />
+                    </div>
                     <label>
                         Fontsize:
                         <input
