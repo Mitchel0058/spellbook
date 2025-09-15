@@ -1,5 +1,6 @@
 {
-  "name": "public",
+  "name": "spellbook",
+  "homepage": "https://mitchel0058.github.io/spellbook/",
   "version": "1.0.0",
   "type": "module",
   "scripts": {

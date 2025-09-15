@@ -1,40 +1,40 @@
 const CACHE_NAME = 'spellbook-cache-v0.1.6';
+const BASE_PATH = '/spellbook'; // Add this line for GitHub Pages
+
 const ASSETS_TO_CACHE = [
-    './', // Cache the root
-    './index.html', // Cache the main HTML file
-    './pages.html', // Cache the pages HTML file
-    './settings.html', // Cache the settings HTML file
-    './favicon.ico', // Cache the favicon
-    './manifest.json', // Cache the manifest
-    './css/spellbook.css', // Cache CSS files
-    './css/interface.css',
-    './css/text-overlays.css',
-    './js/pages.js', // Cache JavaScript files
-    './app.js',
-    './assets/fonts/MagicSchoolOne.ttf', // Cache font files
-    './assets/imgs/fireball.webp', // Cache image files
-    './assets/imgs/spellbook_cover_case.svg',
-    './assets/imgs/spellbook_cover_flip_ani_reverse.webp',
-    './assets/imgs/spellbook_cover_flip_ani_single_reverse.webp',
-    './assets/imgs/spellbook_cover_flip_ani_single.webp',
-    './assets/imgs/spellbook_cover_flip_ani.webp',
-    './assets/imgs/spellbook_cover_right_page.svg',
-    './assets/imgs/spellbook_cover.svg',
-    './assets/imgs/spellbook_title.svg',
-    './assets/sounds/pageturn.mp3' // Cache sound files
+    `${BASE_PATH}/`,
+    `${BASE_PATH}/index.html`,
+    `${BASE_PATH}/pages.html`,
+    `${BASE_PATH}/settings.html`,
+    `${BASE_PATH}/favicon.ico`,
+    `${BASE_PATH}/manifest.json`,
+    `${BASE_PATH}/css/spellbook.css`,
+    `${BASE_PATH}/css/interface.css`,
+    `${BASE_PATH}/css/text-overlays.css`,
+    `${BASE_PATH}/js/pages.js`,
+    `${BASE_PATH}/app.js`,
+    `${BASE_PATH}/assets/fonts/MagicSchoolOne.ttf`,
+    `${BASE_PATH}/assets/imgs/fireball.webp`,
+    `${BASE_PATH}/assets/imgs/spellbook_cover_case.svg`,
+    `${BASE_PATH}/assets/imgs/spellbook_cover_flip_ani_reverse.webp`,
+    `${BASE_PATH}/assets/imgs/spellbook_cover_flip_ani_single_reverse.webp`,
+    `${BASE_PATH}/assets/imgs/spellbook_cover_flip_ani_single.webp`,
+    `${BASE_PATH}/assets/imgs/spellbook_cover_flip_ani.webp`,
+    `${BASE_PATH}/assets/imgs/spellbook_cover_right_page.svg`,
+    `${BASE_PATH}/assets/imgs/spellbook_cover.svg`,
+    `${BASE_PATH}/assets/imgs/spellbook_title.svg`,
+    `${BASE_PATH}/assets/sounds/pageturn.mp3`
 ];
 
-// Install event: Cache assets
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             return cache.addAll(ASSETS_TO_CACHE);
         })
     );
-    self.skipWaiting(); // Activate the service worker immediately
+    self.skipWaiting();
 });
 
-// Activate event: Clean up old caches
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
@@ -47,14 +47,28 @@ self.addEventListener('activate', (event) => {
             );
         })
     );
-    self.clients.claim(); // Take control of all clients immediately
+    self.clients.claim();
 });
 
-// Fetch event: Serve cached assets or fetch from network
 self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request).then((response) => {
-            return response || fetch(event.request);
-        })
-    );
+    // Add GitHub Pages base path handling
+    const url = new URL(event.request.url);
+    const requestPath = url.pathname;
+
+    // Handle requests with base path
+    if (requestPath.startsWith(BASE_PATH)) {
+        event.respondWith(
+            caches.match(event.request).then((response) => {
+                return response || fetch(event.request);
+            })
+        );
+    } else {
+        // Handle requests without base path
+        const pathWithBase = `${BASE_PATH}${requestPath}`;
+        event.respondWith(
+            caches.match(new Request(pathWithBase)).then((response) => {
+                return response || fetch(event.request);
+            })
+        );
+    }
 });

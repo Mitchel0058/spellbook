@@ -3,12 +3,22 @@ import preact from '@preact/preset-vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+    base: '/spellbook/',  
     plugins: [
         preact(),
         VitePWA({
             registerType: 'autoUpdate',
             workbox: {
-                globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+                globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,webm,ttf,mp3}']
+            },
+            manifest: {
+                name: 'Spellbook',
+                short_name: 'Spellbook',
+                description: 'A D&D inspired spellbook',
+                theme_color: '#200404',
+                start_url: '/spellbook/',
+                scope: '/spellbook/',
+                display: 'standalone'
             }
         })
     ],
