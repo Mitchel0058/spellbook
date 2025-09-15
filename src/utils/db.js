@@ -451,7 +451,26 @@ export class SpellbookDB {
      */
     static async deleteSpellByPage(page) {
         const db = await this.init();
-        return db.delete(this.SPELLS_STORE, page);
+
+        // Get all spells
+        let spells = await this.getAllSpells();
+
+        // Delete the target spell
+        await db.delete(this.SPELLS_STORE, page);
+
+        // Filter out the deleted spell and get remaining spells with higher page numbers
+        const spellsToShift = spells.filter(spell => spell[spellOptions.PAGE] > page);
+
+        // Shift the remaining spells down
+        for (const spell of spellsToShift) {
+            const shiftedSpell = { ...spell };
+            shiftedSpell[spellOptions.PAGE] = spell[spellOptions.PAGE] - 1;
+
+            // Delete the old page
+            await db.delete(this.SPELLS_STORE, spell[spellOptions.PAGE]);
+            // Save at new page
+            await this.saveSpell(shiftedSpell);
+        }
     }
 
     /**

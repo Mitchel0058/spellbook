@@ -72,6 +72,8 @@ export default function Spells() {
     const nextFileInputRef = useRef(null);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
     const [isUploadingNextImage, setIsUploadingNextImage] = useState(false);
+    const [navigationDirection, setNavigationDirection] = useState(null);
+    const [pendingPage, setPendingPage] = useState(null);
 
     // Form state for all editable fields
     const [formValues, setFormValues] = useState({
@@ -141,68 +143,41 @@ export default function Spells() {
 
     // When spells or currentPage changes, find the current and next spell
     useEffect(() => {
-        if (spells.length > 0) {
-            // Find the current spell
-            const spell = spells.find(s => s[spellOptions.PAGE] === currentPage);
-            setCurrentSpell(spell || null);
+        if (spells.length === 0) return;
 
-            if (spell) {
-                // Update form values with current spell data
-                setFormValues({
-                    [spellOptions.NAME]: spell[spellOptions.NAME] || '',
-                    [spellOptions.INCANT]: spell[spellOptions.INCANT] || '',
-                    [spellOptions.SPEED]: spell[spellOptions.SPEED] || '',
-                    [spellOptions.RANGE]: spell[spellOptions.RANGE] || '',
-                    [spellOptions.TYPE]: spell[spellOptions.TYPE] || '',
-                    [spellOptions.DESC]: spell[spellOptions.DESC] || '',
-                    [spellOptions.LVL]: spell[spellOptions.LVL] || 0,
-                    [spellOptions.ICONURL]: spell._iconObjectUrl || spell[spellOptions.ICONURL] || '',
-                });
-            } else {
-                // Clear form values if no spell exists
-                setFormValues({
-                    [spellOptions.NAME]: '',
-                    [spellOptions.INCANT]: '',
-                    [spellOptions.SPEED]: '',
-                    [spellOptions.RANGE]: '',
-                    [spellOptions.TYPE]: '',
-                    [spellOptions.DESC]: '',
-                    [spellOptions.LVL]: 0,
-                    [spellOptions.ICONURL]: '',
-                });
+        const loadSpell = async (nextSpell = false) => {
+            const spell = spells.find(s => s[spellOptions.PAGE] === currentPage + (nextSpell ? 1 : 0));
+            const formSetFunction = nextSpell ? setNextFormValues : setFormValues;
+            const spellSetFunction = nextSpell ? setNextSpell : setCurrentSpell;
+
+            spellSetFunction(spell || null);
+            formSetFunction({
+                [spellOptions.NAME]: spell?.[spellOptions.NAME] || '',
+                [spellOptions.INCANT]: spell?.[spellOptions.INCANT] || '',
+                [spellOptions.SPEED]: spell?.[spellOptions.SPEED] || '',
+                [spellOptions.RANGE]: spell?.[spellOptions.RANGE] || '',
+                [spellOptions.TYPE]: spell?.[spellOptions.TYPE] || '',
+                [spellOptions.DESC]: spell?.[spellOptions.DESC] || '',
+                [spellOptions.LVL]: spell?.[spellOptions.LVL] || 0,
+                [spellOptions.ICONURL]: spell?._iconObjectUrl || spell?.[spellOptions.ICONURL] || '',
+            });
+        };
+
+        // If we have a pending animation
+        if (navigationDirection && animations.length > 0) {
+            if (navigationDirection === 'next') {
+                // Load next spell immediately, current spell will load after animation
+                loadSpell(true);
+            } else if (navigationDirection === 'previous') {
+                // Load current spell immediately, next spell will load after animation
+                loadSpell(false);
             }
-
-            // Find the next spell for double page mode
-            const nextPageSpell = spells.find(s => s[spellOptions.PAGE] === currentPage + 1);
-            setNextSpell(nextPageSpell || null);
-
-            if (nextPageSpell) {
-                // Update next form values with next spell data
-                setNextFormValues({
-                    [spellOptions.NAME]: nextPageSpell[spellOptions.NAME] || '',
-                    [spellOptions.INCANT]: nextPageSpell[spellOptions.INCANT] || '',
-                    [spellOptions.SPEED]: nextPageSpell[spellOptions.SPEED] || '',
-                    [spellOptions.RANGE]: nextPageSpell[spellOptions.RANGE] || '',
-                    [spellOptions.TYPE]: nextPageSpell[spellOptions.TYPE] || '',
-                    [spellOptions.DESC]: nextPageSpell[spellOptions.DESC] || '',
-                    [spellOptions.LVL]: nextPageSpell[spellOptions.LVL] || 0,
-                    [spellOptions.ICONURL]: nextPageSpell._iconObjectUrl || nextPageSpell[spellOptions.ICONURL] || '',
-                });
-            } else {
-                // Clear next form values if no next spell exists
-                setNextFormValues({
-                    [spellOptions.NAME]: '',
-                    [spellOptions.INCANT]: '',
-                    [spellOptions.SPEED]: '',
-                    [spellOptions.RANGE]: '',
-                    [spellOptions.TYPE]: '',
-                    [spellOptions.DESC]: '',
-                    [spellOptions.LVL]: 0,
-                    [spellOptions.ICONURL]: '',
-                });
-            }
+        } else {
+            // No animation pending, load both spells
+            loadSpell(false);
+            loadSpell(true);
         }
-    }, [spells, currentPage]);
+    }, [spells, currentPage, navigationDirection, animations.length]);
 
     // Save spell function with nextSpell flag
     const saveSpell = async (updatedValues, isNextSpell = false) => {
@@ -490,20 +465,55 @@ export default function Spells() {
     // Remove animation after it completes
     const handleAnimationEnd = (animationId) => {
         setAnimations(prev => prev.filter(anim => anim.id !== animationId));
+
+        // If this was the last animation, load the delayed spell
+        if (animations.length === 1) { // We check for 1 since this filter hasn't been applied yet
+            if (navigationDirection === 'next') {
+                // Load current spell after next page animation
+                const spell = spells.find(s => s[spellOptions.PAGE] === currentPage);
+                setCurrentSpell(spell || null);
+                setFormValues({
+                    [spellOptions.NAME]: spell?.[spellOptions.NAME] || '',
+                    [spellOptions.INCANT]: spell?.[spellOptions.INCANT] || '',
+                    [spellOptions.SPEED]: spell?.[spellOptions.SPEED] || '',
+                    [spellOptions.RANGE]: spell?.[spellOptions.RANGE] || '',
+                    [spellOptions.TYPE]: spell?.[spellOptions.TYPE] || '',
+                    [spellOptions.DESC]: spell?.[spellOptions.DESC] || '',
+                    [spellOptions.LVL]: spell?.[spellOptions.LVL] || 0,
+                    [spellOptions.ICONURL]: spell?._iconObjectUrl || spell?.[spellOptions.ICONURL] || '',
+                });
+            } else if (navigationDirection === 'previous') {
+                // Load next spell after previous page animation
+                const spell = spells.find(s => s[spellOptions.PAGE] === currentPage + 1);
+                setNextSpell(spell || null);
+                setNextFormValues({
+                    [spellOptions.NAME]: spell?.[spellOptions.NAME] || '',
+                    [spellOptions.INCANT]: spell?.[spellOptions.INCANT] || '',
+                    [spellOptions.SPEED]: spell?.[spellOptions.SPEED] || '',
+                    [spellOptions.RANGE]: spell?.[spellOptions.RANGE] || '',
+                    [spellOptions.TYPE]: spell?.[spellOptions.TYPE] || '',
+                    [spellOptions.DESC]: spell?.[spellOptions.DESC] || '',
+                    [spellOptions.LVL]: spell?.[spellOptions.LVL] || 0,
+                    [spellOptions.ICONURL]: spell?._iconObjectUrl || spell?.[spellOptions.ICONURL] || '',
+                });
+            }
+            setNavigationDirection(null);
+        }
     };
 
     // Handle page switch button click with animation
     const handlePageSwitch = () => {
+        setNavigationDirection('next');
         playAnimation('next');
-        // Navigate to next page (current page + 2 if in double page mode, otherwise current page + 1)
         navigateToPage(currentPage + (isDoublePage ? 2 : 1));
     };
 
     // Handle previous page button click with animation
     const handlePreviousPage = () => {
-        if (currentPage === 0 || (isDoublePage && currentPage === 1)) return; // Prevent going to negative page numbers
+        if (currentPage === 0) return;
+        setNavigationDirection('previous');
         playAnimation('previous');
-        navigateToPage(currentPage - (isDoublePage ? 2 : 1));
+        navigateToPage(Math.max(currentPage - (isDoublePage ? 2 : 1), 0));
     };
 
     // Delete spell function
@@ -512,42 +522,71 @@ export default function Spells() {
             const pageToDelete = isNextSpell ? currentPage + 1 : currentPage;
 
             // Confirm deletion
-            if (!confirm(`Are you sure you want to delete the spell: ${spells[pageToDelete][spellOptions.NAME]}?`)) {
+            if (!confirm(`Are you sure you want to delete the spell: ${(isNextSpell ? nextSpell : currentSpell)?.[spellOptions.NAME]}?`)) {
                 return;
             }
 
             // Delete the spell
             await SpellbookDB.deleteSpellByPage(pageToDelete);
 
-            // Get all remaining spells
-            let remainingSpells = await SpellbookDB.getAllSpells();
-
-            // Shift all page numbers that are greater than the deleted page
-            for (const spell of remainingSpells) {
-                if (spell[spellOptions.PAGE] > pageToDelete) {
-                    // Shift page number down by one
-                    spell[spellOptions.PAGE] -= 1;
-                    await SpellbookDB.saveSpell(spell);
-                }
-            }
-
-            // Update the spells state with the adjusted spells
-            // Fetch fresh data after all updates
+            // Get all remaining spells after deletion and page shifting
             const updatedSpells = await SpellbookDB.getAllSpells();
             setSpells(updatedSpells);
 
-            // If we're on the last page and deleted it, go to the previous page
+            // Calculate the highest valid page
             const highestPage = updatedSpells.length > 0
                 ? Math.max(...updatedSpells.map(s => s[spellOptions.PAGE]))
                 : -1;
 
-            if (currentPage > highestPage && currentPage > 0) {
-                navigateToPage(currentPage - 1);
+            // Handle page navigation based on deletion context
+            if (isNextSpell) {
+                // If deleting next spell, stay on current page but refresh the next spell
+                const nextPageSpell = updatedSpells.find(s => s[spellOptions.PAGE] === currentPage + 1);
+                setNextSpell(nextPageSpell || null);
+                setNextFormValues({
+                    [spellOptions.NAME]: nextPageSpell?.[spellOptions.NAME] || '',
+                    [spellOptions.INCANT]: nextPageSpell?.[spellOptions.INCANT] || '',
+                    [spellOptions.SPEED]: nextPageSpell?.[spellOptions.SPEED] || '',
+                    [spellOptions.RANGE]: nextPageSpell?.[spellOptions.RANGE] || '',
+                    [spellOptions.TYPE]: nextPageSpell?.[spellOptions.TYPE] || '',
+                    [spellOptions.DESC]: nextPageSpell?.[spellOptions.DESC] || '',
+                    [spellOptions.LVL]: nextPageSpell?.[spellOptions.LVL] || 0,
+                    [spellOptions.ICONURL]: nextPageSpell?._iconObjectUrl || nextPageSpell?.[spellOptions.ICONURL] || '',
+                });
             } else {
-                // Otherwise just refresh the current page view
-                setCurrentSpell(null);
-                if (isNextSpell) {
-                    setNextSpell(null);
+                // If deleting current spell
+                if (currentPage > highestPage && currentPage > 0) {
+                    // Navigate to previous page if we're beyond the last spell
+                    navigateToPage(isDoublePage ? Math.max(currentPage - 2, 0) : currentPage - 1);
+                } else {
+                    // Stay on current page but refresh both spells
+                    const currentPageSpell = updatedSpells.find(s => s[spellOptions.PAGE] === currentPage);
+                    const nextPageSpell = updatedSpells.find(s => s[spellOptions.PAGE] === currentPage + 1);
+
+                    setCurrentSpell(currentPageSpell || null);
+                    setNextSpell(nextPageSpell || null);
+
+                    setFormValues({
+                        [spellOptions.NAME]: currentPageSpell?.[spellOptions.NAME] || '',
+                        [spellOptions.INCANT]: currentPageSpell?.[spellOptions.INCANT] || '',
+                        [spellOptions.SPEED]: currentPageSpell?.[spellOptions.SPEED] || '',
+                        [spellOptions.RANGE]: currentPageSpell?.[spellOptions.RANGE] || '',
+                        [spellOptions.TYPE]: currentPageSpell?.[spellOptions.TYPE] || '',
+                        [spellOptions.DESC]: currentPageSpell?.[spellOptions.DESC] || '',
+                        [spellOptions.LVL]: currentPageSpell?.[spellOptions.LVL] || 0,
+                        [spellOptions.ICONURL]: currentPageSpell?._iconObjectUrl || currentPageSpell?.[spellOptions.ICONURL] || '',
+                    });
+
+                    setNextFormValues({
+                        [spellOptions.NAME]: nextPageSpell?.[spellOptions.NAME] || '',
+                        [spellOptions.INCANT]: nextPageSpell?.[spellOptions.INCANT] || '',
+                        [spellOptions.SPEED]: nextPageSpell?.[spellOptions.SPEED] || '',
+                        [spellOptions.RANGE]: nextPageSpell?.[spellOptions.RANGE] || '',
+                        [spellOptions.TYPE]: nextPageSpell?.[spellOptions.TYPE] || '',
+                        [spellOptions.DESC]: nextPageSpell?.[spellOptions.DESC] || '',
+                        [spellOptions.LVL]: nextPageSpell?.[spellOptions.LVL] || 0,
+                        [spellOptions.ICONURL]: nextPageSpell?._iconObjectUrl || nextPageSpell?.[spellOptions.ICONURL] || '',
+                    });
                 }
             }
 
