@@ -1,0 +1,21 @@
+#title {
+    width: calc(var(--unit-width) * 80);
+    height: auto;
+    left: calc(var(--unit-width) * 33);
+    bottom: calc(var(--unit-height) * 158);
+    font-size: calc(var(--reactive-font-size) * 2);
+}
+
+.home__edit-button {
+    top: calc(var(--unit-height) * 43);
+    right: calc(var(--unit-width) * 10);
+    width: calc(var(--unit-width) * 9);
+    height: calc(var(--unit-height) * 9);
+}
+
+.home__settings-button {
+    top: calc(var(--unit-height) * 13);
+    right: calc(var(--unit-width) * 10);
+    width: calc(var(--unit-width) * 9);
+    height: calc(var(--unit-height) * 9);
+}

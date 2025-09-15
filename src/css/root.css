@@ -1,0 +1,101 @@
+:root {
+    --reactive-font-size: 3vh;
+    --text-red: rgb(120, 0, 0);
+    --dark-red: rgb(80, 0, 0);
+    --unit-width: 0.7246%;
+    --unit-height: 0.5263%;
+}
+
+@font-face {
+    font-family: 'MagicSchool';
+    src: url('assets/fonts/MagicSchoolOne.ttf') format('truetype');
+}
+
+.container {
+    display: flex;
+    width: 100%;
+    max-height: 100%;
+    max-height: 100vh;
+    max-height: 100svh;
+}
+
+body,
+html {
+    font-family: SpellbookFont, MagicSchool, sans-serif;
+    max-height: 100vh;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+
+    overflow: hidden;
+    background-color: rgb(24, 24, 24);
+    height: 100vh;
+}
+
+.page-img {
+    width: 100%;
+    max-height: 100vh;
+    /* TODO: option to not stretch to fill the page */
+    height: 100vh;
+    max-height: 100svh;
+}
+
+.next-page {
+    width: calc(var(--unit-width) * 16);
+    height: 100%;
+    top: 0%;
+    right: 0%;
+}
+
+.previous-page {
+    width: calc(var(--unit-width) * 16);
+    height: 100%;
+    top: 0%;
+    left: 0%;
+}
+
+.interact {
+    position: absolute;
+    cursor: pointer;
+    background: transparent;
+    border: none !important;
+    z-index: 9999;
+    margin: 0;
+    padding: 0;
+    font: inherit;
+}
+
+.text-overlay {
+    position: absolute;
+    font-size: var(--reactive-font-size);
+    margin: 0;
+    overflow-x: auto;
+    white-space: nowrap;
+
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+
+    /* TODO: gradient on the left */
+
+    -webkit-mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) 85%, rgba(0, 0, 0, 0));
+    mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) 85%, rgba(0, 0, 0, 0));
+    align-content: center;
+
+    &::after {
+        content: '';
+        width: 20%;
+        padding-left: 3vh;
+    }
+
+    /* &::before {
+        content: '';
+        width: 20%;
+        padding-right: 3vh;
+    } */
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}

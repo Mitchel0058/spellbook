@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spellbook | Settings</title>
+    <link rel="stylesheet" type="text/css" href="css/spellbook.css">
+    <link rel="stylesheet" type="text/css" href="css/text-overlays.css">
+    <link rel="stylesheet" type="text/css" href="css/interface.css">
+    <link rel="stylesheet" type="text/css" href="css/settings.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/ico" href="./favicon.ico?">
+</head>
+
+<body>
+    <!-- <div class="dev-tools">
+        <button class="font-toggle-button" style="top: 2rem;" onclick="toggleFont()">Toggle Font</button>
+        <br>
+        <button class="font-toggle-button" style="top: 4rem;" onclick="toggleEditing()">Enable Editing</button>
+        <br>
+        <button class="font-toggle-button" style="top: 6rem;" onclick="exportContent()">Export</button>
+        <br>
+        <button class="font-toggle-button" style="top: 8rem;" onclick="previousPage()">Previous Page</button>
+        <br>
+        <button class="font-toggle-button" style="top: 10rem;" onclick="nextPage()">Next Page</button>
+    </div> -->
+    <div class="container">
+        <!-- Page 1 -->
+        <div class="svg-overlay page-1">
+            <img class="page-img" src="assets/imgs/spellbook_cover.svg" alt="First page of DnD book">
+            <button class="interact" id="p1-next" onclick="nextPage()"></button>
+            <!-- Nav -->
+            <a href="settings.html">
+                <button class="interact settings"></button>
+            </a>
+            <a href="./">
+                <button class="interact home"></button>
+            </a>
+            <button class="interact font" onclick="toggleFont()"></button>
+
+            <div class="settingsBlock">
+                <div>
+                    <button class="settings-input" type="number" id="exportDB" onclick="exportSpellPageDB()">Export
+                        spellbook</button>
+                    <input class="settings-input" type="file" id="fileInput" accept=".json" onchange="importSpellPageDB(this.files[0])">
+                </div>
+                <label for="font_addition">Font Addition:
+                    <input class="settings-input" type="number" id="font_addition"
+                        onchange="updateFontAddition(this.value)"></label>
+                <label for="page_fit">Page Fit:
+                    <input class="settings-input" type="checkbox" id="page_fit"
+                        onchange="updatePageFit(this.checked)"></label>
+                <label for="animation">Animation:
+                    <input class="settings-input" type="checkbox" id="animation" checked
+                        onchange="updateAnimation(this.checked)"></label>
+                <label for="local_font">Local Font:
+                    <input class="settings-input" type="file" id="local_font" accept=".ttf,.otf,.woff,.woff2"
+                        onchange="updateLocalFont(this.files[0])">
+                    <button class="remove-font-button" onclick="removeLocalFont()">X</button>
+                </label>
+                <label for="current_spellbook_db">Select Spellbook DB:</label>
+                <!-- <input type="text" id="current_spellbook_db" placeholder="Enter database name"
+                    onchange="updateCurrentSpellbookDB(this.value)"> -->
+            </div>
+        </div>
+
+        <!-- Page 2 -->
+        <div class="svg-overlay page-2">
+            <img class="page-img" src="assets/imgs/spellbook_cover_right_page.svg" alt="Second page of DnD book">
+            <button class="interact" id="p2-previous" onclick="previousPage()"></button>
+        </div>
+    </div>
+
+    <script src="js/settings.js"></script>
+    <script src="service-worker.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then((registration) => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, (error) => {
+                    console.log('ServiceWorker registration failed: ', error);
+                });
+        }
+    </script>
+</body>
+
+</html>
