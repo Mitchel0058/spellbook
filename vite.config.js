@@ -25,14 +25,14 @@ export default defineConfig({
     build: {
         outDir: 'dist'
     },
-    // server: {
-    //     // dev server fallback
-    //     historyApiFallback: true
-    // },
-    // preview: {
-    //     // preview server fallback
-    //     historyApiFallback: true
-    // }
+    server: {
+        // dev server fallback
+        historyApiFallback: true
+    },
+    preview: {
+        // preview server fallback
+        historyApiFallback: true
+    }
 })
 
 // import { defineConfig } from 'vite'
