@@ -19,7 +19,7 @@
 
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./service-worker.js')
+            navigator.serviceWorker.register('/spellbook/sw.js')
                 .then((registration) => {
                     console.log('ServiceWorker registration successful with scope: ', registration.scope);
                 }, (error) => {
