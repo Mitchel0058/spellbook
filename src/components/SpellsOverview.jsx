@@ -65,7 +65,7 @@ export default function SpellsOverview({ reorderMode = false }) {
                     className='small-icon'
                     src={spell && (spell._iconObjectUrl || spell[spellOptions.ICONURL])
                         ? (spell._iconObjectUrl || spell[spellOptions.ICONURL])
-                        : 'assets/img/fireball.webp'}
+                        : '/assets/img/fireball.webp'}
                     alt=""
                 />
                 <div className="spell-content">

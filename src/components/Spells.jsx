@@ -45,8 +45,8 @@ const PageTransitionAnimation = ({ type, id, isDoublePage, onAnimationEnd }) => 
 
     // Choose animation based on type and page mode
     const videoSrc = type === 'next'
-        ? (isDoublePage ? 'assets/ani/next-page-double.webm' : 'assets/ani/next-page.webm')
-        : (isDoublePage ? 'assets/ani/previous-page-double.webm' : 'assets/ani/previous-page.webm');
+        ? (isDoublePage ? '/assets/ani/next-page-double.webm' : '/assets/ani/next-page.webm')
+        : (isDoublePage ? '/assets/ani/previous-page-double.webm' : '/assets/ani/previous-page.webm');
 
     return (
         <video
@@ -642,7 +642,7 @@ export default function Spells() {
                         />
                         <img
                             className='icon interact'
-                            src={formValues[spellOptions.ICONURL] || 'assets/img/fireball.webp'}
+                            src={formValues[spellOptions.ICONURL] || '/assets/img/fireball.webp'}
                             style={{ objectFit: currentSpell?.[spellOptions.ICONOBJECTFIT] || 'contain' }}
                             alt=""
                             onClick={() => triggerFileInput()}
@@ -660,7 +660,7 @@ export default function Spells() {
                         className='icon'
                         src={currentSpell && (currentSpell._iconObjectUrl || currentSpell[spellOptions.ICONURL])
                             ? (currentSpell._iconObjectUrl || currentSpell[spellOptions.ICONURL])
-                            : 'assets/img/fireball.webp'}
+                            : '/assets/img/fireball.webp'}
                         style={currentSpell ? { objectFit: currentSpell[spellOptions.ICONOBJECTFIT] } : {}}
                         alt=""
                     />
@@ -709,7 +709,7 @@ export default function Spells() {
                             />
                             <img
                                 className='icon right-page-offset interact'
-                                src={nextFormValues[spellOptions.ICONURL] || 'assets/img/fireball.webp'}
+                                src={nextFormValues[spellOptions.ICONURL] || '/assets/img/fireball.webp'}
                                 style={{ objectFit: nextSpell?.[spellOptions.ICONOBJECTFIT] || 'contain' }}
                                 alt=""
                                 onClick={() => triggerFileInput(true)}
@@ -727,7 +727,7 @@ export default function Spells() {
                             className='icon right-page-offset'
                             src={nextSpell && (nextSpell._iconObjectUrl || nextSpell[spellOptions.ICONURL])
                                 ? (nextSpell._iconObjectUrl || nextSpell[spellOptions.ICONURL])
-                                : 'assets/img/fireball.webp'}
+                                : '/assets/img/fireball.webp'}
                             style={nextSpell ? { objectFit: nextSpell[spellOptions.ICONOBJECTFIT] } : {}}
                             alt=""
                         />

@@ -6,7 +6,7 @@ export default function Page({ pageType, children }) {
     const getImagePath = (type) => {
         // TODO: different fallback page type
         const imageName = pageImages[type] || pageImages[PageType.COVER];
-        return `assets/img/${imageName}`;
+        return `/assets/img/${imageName}`;
     };
 
     return (

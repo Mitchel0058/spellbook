@@ -50,7 +50,7 @@ export default function Home() {
         <>
             {loading ? (
                 <div className="svg-overlay">
-                    <img className="page-img" src={"assets/img/spellbook_cover.svg"} alt="Cover of DnD book" />
+                    <img className="page-img" src={"/assets/img/spellbook_cover.svg"} alt="Cover of DnD book" />
                 </div>
             ) : (
                 <>
