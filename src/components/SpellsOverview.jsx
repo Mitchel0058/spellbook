@@ -61,15 +61,16 @@ export default function SpellsOverview({ reorderMode = false }) {
 
         const content = (
             <>
+                <img
+                    className='small-icon'
+                    src={spell && (spell._iconObjectUrl || spell[spellOptions.ICONURL])
+                        ? (spell._iconObjectUrl || spell[spellOptions.ICONURL])
+                        : 'assets/img/fireball.webp'}
+                    alt=""
+                />
                 <div className="spell-content">
-                    <img
-                        className='small-icon'
-                        src={spell && (spell._iconObjectUrl || spell[spellOptions.ICONURL])
-                            ? (spell._iconObjectUrl || spell[spellOptions.ICONURL])
-                            : 'assets/img/fireball.webp'}
-                        alt=""
-                    />
-                    <div>{spell[spellOptions.PAGE] + 1}&#41;{spell[spellOptions.NAME]}</div>
+                    <div>{spell[spellOptions.PAGE] + 1}&#41;</div>
+                    <div> {spell[spellOptions.NAME]}</div>
                 </div>
                 <div>{spell[spellOptions.LVL]}</div>
             </>

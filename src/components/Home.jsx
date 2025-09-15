@@ -31,7 +31,7 @@ export default function Home() {
         const timer = setTimeout(() => {
             timeoutPassed = true;
             if (settingsLoaded) setLoading(false);
-        }, 2000);
+        }, 500);
 
         // Check when settings are loaded
         if (!settingsLoading) {
@@ -41,11 +41,6 @@ export default function Home() {
 
         return () => clearTimeout(timer);
     }, [settings, settingsLoading]);
-
-    const handlePageNavigation = () => {
-        // Implement your page navigation logic here
-        console.log('Navigate to next page');
-    };
 
     const toggleReorderMode = () => {
         setReorderMode(prev => !prev);
