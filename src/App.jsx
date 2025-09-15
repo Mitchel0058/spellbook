@@ -1,4 +1,4 @@
-import { Route, Switch } from 'wouter'
+import { Route, Switch, Router } from 'wouter'
 import { useEffect } from 'preact/hooks'
 import Home from './components/Home'
 import Settings from './components/Settings'
@@ -34,11 +34,13 @@ export default function App() {
     return (
         <SettingsProvider>
             <div className="container">
-                <Switch>
-                    <Route path="/settings" component={Settings} />
-                    <Route path="/spells" component={Spells} />
-                    <Route path="/" component={Home} />
-                </Switch>
+                <Router>
+                    <Switch>
+                        <Route path="/settings" component={Settings} />
+                        <Route path="/spells" component={Spells} />
+                        <Route path="/" component={Home} />
+                    </Switch>
+                </Router>
             </div>
         </SettingsProvider>
     )

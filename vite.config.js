@@ -3,7 +3,7 @@ import preact from '@preact/preset-vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-    base: '/spellbook/',
+    // base: '/',
     plugins: [
         preact(),
         VitePWA({
@@ -24,7 +24,15 @@ export default defineConfig({
     ],
     build: {
         outDir: 'dist'
-    }
+    },
+    // server: {
+    //     // dev server fallback
+    //     historyApiFallback: true
+    // },
+    // preview: {
+    //     // preview server fallback
+    //     historyApiFallback: true
+    // }
 })
 
 // import { defineConfig } from 'vite'
