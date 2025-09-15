@@ -3,7 +3,7 @@ import preact from '@preact/preset-vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-    base: '/spellbook/',  
+    base: '/spellbook/',
     plugins: [
         preact(),
         VitePWA({
@@ -22,6 +22,9 @@ export default defineConfig({
             }
         })
     ],
+    build: {
+        outDir: 'dist'
+    }
 })
 
 // import { defineConfig } from 'vite'
