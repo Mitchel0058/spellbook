@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spellbook</title>
+    <!-- <link rel="stylesheet" type="text/css" href="css/spellbook.css">
+    <link rel="stylesheet" type="text/css" href="css/text-overlays.css">
+    <link rel="stylesheet" type="text/css" href="css/interface.css">
+    <link rel="stylesheet" type="text/css" href="css/index.css">
+    <link rel="manifest" href="manifest.json">-->
+    <link rel="icon" type="image/ico" href="/spellbook/assets/favicon-C2gBIQWR.ico?">
+  <script type="module" crossorigin src="/spellbook/assets/index-BnVnA5hh.js"></script>
+  <link rel="stylesheet" crossorigin href="/spellbook/assets/index-DeFS-YyX.css">
+<link rel="manifest" href="/spellbook/manifest.webmanifest"></head>
+
+<body>
+    <div id="app"></div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/spellbook/sw.js')
+                .then((registration) => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, (error) => {
+                    console.log('ServiceWorker registration failed: ', error);
+                });
+        }
+    </script>
+</body>
+
+</html>
