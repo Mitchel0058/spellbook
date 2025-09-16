@@ -29,9 +29,9 @@ class DBUtil {
  * Settings database manager
  */
 export class SettingsDB {
-    static DB_NAME = 'Settings';
+    static DB_NAME = 'Spellbook_Settings';
     static STORE_NAME = 'settings';
-    static VERSION = 1;
+    static VERSION = 2;
 
     static db = null;
 
@@ -107,10 +107,6 @@ export class SettingsDB {
      * @returns {Promise<void>}
      */
     static async set(key, value) {
-        if (!key) {
-            console.error("Attempted to save setting with invalid key!", key, value);
-            throw new Error("Invalid key passed to SettingsDB.set");
-        }
         this.validateSettingKey(key);
         await this.init();
         return this.db.put(this.STORE_NAME, { key, value });
