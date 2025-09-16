@@ -107,6 +107,10 @@ export class SettingsDB {
      * @returns {Promise<void>}
      */
     static async set(key, value) {
+        if (!key) {
+            console.error("Attempted to save setting with invalid key!", key, value);
+            throw new Error("Invalid key passed to SettingsDB.set");
+        }
         this.validateSettingKey(key);
         await this.init();
         return this.db.put(this.STORE_NAME, { key, value });
