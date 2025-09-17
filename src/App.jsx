@@ -34,7 +34,7 @@ export default function App() {
     return (
         <SettingsProvider>
             <div className="container">
-                <Router base="/spellbook/">
+                <Router base="/spellbook">
                     <Switch>
                         <Route path="/settings" component={Settings} />
                         <Route path="/spells" component={Spells} />
