@@ -205,42 +205,51 @@ export default function Settings() {
                     <div>
                         Spellbook Settings
                         {/* TODO: change hr look with css */}
-                        <hr />
+                        <hr className='settings__hr-break' />
                     </div>
                     {/* Settings for the currently selected spellbook */}
-                    <label>
-                        Name
-                        <input
-                            type='text'
-                            value={spellbookName}
-                            onChange={(e) => setSpellbookName(e.target.value)}
-                        />
-                        <button className='interact' onClick={handleSpellbookNameChange}>Change</button>
-                    </label>
-                    <label>
-                        Spellbook Font
-                        <input
-                            type='file'
-                            accept=".ttf,.otf,.woff,.woff2"
-                            onChange={handleFontUpload}
-                        />
-                        <button className='interact' onClick={handleRemoveFont}>X</button>
-                    </label>
+                    <div className='settings__container-line'>
+                        <label className='settings__file-input-label' for="spellbookName">
+                            Name:
+                            <br />
+                            <input
+                                type='text'
+                                value={spellbookName}
+                                id='spellbookName'
+                                onChange={(e) => setSpellbookName(e.target.value)}
+                                className='settings__input'
+                            />
+                        </label>
+                        <button className='settings__interact' onClick={handleSpellbookNameChange}>Change</button>
+                    </div>
+                    <div className='settings__container-line'>
+                        <label className='settings__file-input-label'>
+                            Spellbook Font
+                            <input
+                                type='file'
+                                accept=".ttf,.otf,.woff,.woff2"
+                                onChange={handleFontUpload}
+                                className='settings__file-input'
+                            />
+                        </label>
+                        <button className='settings__interact' onClick={handleRemoveFont}>X</button>
+                    </div>
                     <div>Change Spellbook
                         <div>
-                            <div><i>Current: {settings[settingsOptions.CURRENT_SPELLBOOK_DB]}</i></div>
+                            <div>Current: <i>{settings[settingsOptions.CURRENT_SPELLBOOK_DB]}</i></div>
                             {settings[settingsOptions.SPELLBOOK_LIST]?.filter(name =>
                                 name !== settings[settingsOptions.CURRENT_SPELLBOOK_DB]
                             ).map((name) => (
-                                <div key={name}>
+                                <div key={name} className='settings__spellbook-item'>
                                     <button onClick={async () => {
                                         await SpellbookDB.switchSpellbook(name);
                                         setNeedsRefresh(true);
-                                    }}>
+                                    }}
+                                        className='settings__spellbook-button'>
                                         {name}
                                     </button>
                                     <button
-                                        className="interact"
+                                        className="settings__interact"
                                         onClick={() => handleDeleteSpellbook(name)}
                                     >
                                         Delete
@@ -249,29 +258,32 @@ export default function Settings() {
                             ))}
                         </div>
                     </div>
-                    <div>
+                    <div className='settings__container-line'>
                         <label for="newSpellbookName">
                             Create new spellbook
+                            <input
+                                type='text'
+                                id="newSpellbookName"
+                                value={newSpellbookName}
+                                className='settings__input'
+                                onChange={(e) => setNewSpellbookName(e.target.value)}
+                            />
                         </label>
-                        <input
-                            type='text'
-                            id="newSpellbookName"
-                            value={newSpellbookName}
-                            onChange={(e) => setNewSpellbookName(e.target.value)}
-                        />
-                        <button className='interact' onClick={handleCreateNewSpellbook}>Create</button>
+                        <button className='settings__interact' onClick={handleCreateNewSpellbook}>Add</button>
                     </div>
                     <div>
                         <label for="exportSpellbook">Export Spellbook</label>
                         <br />
-                        <button id="exportSpellbook" onClick={handleExportSpellbook}>Export</button>
-                        <br />
+                        <button id="exportSpellbook" className='settings__interact' onClick={handleExportSpellbook}>Export</button>
+                    </div>
+                    <div>
                         <label for="importSpellbook">Import Spellbook</label>
                         <input
                             type="file"
                             accept=".spellbook,.json"
                             id="importSpellbook"
                             onChange={handleImportSpellbookSelect}
+                            className='settings__file-input'
                         />
                         {importData && (
                             <div>
@@ -287,7 +299,7 @@ export default function Settings() {
 
                     <div>
                         General Settings
-                        <hr />
+                        <hr className='settings__hr-break' />
                     </div>
                     <label>
                         Fontsize:
@@ -295,6 +307,7 @@ export default function Settings() {
                             type='number'
                             value={fontAddition}
                             onChange={(e) => handleFontAdditionChange(e.target.value)}
+                            className='settings__input'
                         />
                     </label>
                     <label>
@@ -318,7 +331,7 @@ export default function Settings() {
                 <Link to='/' className='interact settings__home-button' />
                 <button className='interact settings__font-button'></button>
                 <button className='interact settings__edit-button'></button>
-            </Page>
+            </Page >
 
             {isDoublePage &&
                 <Page pageType={PageType.SPELLRIGHT}>
