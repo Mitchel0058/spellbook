@@ -69,8 +69,8 @@ export default function SpellsOverview({ reorderMode = false }) {
                     alt=""
                 />
                 <div className="spell-content">
-                    <div>{spell[spellOptions.PAGE] + 1}&#41;</div>
-                    <div> {spell[spellOptions.NAME]}</div>
+                    {/* <div>{spell[spellOptions.PAGE] + 1}&#41;</div> */}
+                    <div className="spellsOverview__spellname"> {spell[spellOptions.NAME]}</div>
                 </div>
                 <div>{spell[spellOptions.LVL]}</div>
             </>

@@ -23,6 +23,10 @@
     height: calc(var(--unit-height) * 10);
 }
 
+.spellsOverview__spellname {
+    text-align: center;
+}
+
 .spell-item {
     width: 100%;
     height: calc(var(--unit-height) * 20);
