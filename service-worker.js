@@ -1,5 +1,5 @@
-const CACHE_NAME = 'spellbook-cache-v0.1.6';
-const BASE_PATH = '/spellbook'; // Add this line for GitHub Pages
+const CACHE_NAME = 'spellbook-cache-v0.1.7';
+const BASE_PATH = '/spellbook';
 
 const ASSETS_TO_CACHE = [
     `${BASE_PATH}/`,
