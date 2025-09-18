@@ -2,6 +2,8 @@
     --reactive-font-size: 3vh;
     --text-red: rgb(120, 0, 0);
     --dark-red: rgb(80, 0, 0);
+    --dark-brown: #a67048;
+    --darker-brown: #8f563b;
     --unit-width: 0.7246%;
     --unit-height: 0.5263%;
 }
@@ -60,7 +62,7 @@ html {
     position: absolute;
     cursor: pointer;
     background: transparent;
-    border: none !important;
+    border: none;
     z-index: 9999;
     margin: 0;
     padding: 0;

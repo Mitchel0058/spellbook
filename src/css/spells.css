@@ -76,6 +76,24 @@
     height: 25%;
 }
 
+.img-fit-select {
+    left: calc(var(--unit-width) * 24);
+    bottom: calc(var(--unit-height) * 179);
+    background-color: var(--dark-brown) !important;
+    border: 2px solid var(--darker-brown) !important;
+    font-size: var(--reactive-font-size) !important;
+    width: calc(var(--unit-width) * 32);
+    height: calc(var(--unit-height) * 7);
+}
+
+.img-fit-select option {
+    background-color: var(--dark-brown);
+    border: none;
+    padding: 0;
+    margin: 0;
+    font-size: var(--reactive-font-size) !important;
+}
+
 .editable {
     font-size: var(--reactive-font-size) !important;
     padding: 0;
@@ -118,10 +136,18 @@ input[type=number] {
 
 .icon {
     position: absolute;
+    box-sizing: border-box;
     width: calc(var(--unit-width) * 28);
     height: calc(var(--unit-height) * 28);
     left: calc(var(--unit-width) * 26);
     bottom: calc(var(--unit-height) * 149);
+}
+
+.icon-editing {
+    outline-style: solid !important;
+    outline-color: var(--text-red) !important;
+    outline-width: var(--unit-height) var(--unit-width) !important;
+    background-color: #0001 !important;
 }
 
 .settings-button {

@@ -85,6 +85,7 @@ export default function Spells() {
         [spellOptions.DESC]: '',
         [spellOptions.LVL]: 0,
         [spellOptions.ICONURL]: '',
+        [spellOptions.ICONOBJECTFIT]: 'contain',
     });
 
     // Form state for next spell when in double page mode
@@ -97,6 +98,7 @@ export default function Spells() {
         [spellOptions.DESC]: '',
         [spellOptions.LVL]: 0,
         [spellOptions.ICONURL]: '',
+        [spellOptions.ICONOBJECTFIT]: 'contain',
     });
 
     // Animation state
@@ -641,7 +643,7 @@ export default function Spells() {
                             onChange={(e) => handleImageUpload(e)}
                         />
                         <img
-                            className='icon interact'
+                            className='icon icon-editing interact'
                             src={formValues[spellOptions.ICONURL] || 'assets/img/fireball.webp'}
                             style={{ objectFit: currentSpell?.[spellOptions.ICONOBJECTFIT] || 'contain' }}
                             alt=""
@@ -653,6 +655,19 @@ export default function Spells() {
                             }}
                             tabIndex={0}
                         />
+                        <select
+                            className='interact img-fit-select'
+                            name="img-fit"
+                            id="img-fit-select"
+                            value={currentSpell[spellOptions.ICONOBJECTFIT] || 'contain'}
+                            onChange={(e) => handleInputChange(spellOptions.ICONOBJECTFIT, e.target.value)}
+                        >
+                            <option value="contain">Contain</option>
+                            <option value="cover">Cover</option>
+                            <option value="fill">Fill</option>
+                            <option value="none">None</option>
+                            <option value="scale-down">Scale Down</option>
+                        </select>
                         {isUploadingImage && <div className="loading-indicator">Uploading...</div>}
                     </>
                 ) : (
@@ -708,7 +723,7 @@ export default function Spells() {
                                 onChange={(e) => handleImageUpload(e, true)}
                             />
                             <img
-                                className='icon right-page-offset interact'
+                                className='icon icon-editing right-page-offset interact'
                                 src={nextFormValues[spellOptions.ICONURL] || 'assets/img/fireball.webp'}
                                 style={{ objectFit: nextSpell?.[spellOptions.ICONOBJECTFIT] || 'contain' }}
                                 alt=""
@@ -720,6 +735,19 @@ export default function Spells() {
                                 }}
                                 tabIndex={0}
                             />
+                            <select
+                                className='interact img-fit-select right-page-offset'
+                                name="img-fit-next"
+                                id="img-fit-select-next"
+                                value={nextSpell[spellOptions.ICONOBJECTFIT] || 'contain'}
+                                onChange={(e) => handleNextInputChange(spellOptions.ICONOBJECTFIT, e.target.value)}
+                            >
+                                <option value="contain">Contain</option>
+                                <option value="cover">Cover</option>
+                                <option value="fill">Fill</option>
+                                <option value="none">None</option>
+                                <option value="scale-down">Scale Down</option>
+                            </select>
                             {isUploadingNextImage && <div className="loading-indicator right-page-offset">Uploading...</div>}
                         </>
                     ) : (
