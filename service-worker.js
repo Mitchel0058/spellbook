@@ -1,4 +1,4 @@
-const CACHE_NAME = 'spellbook-cache-v0.1.7';
+const CACHE_NAME = 'spellbook-cache-v0.1.8';
 const BASE_PATH = '/spellbook';
 
 const ASSETS_TO_CACHE = [
