@@ -21,10 +21,10 @@ export default defineConfig({
                 scope: '/spellbook/',
                 display: 'standalone',
                 icons: [
-                    { src: 'assets/imgs/cover_192.png', sizes: '192x192', type: 'image/png' },
-                    { src: 'assets/imgs/cover_512.png', sizes: '512x512', type: 'image/png' },
-                    { src: 'assets/imgs/cover_192.webp', sizes: '192x192', type: 'image/webp' },
-                    { src: 'assets/imgs/cover_512.webp', sizes: '512x512', type: 'image/webp' }
+                    { src: 'assets/img/cover_192.png', sizes: '192x192', type: 'image/png' },
+                    { src: 'assets/img/cover_512.png', sizes: '512x512', type: 'image/png' },
+                    { src: 'assets/img/cover_192.webp', sizes: '192x192', type: 'image/webp' },
+                    { src: 'assets/img/cover_512.webp', sizes: '512x512', type: 'image/webp' }
                 ]
             }
         })
