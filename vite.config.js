@@ -16,6 +16,7 @@ export default defineConfig({
                 short_name: 'Spellbook',
                 description: 'A D&D inspired spellbook',
                 theme_color: '#200404',
+                background_color: '#200404',
                 start_url: '/spellbook/',
                 scope: '/spellbook/',
                 display: 'standalone'
