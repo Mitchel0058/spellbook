@@ -11,23 +11,14 @@
     <link rel="stylesheet" type="text/css" href="css/index.css">
     <link rel="manifest" href="manifest.json">-->
     <link rel="icon" type="image/ico" href="/spellbook/assets/favicon-C2gBIQWR.ico?">
+    <link rel="manifest" href="/spellbook/manifest.webmanifest">
+    <meta name="theme-color" content="#200404">
   <script type="module" crossorigin src="/spellbook/assets/index-Cdmjliht.js"></script>
   <link rel="stylesheet" crossorigin href="/spellbook/assets/index-BIdDrn3e.css">
 <link rel="manifest" href="/spellbook/manifest.webmanifest"></head>
 
 <body>
     <div id="app"></div>
-
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/spellbook/sw.js')
-                .then((registration) => {
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                }, (error) => {
-                    console.log('ServiceWorker registration failed: ', error);
-                });
-        }
-    </script>
 </body>
 
 </html>
