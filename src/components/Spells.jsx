@@ -162,6 +162,7 @@ export default function Spells() {
                 [spellOptions.DESC]: spell?.[spellOptions.DESC] || '',
                 [spellOptions.LVL]: spell?.[spellOptions.LVL] || 0,
                 [spellOptions.ICONURL]: spell?._iconObjectUrl || spell?.[spellOptions.ICONURL] || '',
+                [spellOptions.ICONOBJECTFIT]: spell?.[spellOptions.ICONOBJECTFIT] || 'contain',
             });
         };
 
@@ -270,11 +271,19 @@ export default function Spells() {
             [field]: value
         }));
 
-        // Debounce the save operation
-        debouncedSave({
+        // Prepare values for saving - preserve original file if it exists
+        const valuesToSave = {
             ...formValues,
             [field]: value
-        });
+        };
+
+        // If we're not updating the icon itself, preserve the original file from the spell
+        if (field !== spellOptions.ICONURL && currentSpell && currentSpell[spellOptions.ICONURL]) {
+            valuesToSave[spellOptions.ICONURL] = currentSpell[spellOptions.ICONURL];
+        }
+
+        // Debounce the save operation
+        debouncedSave(valuesToSave);
     };
 
     // Handle input changes for next spell
@@ -290,12 +299,20 @@ export default function Spells() {
             [field]: value
         }));
 
-        // Debounce the save operation for the next spell
-        debouncedSave({
+        // Prepare values for saving - preserve original file if it exists
+        const valuesToSave = {
             ...nextFormValues,
             [field]: value,
             [spellOptions.PAGE]: currentPage + 1
-        }, true);
+        };
+
+        // If we're not updating the icon itself, preserve the original file from the spell
+        if (field !== spellOptions.ICONURL && nextSpell && nextSpell[spellOptions.ICONURL]) {
+            valuesToSave[spellOptions.ICONURL] = nextSpell[spellOptions.ICONURL];
+        }
+
+        // Debounce the save operation for the next spell
+        debouncedSave(valuesToSave, true);
     };
 
     // Toggle edit mode
@@ -483,6 +500,7 @@ export default function Spells() {
                     [spellOptions.DESC]: spell?.[spellOptions.DESC] || '',
                     [spellOptions.LVL]: spell?.[spellOptions.LVL] || 0,
                     [spellOptions.ICONURL]: spell?._iconObjectUrl || spell?.[spellOptions.ICONURL] || '',
+                    [spellOptions.ICONOBJECTFIT]: spell?.[spellOptions.ICONOBJECTFIT] || 'contain',
                 });
             } else if (navigationDirection === 'previous') {
                 // Load next spell after previous page animation
@@ -497,6 +515,7 @@ export default function Spells() {
                     [spellOptions.DESC]: spell?.[spellOptions.DESC] || '',
                     [spellOptions.LVL]: spell?.[spellOptions.LVL] || 0,
                     [spellOptions.ICONURL]: spell?._iconObjectUrl || spell?.[spellOptions.ICONURL] || '',
+                    [spellOptions.ICONOBJECTFIT]: spell?.[spellOptions.ICONOBJECTFIT] || 'contain',
                 });
             }
             setNavigationDirection(null);
@@ -554,6 +573,7 @@ export default function Spells() {
                     [spellOptions.DESC]: nextPageSpell?.[spellOptions.DESC] || '',
                     [spellOptions.LVL]: nextPageSpell?.[spellOptions.LVL] || 0,
                     [spellOptions.ICONURL]: nextPageSpell?._iconObjectUrl || nextPageSpell?.[spellOptions.ICONURL] || '',
+                    [spellOptions.ICONOBJECTFIT]: nextPageSpell?.[spellOptions.ICONOBJECTFIT] || 'contain',
                 });
             } else {
                 // If deleting current spell
@@ -577,6 +597,7 @@ export default function Spells() {
                         [spellOptions.DESC]: currentPageSpell?.[spellOptions.DESC] || '',
                         [spellOptions.LVL]: currentPageSpell?.[spellOptions.LVL] || 0,
                         [spellOptions.ICONURL]: currentPageSpell?._iconObjectUrl || currentPageSpell?.[spellOptions.ICONURL] || '',
+                        [spellOptions.ICONOBJECTFIT]: currentPageSpell?.[spellOptions.ICONOBJECTFIT] || 'contain',
                     });
 
                     setNextFormValues({
@@ -588,6 +609,7 @@ export default function Spells() {
                         [spellOptions.DESC]: nextPageSpell?.[spellOptions.DESC] || '',
                         [spellOptions.LVL]: nextPageSpell?.[spellOptions.LVL] || 0,
                         [spellOptions.ICONURL]: nextPageSpell?._iconObjectUrl || nextPageSpell?.[spellOptions.ICONURL] || '',
+                        [spellOptions.ICONOBJECTFIT]: nextPageSpell?.[spellOptions.ICONOBJECTFIT] || 'contain',
                     });
                 }
             }
@@ -659,7 +681,7 @@ export default function Spells() {
                             className='interact img-fit-select'
                             name="img-fit"
                             id="img-fit-select"
-                            value={currentSpell[spellOptions.ICONOBJECTFIT] || 'contain'}
+                            value={currentSpell?.[spellOptions.ICONOBJECTFIT] || 'contain'}
                             onChange={(e) => handleInputChange(spellOptions.ICONOBJECTFIT, e.target.value)}
                         >
                             <option value="contain">Contain</option>
@@ -739,7 +761,7 @@ export default function Spells() {
                                 className='interact img-fit-select right-page-offset'
                                 name="img-fit-next"
                                 id="img-fit-select-next"
-                                value={nextSpell[spellOptions.ICONOBJECTFIT] || 'contain'}
+                                value={nextSpell?.[spellOptions.ICONOBJECTFIT] || 'contain'}
                                 onChange={(e) => handleNextInputChange(spellOptions.ICONOBJECTFIT, e.target.value)}
                             >
                                 <option value="contain">Contain</option>
