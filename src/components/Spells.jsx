@@ -133,7 +133,7 @@ export default function Spells() {
                 const allSpells = await SpellbookDB.getAllSpells();
                 setSpells(allSpells);
                 setLoading(false);
-                console.log('All spells loaded:', allSpells.length);
+                // console.log('All spells loaded:', allSpells.length);
             } catch (error) {
                 console.error('Error loading spells:', error);
                 setLoading(false);
@@ -152,17 +152,48 @@ export default function Spells() {
             const formSetFunction = nextSpell ? setNextFormValues : setFormValues;
             const spellSetFunction = nextSpell ? setNextSpell : setCurrentSpell;
 
-            spellSetFunction(spell || null);
+            // console.log(`Loading spell for page ${currentPage + (nextSpell ? 1 : 0)}:`, {
+            //     hasSpell: !!spell,
+            //     iconType: spell ? typeof spell[spellOptions.ICONURL] : 'none',
+            //     hasObjectUrl: spell ? !!spell._iconObjectUrl : false,
+            //     iconUrl: spell ? spell[spellOptions.ICONURL] : null
+            // });
+
+            // If spell has an image file but no object URL, create one
+            let updatedSpell = spell;
+            if (spell && spell[spellOptions.ICONURL] && typeof spell[spellOptions.ICONURL] !== 'string' && !spell._iconObjectUrl) {
+                // console.log('Creating new blob URL for spell');
+                const objectUrl = URL.createObjectURL(spell[spellOptions.ICONURL]);
+                blobUrlsRef.current.add(objectUrl); // Track for cleanup
+                // console.log('Created blob URL:', objectUrl);
+                updatedSpell = {
+                    ...spell,
+                    _iconObjectUrl: objectUrl
+                };
+
+                // Update the spells array with the new object URL
+                setSpells(prevSpells =>
+                    prevSpells.map(s =>
+                        s[spellOptions.PAGE] === spell[spellOptions.PAGE] ? updatedSpell : s
+                    )
+                );
+            }
+
+            spellSetFunction(updatedSpell || null);
+
+            const displayUrl = updatedSpell?._iconObjectUrl || updatedSpell?.[spellOptions.ICONURL] || '';
+            // console.log('Setting form values with display URL:', displayUrl);
+
             formSetFunction({
-                [spellOptions.NAME]: spell?.[spellOptions.NAME] || '',
-                [spellOptions.INCANT]: spell?.[spellOptions.INCANT] || '',
-                [spellOptions.SPEED]: spell?.[spellOptions.SPEED] || '',
-                [spellOptions.RANGE]: spell?.[spellOptions.RANGE] || '',
-                [spellOptions.TYPE]: spell?.[spellOptions.TYPE] || '',
-                [spellOptions.DESC]: spell?.[spellOptions.DESC] || '',
-                [spellOptions.LVL]: spell?.[spellOptions.LVL] || 0,
-                [spellOptions.ICONURL]: spell?._iconObjectUrl || spell?.[spellOptions.ICONURL] || '',
-                [spellOptions.ICONOBJECTFIT]: spell?.[spellOptions.ICONOBJECTFIT] || 'contain',
+                [spellOptions.NAME]: updatedSpell?.[spellOptions.NAME] || '',
+                [spellOptions.INCANT]: updatedSpell?.[spellOptions.INCANT] || '',
+                [spellOptions.SPEED]: updatedSpell?.[spellOptions.SPEED] || '',
+                [spellOptions.RANGE]: updatedSpell?.[spellOptions.RANGE] || '',
+                [spellOptions.TYPE]: updatedSpell?.[spellOptions.TYPE] || '',
+                [spellOptions.DESC]: updatedSpell?.[spellOptions.DESC] || '',
+                [spellOptions.LVL]: updatedSpell?.[spellOptions.LVL] || 0,
+                [spellOptions.ICONURL]: displayUrl,
+                [spellOptions.ICONOBJECTFIT]: updatedSpell?.[spellOptions.ICONOBJECTFIT] || 'contain',
             });
         };
 
@@ -233,20 +264,49 @@ export default function Spells() {
                             if (spell._iconObjectUrl && !spellToSave._iconObjectUrl) {
                                 spellToSave._iconObjectUrl = spell._iconObjectUrl;
                             }
+                            // If the spell has a file but no object URL, create one
+                            else if (spellToSave[spellOptions.ICONURL] && typeof spellToSave[spellOptions.ICONURL] !== 'string' && !spellToSave._iconObjectUrl) {
+                                spellToSave._iconObjectUrl = URL.createObjectURL(spellToSave[spellOptions.ICONURL]);
+                                blobUrlsRef.current.add(spellToSave._iconObjectUrl); // Track for cleanup
+                                // console.log('Created new blob URL during save:', spellToSave._iconObjectUrl);
+                            }
                             return spellToSave;
                         }
                         return spell;
                     });
                 } else {
+                    // If the spell has a file but no object URL, create one
+                    if (spellToSave[spellOptions.ICONURL] && typeof spellToSave[spellOptions.ICONURL] !== 'string' && !spellToSave._iconObjectUrl) {
+                        spellToSave._iconObjectUrl = URL.createObjectURL(spellToSave[spellOptions.ICONURL]);
+                        blobUrlsRef.current.add(spellToSave._iconObjectUrl); // Track for cleanup
+                        // console.log('Created new blob URL for new spell:', spellToSave._iconObjectUrl);
+                    }
                     return [...prevSpells, spellToSave];
                 }
             });
 
-            // Update current or next spell reference
+            // Update current or next spell reference with proper object URL
+            const updatedSpellForState = { ...spellToSave };
+            if (updatedSpellForState[spellOptions.ICONURL] && typeof updatedSpellForState[spellOptions.ICONURL] !== 'string' && !updatedSpellForState._iconObjectUrl) {
+                updatedSpellForState._iconObjectUrl = URL.createObjectURL(updatedSpellForState[spellOptions.ICONURL]);
+                blobUrlsRef.current.add(updatedSpellForState._iconObjectUrl); // Track for cleanup
+                // console.log('Created blob URL for state update:', updatedSpellForState._iconObjectUrl);
+            }
+
             if (isNextSpell) {
-                setNextSpell(spellToSave);
+                setNextSpell(updatedSpellForState);
+                // Update form values to use the correct blob URL
+                setNextFormValues(prev => ({
+                    ...prev,
+                    [spellOptions.ICONURL]: updatedSpellForState._iconObjectUrl || updatedSpellForState[spellOptions.ICONURL] || prev[spellOptions.ICONURL]
+                }));
             } else {
-                setCurrentSpell(spellToSave);
+                setCurrentSpell(updatedSpellForState);
+                // Update form values to use the correct blob URL
+                setFormValues(prev => ({
+                    ...prev,
+                    [spellOptions.ICONURL]: updatedSpellForState._iconObjectUrl || updatedSpellForState[spellOptions.ICONURL] || prev[spellOptions.ICONURL]
+                }));
             }
         } catch (error) {
             console.error('Error saving spell:', error);
@@ -317,6 +377,19 @@ export default function Spells() {
 
     // Toggle edit mode
     const toggleEditMode = () => {
+        // console.log('Toggling edit mode from', editMode, 'to', !editMode);
+        // console.log('Current spell icon info:', {
+        //     hasCurrentSpell: !!currentSpell,
+        //     iconType: currentSpell ? typeof currentSpell[spellOptions.ICONURL] : 'none',
+        //     hasObjectUrl: currentSpell ? !!currentSpell._iconObjectUrl : false,
+        //     formIconUrl: formValues[spellOptions.ICONURL]
+        // });
+        // console.log('Next spell icon info:', {
+        //     hasNextSpell: !!nextSpell,
+        //     iconType: nextSpell ? typeof nextSpell[spellOptions.ICONURL] : 'none',
+        //     hasObjectUrl: nextSpell ? !!nextSpell._iconObjectUrl : false,
+        //     formIconUrl: nextFormValues[spellOptions.ICONURL]
+        // });
         setEditMode(!editMode);
     };
 
@@ -383,6 +456,7 @@ export default function Spells() {
 
             const pageToUse = isNextSpell ? currentPage + 1 : currentPage;
             const objectUrl = await SpellbookDB.saveSpellImage(pageToUse, file);
+            blobUrlsRef.current.add(objectUrl); // Track for cleanup
 
             // Create an updated spell object with the new image
             // The database will store only the file, not the objectUrl
@@ -438,17 +512,21 @@ export default function Spells() {
         }
     };
 
+    // Track blob URLs for cleanup
+    const blobUrlsRef = useRef(new Set());
+
     // Clean up object URLs when component unmounts
     useEffect(() => {
         return () => {
+            // console.log('Component unmounting, revoking blob URLs...');
             // Revoke any object URLs to prevent memory leaks
-            spells.forEach(spell => {
-                if (spell._iconObjectUrl) {
-                    URL.revokeObjectURL(spell._iconObjectUrl);
-                }
+            blobUrlsRef.current.forEach(url => {
+                // console.log('Revoking blob URL:', url);
+                URL.revokeObjectURL(url);
             });
+            blobUrlsRef.current.clear();
         };
-    }, [spells]);
+    }, []);
 
     // Trigger the file input click when the image is clicked
     const triggerFileInput = (isNextSpell = false) => {
@@ -490,32 +568,56 @@ export default function Spells() {
             if (navigationDirection === 'next') {
                 // Load current spell after next page animation
                 const spell = spells.find(s => s[spellOptions.PAGE] === currentPage);
-                setCurrentSpell(spell || null);
+
+                // If spell has an image file but no object URL, create one
+                let updatedSpell = spell;
+                if (spell && spell[spellOptions.ICONURL] && typeof spell[spellOptions.ICONURL] !== 'string' && !spell._iconObjectUrl) {
+                    const objectUrl = URL.createObjectURL(spell[spellOptions.ICONURL]);
+                    blobUrlsRef.current.add(objectUrl); // Track for cleanup
+                    updatedSpell = {
+                        ...spell,
+                        _iconObjectUrl: objectUrl
+                    };
+                }
+
+                setCurrentSpell(updatedSpell || null);
                 setFormValues({
-                    [spellOptions.NAME]: spell?.[spellOptions.NAME] || '',
-                    [spellOptions.INCANT]: spell?.[spellOptions.INCANT] || '',
-                    [spellOptions.SPEED]: spell?.[spellOptions.SPEED] || '',
-                    [spellOptions.RANGE]: spell?.[spellOptions.RANGE] || '',
-                    [spellOptions.TYPE]: spell?.[spellOptions.TYPE] || '',
-                    [spellOptions.DESC]: spell?.[spellOptions.DESC] || '',
-                    [spellOptions.LVL]: spell?.[spellOptions.LVL] || 0,
-                    [spellOptions.ICONURL]: spell?._iconObjectUrl || spell?.[spellOptions.ICONURL] || '',
-                    [spellOptions.ICONOBJECTFIT]: spell?.[spellOptions.ICONOBJECTFIT] || 'contain',
+                    [spellOptions.NAME]: updatedSpell?.[spellOptions.NAME] || '',
+                    [spellOptions.INCANT]: updatedSpell?.[spellOptions.INCANT] || '',
+                    [spellOptions.SPEED]: updatedSpell?.[spellOptions.SPEED] || '',
+                    [spellOptions.RANGE]: updatedSpell?.[spellOptions.RANGE] || '',
+                    [spellOptions.TYPE]: updatedSpell?.[spellOptions.TYPE] || '',
+                    [spellOptions.DESC]: updatedSpell?.[spellOptions.DESC] || '',
+                    [spellOptions.LVL]: updatedSpell?.[spellOptions.LVL] || 0,
+                    [spellOptions.ICONURL]: updatedSpell?._iconObjectUrl || updatedSpell?.[spellOptions.ICONURL] || '',
+                    [spellOptions.ICONOBJECTFIT]: updatedSpell?.[spellOptions.ICONOBJECTFIT] || 'contain',
                 });
             } else if (navigationDirection === 'previous') {
                 // Load next spell after previous page animation
                 const spell = spells.find(s => s[spellOptions.PAGE] === currentPage + 1);
-                setNextSpell(spell || null);
+
+                // If spell has an image file but no object URL, create one
+                let updatedSpell = spell;
+                if (spell && spell[spellOptions.ICONURL] && typeof spell[spellOptions.ICONURL] !== 'string' && !spell._iconObjectUrl) {
+                    const objectUrl = URL.createObjectURL(spell[spellOptions.ICONURL]);
+                    blobUrlsRef.current.add(objectUrl); // Track for cleanup
+                    updatedSpell = {
+                        ...spell,
+                        _iconObjectUrl: objectUrl
+                    };
+                }
+
+                setNextSpell(updatedSpell || null);
                 setNextFormValues({
-                    [spellOptions.NAME]: spell?.[spellOptions.NAME] || '',
-                    [spellOptions.INCANT]: spell?.[spellOptions.INCANT] || '',
-                    [spellOptions.SPEED]: spell?.[spellOptions.SPEED] || '',
-                    [spellOptions.RANGE]: spell?.[spellOptions.RANGE] || '',
-                    [spellOptions.TYPE]: spell?.[spellOptions.TYPE] || '',
-                    [spellOptions.DESC]: spell?.[spellOptions.DESC] || '',
-                    [spellOptions.LVL]: spell?.[spellOptions.LVL] || 0,
-                    [spellOptions.ICONURL]: spell?._iconObjectUrl || spell?.[spellOptions.ICONURL] || '',
-                    [spellOptions.ICONOBJECTFIT]: spell?.[spellOptions.ICONOBJECTFIT] || 'contain',
+                    [spellOptions.NAME]: updatedSpell?.[spellOptions.NAME] || '',
+                    [spellOptions.INCANT]: updatedSpell?.[spellOptions.INCANT] || '',
+                    [spellOptions.SPEED]: updatedSpell?.[spellOptions.SPEED] || '',
+                    [spellOptions.RANGE]: updatedSpell?.[spellOptions.RANGE] || '',
+                    [spellOptions.TYPE]: updatedSpell?.[spellOptions.TYPE] || '',
+                    [spellOptions.DESC]: updatedSpell?.[spellOptions.DESC] || '',
+                    [spellOptions.LVL]: updatedSpell?.[spellOptions.LVL] || 0,
+                    [spellOptions.ICONURL]: updatedSpell?._iconObjectUrl || updatedSpell?.[spellOptions.ICONURL] || '',
+                    [spellOptions.ICONOBJECTFIT]: updatedSpell?.[spellOptions.ICONOBJECTFIT] || 'contain',
                 });
             }
             setNavigationDirection(null);
