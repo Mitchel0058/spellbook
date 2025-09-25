@@ -762,7 +762,7 @@ export default function Spells() {
                         <input
                             type="file"
                             ref={fileInputRef}
-                            style={{ display: 'none' }}
+                            className='icon-input'
                             accept="image/*"
                             onChange={(e) => handleImageUpload(e)}
                         />
@@ -771,12 +771,6 @@ export default function Spells() {
                             src={formValues[spellOptions.ICONURL] || 'assets/img/fireball.webp'}
                             style={{ objectFit: currentSpell?.[spellOptions.ICONOBJECTFIT] || 'contain' }}
                             alt=""
-                            onClick={() => triggerFileInput()}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    triggerFileInput();
-                                }
-                            }}
                             tabIndex={0}
                         />
                         <select
@@ -842,7 +836,7 @@ export default function Spells() {
                             <input
                                 type="file"
                                 ref={nextFileInputRef}
-                                style={{ display: 'none' }}
+                                className='icon-input right-page-offset'
                                 accept="image/*"
                                 onChange={(e) => handleImageUpload(e, true)}
                             />
@@ -851,12 +845,6 @@ export default function Spells() {
                                 src={nextFormValues[spellOptions.ICONURL] || 'assets/img/fireball.webp'}
                                 style={{ objectFit: nextSpell?.[spellOptions.ICONOBJECTFIT] || 'contain' }}
                                 alt=""
-                                onClick={() => triggerFileInput(true)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        triggerFileInput(true);
-                                    }
-                                }}
                                 tabIndex={0}
                             />
                             <select

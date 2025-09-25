@@ -11,7 +11,7 @@ export default function Page({ pageType, children }) {
 
     return (
         <div className="svg-overlay">
-            <img className={`page-img`} src={getImagePath(pageType)} alt={`${pageType} page of DnD book`} />
+            <img className={`page-img`} src={getImagePath(pageType)} alt={`${pageType} page of DnD book`} draggable={false} />
             {children}
         </div>
     );

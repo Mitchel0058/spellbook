@@ -150,6 +150,17 @@ input[type=number] {
     background-color: #0001 !important;
 }
 
+.icon-input {
+    opacity: 0;
+    position: absolute;
+    width: calc(var(--unit-width) * 28);
+    height: calc(var(--unit-height) * 28);
+    left: calc(var(--unit-width) * 26);
+    bottom: calc(var(--unit-height) * 149);
+    z-index: 10000;
+    cursor: pointer;
+}
+
 .settings-button {
     width: calc(var(--unit-width) * 9);
     height: calc(var(--unit-height) * 9);
