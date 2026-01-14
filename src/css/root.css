@@ -75,14 +75,27 @@ html {
     margin: 0;
     overflow-x: auto;
     white-space: nowrap;
+    margin-left: calc(var(--unit-width) * -2);
+
+    padding-left: calc(var(--unit-width) * 2);
 
     -ms-overflow-style: none;
     scrollbar-width: none;
 
     /* TODO: gradient on the left */
 
-    -webkit-mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) 85%, rgba(0, 0, 0, 0));
-    mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) 85%, rgba(0, 0, 0, 0));
+    -webkit-mask-image: linear-gradient(to right,
+            rgba(0, 0, 0, 0),
+            rgba(0, 0, 0, 0.3) 3%,
+            rgba(0, 0, 0, 1) 6%,
+            rgba(0, 0, 0, 1) 85%,
+            rgba(0, 0, 0, 0));
+    mask-image: linear-gradient(to right,
+            rgba(0, 0, 0, 0),
+            rgba(0, 0, 0, 0.3) 3%,
+            rgba(0, 0, 0, 1) 6%,
+            rgba(0, 0, 0, 1) 85%,
+            rgba(0, 0, 0, 0));
     align-content: center;
 
     &::after {
@@ -100,4 +113,12 @@ html {
     &::-webkit-scrollbar {
         display: none;
     }
+}
+
+.text-overlay.right-page-offset {
+    margin-left: calc(var(--unit-width) * -10);
+}
+
+.right-page-offset {
+    margin-left: calc(var(--unit-width) * -8);
 }
