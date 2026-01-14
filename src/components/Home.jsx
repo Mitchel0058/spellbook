@@ -54,7 +54,7 @@ export default function Home() {
                 </div>
             ) : (
                 <>
-                    <Page pageType={PageType.TITLE}>
+                    <Page pageType={PageType.TITLE} onEditClick={toggleReorderMode}>
                         <div className='text-overlay' id="title">
                             {settings[settingsOptions.CURRENT_SPELLBOOK_DB]}
                         </div>
@@ -62,8 +62,6 @@ export default function Home() {
                         {!isDoublePage && (
                             <Link to="/spells" className="interact next-page"></Link>
                         )}
-                        <button class="interact home__edit-button" onClick={toggleReorderMode} />
-                        <Link to='/settings' class="interact home__settings-button" />
                     </Page >
 
                     {/* Page 2 */}

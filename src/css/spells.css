@@ -172,34 +172,6 @@ input[type=number] {
     cursor: pointer;
 }
 
-.settings-button {
-    width: calc(var(--unit-width) * 9);
-    height: calc(var(--unit-height) * 9);
-    left: calc(var(--unit-width) * 21);
-    top: calc(var(--unit-height) * 57);
-}
-
-.home-button {
-    width: calc(var(--unit-width) * 9);
-    height: calc(var(--unit-height) * 9);
-    left: calc(var(--unit-width) * 31);
-    top: calc(var(--unit-height) * 57);
-}
-
-.font-button {
-    width: calc(var(--unit-width) * 9);
-    height: calc(var(--unit-height) * 9);
-    left: calc(var(--unit-width) * 41);
-    top: calc(var(--unit-height) * 57);
-}
-
-.edit-button {
-    width: calc(var(--unit-width) * 9);
-    height: calc(var(--unit-height) * 9);
-    left: calc(var(--unit-width) * 51);
-    top: calc(var(--unit-height) * 57);
-}
-
 .delete-button {
     width: calc(var(--unit-width) * 9);
     height: calc(var(--unit-height) * 9);

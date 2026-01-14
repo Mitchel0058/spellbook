@@ -1,0 +1,47 @@
+/* Button positioning for different page types */
+
+/* Base button styles */
+.square-button {
+    position: absolute;
+    width: calc(var(--unit-width) * 9);
+    height: calc(var(--unit-height) * 9);
+    z-index: 100;
+}
+
+/* Home page (title) button positions */
+.home__settings-button {
+    top: calc(var(--unit-height) * 13);
+    right: calc(var(--unit-width) * 10);
+}
+
+.home__edit-button {
+    top: calc(var(--unit-height) * 43);
+    right: calc(var(--unit-width) * 10);
+}
+
+/* Spell page button positions */
+.spell__settings-button {
+    top: calc(var(--unit-height) * 57);
+    left: calc(var(--unit-width) * 21);
+}
+
+.spell__home-button {
+    top: calc(var(--unit-height) * 57);
+    left: calc(var(--unit-width) * 31);
+}
+
+.spell__font-button {
+    top: calc(var(--unit-height) * 57);
+    left: calc(var(--unit-width) * 41);
+}
+
+.spell__edit-button {
+    top: calc(var(--unit-height) * 57);
+    left: calc(var(--unit-width) * 51);
+}
+
+/* Right page offset for double-page layout */
+.right-page-offset {
+    left: auto;
+    right: calc(var(--unit-width) * 10) !important;
+}
