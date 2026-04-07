@@ -4,11 +4,11 @@
 export const PageType = {
     COVER: 'cover',
     TITLE: 'title',
+    TITLE_RIGHT: 'title-right',
     SPELL: 'spell',
-    SPELLRIGHT: 'spell-right',
-    // TEXT: 'text',
-    // ILLUSTRATION: 'illustration',
-    // INDEX: 'index'
+    SPELL_RIGHT: 'spell-right',
+    BLANK: 'blank',
+    BLANK_RIGHT: 'blank-right'
 };
 
 /**
@@ -16,10 +16,10 @@ export const PageType = {
  */
 export const pageImages = {
     [PageType.COVER]: 'spellbook_cover.svg',
-    [PageType.TITLE]: 'spellbook_title.svg',
-    [PageType.SPELL]: 'spellbook_spell.svg',
-    [PageType.SPELLRIGHT]: 'spellbook_spell_right.svg',
-    // [PageType.TEXT]: 'spellbook_text.svg',
-    // [PageType.ILLUSTRATION]: 'spellbook_illustration.svg',
-    // [PageType.INDEX]: 'spellbook_index.svg'
+    [PageType.TITLE]: 'spellbook_left_title.svg',
+    [PageType.TITLE_RIGHT]: 'spellbook_right_title.svg',
+    [PageType.SPELL]: 'spellbook_left_spell.svg',
+    [PageType.SPELL_RIGHT]: 'spellbook_right_spell.svg',
+    [PageType.BLANK]: 'spellbook_left_blank.svg',
+    [PageType.BLANK_RIGHT]: 'spellbook_right_blank.svg'
 };

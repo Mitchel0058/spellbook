@@ -6,6 +6,8 @@ import { useSettings } from '../context/SettingsContext';
 import { settingsOptions } from '../constants/settingsOptions';
 import SpellsOverview from './SpellsOverview';
 import { Link } from 'wouter';
+import SquareButton from './SquareButton';
+import { ButtonType } from '../constants/buttonType';
 
 export default function Home() {
     const [loading, setLoading] = useState(true);
@@ -22,24 +24,12 @@ export default function Home() {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Combined loading effect that waits for both timeout and settings
+    // Loading check
     useEffect(() => {
-        let timeoutPassed = false;
-        let settingsLoaded = false;
-
-        // Timer for simulated loading
-        const timer = setTimeout(() => {
-            timeoutPassed = true;
-            if (settingsLoaded) setLoading(false);
-        }, 500);
-
         // Check when settings are loaded
         if (!settingsLoading) {
-            settingsLoaded = true;
-            if (timeoutPassed) setLoading(false);
+            setLoading(false);
         }
-
-        return () => clearTimeout(timer);
     }, [settings, settingsLoading]);
 
     const toggleReorderMode = () => {
@@ -48,37 +38,27 @@ export default function Home() {
 
     return (
         <>
-            {loading ? (
-                <div className="svg-overlay">
-                    <img className="page-img" src={"assets/img/spellbook_cover.svg"} alt="Cover of DnD book" />
+            <Page pageType={PageType.TITLE} onEditClick={toggleReorderMode} >
+                <div className='text-overlay' id="title">
+                    {settings[settingsOptions.CURRENT_SPELLBOOK_DB]}
                 </div>
-            ) : (
-                <>
-                    <Page pageType={PageType.TITLE} onEditClick={toggleReorderMode}>
-                        <div className='text-overlay' id="title">
-                            {settings[settingsOptions.CURRENT_SPELLBOOK_DB]}
-                        </div>
-                        <SpellsOverview reorderMode={reorderMode} />
-                        {!isDoublePage && (
-                            <Link to="/spells" className="interact next-page"></Link>
-                        )}
-                    </Page >
+                <SquareButton buttonType={ButtonType.HOME} isLink={true} linkTo={"/"} yPosition={21} xPosition={119} />
+                <SquareButton buttonType={ButtonType.EDIT} onClick={toggleReorderMode} yPosition={31} xPosition={119} />
+                <SquareButton buttonType={ButtonType.REORDER} isLink={true} linkTo={"/notes"} yPosition={41} xPosition={119} />
+                <SquareButton buttonType={ButtonType.SETTINGS} isLink={true} linkTo={"/settings"} yPosition={51} xPosition={119} />
+                <SpellsOverview reorderMode={reorderMode} />
+                {!isDoublePage && (
+                    <Link to="/spells" className="interact next-page"></Link>
+                )}
+            </Page >
 
-                    {/* Page 2 */}
+            {/* Page 2 */}
+            {isDoublePage && (
+                <Page pageType={PageType.SPELL_RIGHT}>
                     {isDoublePage && (
-                        <Page pageType={PageType.SPELLRIGHT}>
-                            {isDoublePage && (
-                                <Link to="/spells" className="interact next-page"></Link>
-                            )}
-                        </Page>
+                        <Link to="/spells" className="interact next-page"></Link>
                     )}
-
-                    {/* 
-                        <script src="spell.js"></script>
-                        <script src="js/settings.js"></script>
-                        <script src="js/index.js"></script> 
-                    */}
-                </>
+                </Page>
             )}
         </>
     );

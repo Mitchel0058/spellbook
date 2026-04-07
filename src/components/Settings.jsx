@@ -6,6 +6,8 @@ import { useSettings } from '../context/SettingsContext';
 import { settingsOptions } from '../constants/settingsOptions';
 import { Link } from 'wouter';
 import { SpellbookDB } from '../utils/db';
+import SquareButton from './SquareButton';
+import { ButtonType } from '../constants/buttonType';
 
 export default function Settings() {
     const [isDoublePage, setIsDoublePage] = useState(window.innerWidth > window.innerHeight);
@@ -328,13 +330,11 @@ export default function Settings() {
                     </label>
                     <div className='settings__container-after'></div>
                 </div>
-                <Link to='/' className='interact settings__home-button' />
-                <button className='interact settings__font-button'></button>
-                <button className='interact settings__edit-button'></button>
+                <SquareButton buttonType={ButtonType.HOME} isLink={true} linkTo={"/"} yPosition={21} xPosition={119} />
             </Page >
 
             {isDoublePage &&
-                <Page pageType={PageType.SPELLRIGHT}>
+                <Page pageType={PageType.BLANK_RIGHT}>
                 </Page>
             }
         </>

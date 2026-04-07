@@ -5,6 +5,8 @@ import { SpellbookDB } from '../utils/db';
 import { spellOptions, DEFAULT_SPELL_OPTIONS } from '../constants/spellOptions';
 import '../css/spells.css';
 import { Link } from 'wouter';
+import SquareButton from './SquareButton';
+import { ButtonType } from '../constants/buttonType';
 
 // Debounce utility function
 const useDebounce = (callback, delay) => {
@@ -749,7 +751,7 @@ export default function Spells() {
                     {currentPage + 1}
                 </div>
 
-                {editMode && <button className="interact delete-button" onClick={() => deleteSpell(false)}>X</button>}
+                {editMode && <SquareButton buttonType={ButtonType.CANCEL} onClick={() => deleteSpell(false)} yPosition={24} xPosition={118} />}
                 {!editMode && <button className="interact previous-page" onClick={handlePreviousPage}></button>}
                 {!editMode && !isDoublePage && <button className="interact next-page" onClick={handlePageSwitch}></button>}
 
@@ -794,10 +796,13 @@ export default function Spells() {
                         alt=""
                     />
                 )}
+                <SquareButton buttonType={ButtonType.HOME} isLink={true} linkTo={"/"} yPosition={57} xPosition={26} />
+                <SquareButton buttonType={ButtonType.SETTINGS} isLink={true} linkTo={"/settings"} yPosition={57} xPosition={36} />
+                <SquareButton buttonType={ButtonType.EDIT} onClick={toggleEditMode} yPosition={57} xPosition={46} />
             </Page>
 
             {isDoublePage && (
-                <Page pageType={PageType.SPELLRIGHT} onEditClick={toggleEditMode} isEditMode={editMode} isDoublePage={isDoublePage}>
+                <Page pageType={PageType.SPELL_RIGHT} onEditClick={toggleEditMode} isEditMode={editMode} isDoublePage={isDoublePage}>
                     {renderNextField(spellOptions.NAME, 'text-overlay spellname right-page-offset', '')}
                     {renderNextField(spellOptions.INCANT, 'text-overlay incant right-page-offset', '')}
                     {renderNextField(spellOptions.SPEED, 'text-overlay speed right-page-offset', '')}
@@ -820,7 +825,7 @@ export default function Spells() {
                         {currentPage + 2}
                     </div>
 
-                    {editMode && <button className="interact delete-button right-page-offset" onClick={() => deleteSpell(true)}>X</button>}
+                    {editMode && <SquareButton buttonType={ButtonType.CANCEL} onClick={() => deleteSpell(true)} yPosition={24} xPosition={110} />}
                     {isDoublePage && !editMode && <button className="interact next-page" onClick={handlePageSwitch}></button>}
 
                     {editMode ? (
@@ -864,6 +869,9 @@ export default function Spells() {
                             alt=""
                         />
                     )}
+                    <SquareButton buttonType={ButtonType.HOME} isLink={true} linkTo={"/"} yPosition={57} xPosition={18} />
+                    <SquareButton buttonType={ButtonType.SETTINGS} isLink={true} linkTo={"/settings"} yPosition={57} xPosition={28} />
+                    <SquareButton buttonType={ButtonType.EDIT} onClick={toggleEditMode} yPosition={57} xPosition={38} />
                 </Page>
             )}
 

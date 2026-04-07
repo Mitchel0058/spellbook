@@ -49,6 +49,8 @@
     place-content: center;
     text-align: center;
     border-radius: 100%;
+    font-weight: bold !important;
+    color: var(--dark-red)
 }
 
 .description {
@@ -109,8 +111,6 @@
     font-size: var(--reactive-font-size) !important;
     padding: 0;
     border: none;
-    color: black;
-    font: inherit;
     background: #0001;
 }
 
@@ -188,7 +188,7 @@ input[type=number] {
     height: 100vh;
     top: 0;
     left: 0;
-    z-index: 9998;
+    z-index: 99999;
 }
 
 /* Mobile */
