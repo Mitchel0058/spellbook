@@ -1,0 +1,131 @@
+:root {
+    --reactive-font-size: 3vh;
+    --text-red: rgb(120, 0, 0);
+    --dark-red: rgb(80, 0, 0);
+    --dark-brown: #a67048;
+    --darker-brown: #8f563b;
+    --unit-width: 0.7246%;
+    --unit-height: 0.5263%;
+}
+
+.right-page-offset-px {
+    transform: translateX(calc(var(--unit-width-px) * -4));
+}
+
+.right-page-offset-px-layout {
+    transform: translateX(calc(var(--unit-width-px) * -10));
+}
+
+@font-face {
+    font-family: 'MagicSchool';
+    src: url('/spellbook/assets/fonts/MagicSchoolOne.ttf') format('truetype');
+}
+
+.container {
+    display: flex;
+    width: 100%;
+    max-height: 100%;
+    max-height: 100vh;
+    max-height: 100svh;
+}
+
+body,
+html {
+    font-family: SpellbookFont, MagicSchool, sans-serif;
+    max-height: 100vh;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+
+    overflow: hidden;
+    background-color: rgb(24, 24, 24);
+    height: 100vh;
+}
+
+#app {
+    display: flex;
+    width: 100%;
+    max-height: 100%;
+    max-height: 100vh;
+    max-height: 100svh;
+}
+
+.page-img {
+    width: 100%;
+    max-height: 100vh;
+    /* TODO: option to not stretch to fill the page */
+    height: 100vh;
+    max-height: 100svh;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.next-page {
+    width: calc(var(--unit-width) * 16);
+    height: 100%;
+    top: 0%;
+    right: 0%;
+}
+
+.previous-page {
+    width: calc(var(--unit-width) * 16);
+    height: 100%;
+    top: 0%;
+    left: 0%;
+}
+
+.interact {
+    position: absolute;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    z-index: 9999;
+    margin: 0;
+    padding: 0;
+    font: inherit;
+    /* TODO: remove, for testing only */
+    /* background-color: #3eafd850; */
+}
+
+/* Scroll fade */
+/* Horizontal scroll fade: mask left/right edges based on scroll position.
+   --fade-length is the % of the element's own width used for the fade,
+   independently on each side (0% = no fade needed on that side right now). */
+.scroll-fade-x {
+    --fade-length: 10%;
+    --fade-left: 0%;
+    --fade-right: 0%;
+    -webkit-mask-image: linear-gradient(to right,
+            rgba(0, 0, 0, 0) 0%,
+            rgba(0, 0, 0, 1) var(--fade-left),
+            rgba(0, 0, 0, 1) calc(100% - var(--fade-right)),
+            rgba(0, 0, 0, 0) 100%);
+    mask-image: linear-gradient(to right,
+            rgba(0, 0, 0, 0) 0%,
+            rgba(0, 0, 0, 1) var(--fade-left),
+            rgba(0, 0, 0, 1) calc(100% - var(--fade-right)),
+            rgba(0, 0, 0, 0) 100%);
+}
+
+/* Vertical scroll fade: same idea, top/bottom edges. */
+.scroll-fade-y {
+    --fade-length: 10%;
+    --fade-top: 0%;
+    --fade-bottom: 0%;
+    -webkit-mask-image: linear-gradient(to bottom,
+            rgba(0, 0, 0, 0) 0%,
+            rgba(0, 0, 0, 1) var(--fade-top),
+            rgba(0, 0, 0, 1) calc(100% - var(--fade-bottom)),
+            rgba(0, 0, 0, 0) 100%);
+    mask-image: linear-gradient(to bottom,
+            rgba(0, 0, 0, 0) 0%,
+            rgba(0, 0, 0, 1) var(--fade-top),
+            rgba(0, 0, 0, 1) calc(100% - var(--fade-bottom)),
+            rgba(0, 0, 0, 0) 100%);
+}

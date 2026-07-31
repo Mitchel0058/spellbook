@@ -13,13 +13,16 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "preact": "^10.26.9",
-    "vite": "^6.3.5",
     "wouter": "^3.7.1"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.2",
+    "@sveltejs/vite-plugin-svelte": "^5.1.1",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
+    "baseline-browser-mapping": "^2.10.43",
     "postcss-nesting": "^13.0.2",
+    "svelte": "^5.56.5",
+    "vite": "^6.4.3",
     "vite-plugin-pwa": "^1.0.1"
   }
 }

@@ -1,7 +1,24 @@
 import { openDB } from 'idb';
 import { settingsOptions, DEFAULT_SETTINGS } from '../constants/settingsOptions';
 import { spellOptions, DEFAULT_SPELL_OPTIONS } from '../constants/spellOptions';
-import { noteOptions, DEFAULT_NOTE_OPTIONS } from '../constants/noteOptions';
+
+import spellTemplate from '../templates/spell.template.json';
+
+// Maps each spell.template.json element id to the legacy spell field it
+// should be populated from during the v1 -> v2 migration. Only content is
+// taken from the old spell; every other property (position, size, zIndex,
+// and each element's own textOptions/titleOptions/imageOptions) always
+// comes from whatever the template currently defines.
+const SPELL_TEMPLATE_ELEMENT_MAP = {
+    image: spellOptions.ICONURL,
+    description: spellOptions.DESC,
+    title: spellOptions.NAME,
+    'text-1': spellOptions.INCANT,
+    'text-2': spellOptions.SPEED,
+    'text-3': spellOptions.RANGE,
+    'text-4': spellOptions.TYPE,
+    'text-5': spellOptions.LVL,
+};
 
 /**
  * Database utility class for managing IndexedDB databases
@@ -16,9 +33,9 @@ class DBUtil {
      */
     static async initDB(dbName, version, upgradeCallback) {
         return openDB(dbName, version, {
-            upgrade(db, oldVersion, newVersion, transaction) {
+            async upgrade(db, oldVersion, newVersion, transaction) {
                 if (upgradeCallback) {
-                    upgradeCallback(db, oldVersion, newVersion, transaction);
+                    await upgradeCallback(db, oldVersion, newVersion, transaction);
                 }
             },
         });
@@ -185,112 +202,86 @@ export class SettingsDB {
 }
 
 /**
- * Spellbook database manager for both spells and notes
+ * Page database manager — replaces SpellbookDB's spells/notes stores.
+ * Keeps page identity (id) separate from display order.
  */
-export class SpellbookDB {
-    static SPELLS_STORE = 'spells';
-    static NOTES_STORE = 'notes';
-    static VERSION = 1;
+export class PageDB {
+    static PAGES_STORE = 'pages';
+    static ORDER_STORE = 'pageOrder';
+    static SETTINGS_STORE = 'spellbookSettings';
+    static VERSION = 2;
 
     static activeDB = null;
     static activeDBName = null;
 
-    /**
-     * Initialize the Spellbook database with the given name
-     * @param {string} dbName - The name of the spellbook database
-     * @returns {Promise<IDBDatabase>}
-     */
-    static SETTINGS_STORE = 'spellbookSettings';
-
     static async init(dbName = null) {
-        // If no dbName is provided, get the current spellbook name from settings
         if (!dbName) {
             dbName = await SettingsDB.get(settingsOptions.CURRENT_SPELLBOOK_DB);
         }
 
-        // If we already have this DB open, return it
         if (this.activeDB && this.activeDBName === dbName) {
             return this.activeDB;
         }
 
-        // Close any previously opened database
         if (this.activeDB) {
             this.activeDB.close();
             this.activeDB = null;
             this.activeDBName = null;
         }
 
-        // Open the database with the given name
-        this.activeDB = await DBUtil.initDB(dbName, this.VERSION, (db) => {
-            // Create the spells store if it doesn't exist
-            if (!db.objectStoreNames.contains(this.SPELLS_STORE)) {
-                const spellsStore = db.createObjectStore(this.SPELLS_STORE, { keyPath: spellOptions.PAGE });
-                spellsStore.createIndex('pageIndex', spellOptions.PAGE, { unique: true });
-            }
+        this.activeDB = await DBUtil.initDB(
+            dbName,
+            this.VERSION,
+            async (db, oldVersion, newVersion, transaction) => {
+                // Old spells/notes stores are deprecated and no longer created.
+                // Existing DBs upgrading from version 1 keep their old stores
+                // on disk (harmless, just unused) until a migration is written.
 
-            // Create the notes store if it doesn't exist
-            if (!db.objectStoreNames.contains(this.NOTES_STORE)) {
-                const notesStore = db.createObjectStore(this.NOTES_STORE, { keyPath: noteOptions.PAGE });
-                notesStore.createIndex('pageIndex', noteOptions.PAGE, { unique: true });
-                notesStore.createIndex('dateIndex', noteOptions.DATE, { unique: false });
-            }
+                if (!db.objectStoreNames.contains(this.PAGES_STORE)) {
+                    db.createObjectStore(this.PAGES_STORE, { keyPath: 'id' });
+                }
 
-            // Create the spellbook settings store if it doesn't exist
-            if (!db.objectStoreNames.contains(this.SETTINGS_STORE)) {
-                db.createObjectStore(this.SETTINGS_STORE, { keyPath: 'key' });
-            }
-        });
+                if (!db.objectStoreNames.contains(this.ORDER_STORE)) {
+                    db.createObjectStore(this.ORDER_STORE, { keyPath: 'key' });
+                }
+
+                if (!db.objectStoreNames.contains(this.SETTINGS_STORE)) {
+                    db.createObjectStore(this.SETTINGS_STORE, { keyPath: 'key' });
+                }
+
+                await this._migrateSpellsToPages(db, oldVersion, transaction);
+
+                // Once migration has been tested and confirmed correct,
+                // uncomment these to remove the legacy stores entirely:
+                // if (db.objectStoreNames.contains('spells')) {
+                //     db.deleteObjectStore('spells');
+                // }
+                // if (db.objectStoreNames.contains('notes')) {
+                //     db.deleteObjectStore('notes');
+                // }
+            },
+        );
 
         this.activeDBName = dbName;
         return this.activeDB;
     }
 
-    /**
-     * Switch to a different spellbook database
-     * @param {string} dbName - The name of the spellbook to switch to
-     * @returns {Promise<void>}
-     */
+    // Same multi-spellbook plumbing as before, unchanged in spirit —
+    // still per-named-database, still tracked in SettingsDB's spellbook list.
     static async switchSpellbook(dbName) {
-        // Update the current spellbook in settings
         await SettingsDB.set(settingsOptions.CURRENT_SPELLBOOK_DB, dbName);
-
-        // Close and reopen with the new name
         await this.init(dbName);
     }
 
-    /**
-     * Rename a spellbook database
-     * @param {string} oldName - Current name of the spellbook
-     * @param {string} newName - New name for the spellbook
-     * @returns {Promise<void>}
-     */
-    static async renameSpellbook(oldName, newName) {
-        // Export current data
-        const data = await this.exportSpellbookData();
-
-        // Create new DB with the new name
-        await this.createNewSpellbook(newName);
-
-        // Import data to new DB
-        await this.importSpellbookData(data);
-
-        // Delete old DB
-        await this.deleteSpellbook(oldName);
-
-        // Update spellbook list
-        const spellbookList = await this.listAllSpellbooks();
-        const updatedList = spellbookList.map(name => name === oldName ? newName : name);
-        await SettingsDB.set(settingsOptions.SPELLBOOK_LIST, updatedList);
-
-        // Switch to new DB
-        await this.switchSpellbook(newName);
+    static async getCurrentSpellbookName() {
+        return SettingsDB.get(settingsOptions.CURRENT_SPELLBOOK_DB);
     }
 
-    /**
-     * Generate a unique name for an imported spellbook
-     * @param {string} baseName - The original name to start with
-     * @returns {Promise<string>} - A unique name for the spellbook
-     */
+    static async listAllSpellbooks() {
+        const spellbookList = await SettingsDB.get('spellbookList');
+        return spellbookList || [await this.getCurrentSpellbookName()];
+    }
+
     static async generateUniqueSpellbookName(baseName) {
         const spellbookList = await this.listAllSpellbooks();
         let newName = baseName;
@@ -304,558 +295,417 @@ export class SpellbookDB {
         return newName;
     }
 
-    /**
-     * Get the name of the current active spellbook
-     * @returns {Promise<string>} - The name of the current spellbook
-     */
-    static async getCurrentSpellbookName() {
-        return SettingsDB.get(settingsOptions.CURRENT_SPELLBOOK_DB);
-    }
-
-    /**
-     * List all available spellbook databases
-     * @returns {Promise<string[]>} - Array of spellbook names
-     */
-    static async listAllSpellbooks() {
-        // This is an approximation as IndexedDB doesn't directly support listing databases
-        // We'll maintain a list in settings
-        const spellbookList = await SettingsDB.get('spellbookList');
-        return spellbookList || [await this.getCurrentSpellbookName()];
-    }
-
-    /**
-     * Create a new spellbook database
-     * @param {string} dbName - The name for the new spellbook
-     * @returns {Promise<void>}
-     */
     static async createNewSpellbook(dbName) {
-        // Add to the list of spellbooks
         const spellbookList = await this.listAllSpellbooks();
         if (!spellbookList.includes(dbName)) {
             spellbookList.push(dbName);
             await SettingsDB.set('spellbookList', spellbookList);
         }
-
-        // Switch to the new spellbook
         await this.switchSpellbook(dbName);
     }
 
-    /**
-     * Delete a spellbook database
-     * @param {string} dbName - The name of the spellbook to delete
-     * @returns {Promise<void>}
-     */
     static async deleteSpellbook(dbName) {
-        // Cannot delete the current spellbook
         const currentName = await this.getCurrentSpellbookName();
         if (dbName === currentName) {
             throw new Error('Cannot delete the currently active spellbook');
         }
-
-        // Remove from the list
         const spellbookList = await this.listAllSpellbooks();
-        const updatedList = spellbookList.filter(name => name !== dbName);
+        const updatedList = spellbookList.filter((name) => name !== dbName);
         await SettingsDB.set('spellbookList', updatedList);
-
-        // Delete the database
         await window.indexedDB.deleteDatabase(dbName);
     }
 
-    /* SPELL METHODS */
+    /* ORDER */
 
-    /**
-     * Validates if spell properties are valid
-     * @param {Object} spell - The spell object to validate
-     * @returns {boolean} - Whether the spell is valid
-     * @throws {Error} - If the spell has invalid properties
-     */
-    static validateSpell(spell) {
-        const validKeys = Object.values(spellOptions);
-        const allowedExtraKeys = ['_iconObjectUrl']; // Allow this key but don't require it
-        const optionalKeys = [spellOptions.ICONURL, spellOptions.ICONOBJECTURL, spellOptions.ICONOBJECTFIT];
-
-        // Check that all required properties exist except optional ones
-        for (const key of validKeys) {
-            if (!optionalKeys.includes(key) && spell[key] === undefined) {
-                throw new Error(`Missing required spell property: ${key}`);
-            }
-        }
-
-        // Check for invalid properties
-        for (const key in spell) {
-            if (!validKeys.includes(key) && !allowedExtraKeys.includes(key)) {
-                throw new Error(`Invalid spell property: ${key}`);
-            }
-        }
-
-        return true;
+    // Returns the ordered array of page ids, e.g. ['a1b2', 'c3d4', ...].
+    // Empty array if nothing saved yet.
+    static async getOrder() {
+        const db = await this.init();
+        const record = await db.get(this.ORDER_STORE, 'order');
+        return record?.ids ?? [];
     }
 
-    /**
-     * Create a new spell with default values
-     * @param {number} page - The page number for the spell
-     * @returns {Object} - A new spell object with default values
-     */
-    static createEmptySpell(page) {
-        return {
-            ...DEFAULT_SPELL_OPTIONS,
-            [spellOptions.PAGE]: page
+    /* PAGES */
+
+    static async getPageById(id) {
+        const db = await this.init();
+        return db.get(this.PAGES_STORE, id);
+    }
+
+    static async getAllPages() {
+        const db = await this.init();
+        return db.getAll(this.PAGES_STORE);
+    }
+
+    // Loads every page in display order, skipping any id in the order
+    // array whose page record is missing (defensive against corruption).
+    static async loadAllPagesInOrder() {
+        const [orderIds, allPages] = await Promise.all([
+            this.getOrder(),
+            this.getAllPages(),
+        ]);
+
+        const pageMap = new Map(allPages.map((p) => [p.id, p]));
+
+        return orderIds
+            .map((id) => pageMap.get(id))
+            .filter((page) => page !== undefined);
+    }
+
+    // If the DB is completely empty, creates one blank page and persists it
+    // immediately as both a page record AND an order entry. This is the only
+    // way a "first page" should ever come into existence — loadAllPagesInOrder
+    // callers should call this when they get back an empty array, rather than
+    // fabricating a page in memory themselves.
+    static async ensureAtLeastOnePage(makePageFn) {
+        const existing = await this.loadAllPagesInOrder();
+        if (existing.length > 0) {
+            return existing;
+        }
+
+        const newPage = makePageFn();
+        await this._insertPageAtIndex(0, newPage);
+        return [newPage];
+    }
+
+    // Saves a single page's data (elements/settings). Does NOT touch order —
+    // use insertPageAfter/deletePage for anything that changes page count.
+    static async savePage(page) {
+        const db = await this.init();
+        await db.put(this.PAGES_STORE, page);
+    }
+
+    // Shared internal primitive: writes the page record AND splices its id
+    // into the order array, atomically, in one transaction. Both
+    // insertPageAfter and ensureAtLeastOnePage go through this — nothing else
+    // should call tx.objectStore(ORDER_STORE) directly.
+    static async _insertPageAtIndex(index, newPage) {
+        const db = await this.init();
+        const tx = db.transaction([this.PAGES_STORE, this.ORDER_STORE], 'readwrite');
+
+        const orderRecord = (await tx.objectStore(this.ORDER_STORE).get('order')) ?? {
+            key: 'order',
+            ids: [],
         };
-    }
+        orderRecord.ids.splice(index, 0, newPage.id);
 
-    /**
-     * Get a spell by page number
-     * @param {number} page - The page number
-     * @returns {Promise<Object>} - The spell or null if not found
-     */
-    static async getSpellByPage(page) {
-        const db = await this.init();
-        const spell = await db.get(this.SPELLS_STORE, page);
+        await Promise.all([
+            tx.objectStore(this.PAGES_STORE).put(newPage),
+            tx.objectStore(this.ORDER_STORE).put(orderRecord),
+        ]);
 
-        if (!spell) return null;
-
-        // Process icon URL if it's a Blob/File
-        if (spell[spellOptions.ICONURL] instanceof Blob) {
-            // Create an object URL for the blob
-            spell._iconObjectUrl = URL.createObjectURL(spell[spellOptions.ICONURL]);
-        }
-
-        return spell;
-    }
-
-    /**
-     * Save a spell
-     * @param {Object} spell - The spell object to save
-     * @returns {Promise<number>} - The page number of the saved spell
-     */
-    static async saveSpell(spell) {
-        const db = await this.init();
-
-        // Create a copy of the spell without the _iconObjectUrl property
-        const spellToSave = { ...spell };
-
-        // Remove the _iconObjectUrl property before validation and saving
-        if ('_iconObjectUrl' in spellToSave) {
-            delete spellToSave._iconObjectUrl;
-        }
-
-        this.validateSpell(spellToSave);
-        await db.put(this.SPELLS_STORE, spellToSave);
-        return spellToSave[spellOptions.PAGE];
-    }
-
-    /**
-     * Delete a spell by page number
-     * @param {number} page - The page number of the spell to delete
-     * @returns {Promise<void>}
-     */
-    static async deleteSpellByPage(page) {
-        const db = await this.init();
-
-        // Get all spells
-        let spells = await this.getAllSpells();
-
-        // Delete the target spell
-        await db.delete(this.SPELLS_STORE, page);
-
-        // Filter out the deleted spell and get remaining spells with higher page numbers
-        const spellsToShift = spells.filter(spell => spell[spellOptions.PAGE] > page);
-
-        // Shift the remaining spells down
-        for (const spell of spellsToShift) {
-            const shiftedSpell = { ...spell };
-            shiftedSpell[spellOptions.PAGE] = spell[spellOptions.PAGE] - 1;
-
-            // Delete the old page
-            await db.delete(this.SPELLS_STORE, spell[spellOptions.PAGE]);
-            // Save at new page
-            await this.saveSpell(shiftedSpell);
-        }
-    }
-
-    /**
-     * Get all spells
-     * @returns {Promise<Array<Object>>} - Array of all spells
-     */
-    static async getAllSpells() {
-        const db = await this.init();
-        const spells = await db.getAll(this.SPELLS_STORE);
-
-        // Process any blob image data to create object URLs
-        return spells.map(spell => {
-            if (spell[spellOptions.ICONURL] instanceof Blob) {
-                // Create an object URL for the blob
-                spell._iconObjectUrl = URL.createObjectURL(spell[spellOptions.ICONURL]);
-            }
-            return spell;
-        });
-    }
-
-    /**
-     * Get all spells sorted by page number
-     * @returns {Promise<Array<Object>>} - Array of all spells sorted by page
-     */
-    static async getAllSpellsSortedByPage() {
-        const spells = await this.getAllSpells();
-        return spells.sort((a, b) => a[spellOptions.PAGE] - b[spellOptions.PAGE]);
-    }
-
-    /**
-     * Get the highest spell page number currently in use
-     * @returns {Promise<number>} - The highest page number or 0 if no spells exist
-     */
-    static async getHighestSpellPageNumber() {
-        const spells = await this.getAllSpells();
-        if (spells.length === 0) return 0;
-
-        return Math.max(...spells.map(spell => spell[spellOptions.PAGE]));
-    }
-
-    /**
-     * Swap the pages of two spells
-     * @param {number} pageA - The page number of the first spell
-     * @param {number} pageB - The page number of the second spell
-     * @returns {Promise<boolean>} - Whether the swap was successful
-     */
-    static async swapSpellPages(pageA, pageB) {
-        try {
-            const spellA = await this.getSpellByPage(pageA);
-            const spellB = await this.getSpellByPage(pageB);
-
-            if (!spellA || !spellB) {
-                return false;
-            }
-
-            // Swap the page numbers
-            const tempPage = spellA[spellOptions.PAGE];
-            spellA[spellOptions.PAGE] = spellB[spellOptions.PAGE];
-            spellB[spellOptions.PAGE] = tempPage;
-
-            // Save both spells with their new page numbers
-            await this.saveSpell(spellA);
-            await this.saveSpell(spellB);
-
-            return true;
-        } catch (error) {
-            console.error('Error swapping spell pages:', error);
-            return false;
-        }
-    }
-
-    /* NOTE METHODS */
-
-    /**
-     * Validates if note properties are valid
-     * @param {Object} note - The note object to validate
-     * @returns {boolean} - Whether the note is valid
-     * @throws {Error} - If the note has invalid properties
-     */
-    static validateNote(note) {
-        const validKeys = Object.values(noteOptions);
-
-        // Check that all required properties exist
-        for (const key of validKeys) {
-            if (note[key] === undefined) {
-                throw new Error(`Missing required note property: ${key}`);
-            }
-        }
-
-        // Check for invalid properties
-        for (const key in note) {
-            if (!validKeys.includes(key)) {
-                throw new Error(`Invalid note property: ${key}`);
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Create a new note with default values
-     * @param {number} page - The page number for the note
-     * @returns {Object} - A new note object with default values
-     */
-    static createEmptyNote(page) {
-        return {
-            ...DEFAULT_NOTE_OPTIONS,
-            [noteOptions.PAGE]: page,
-            [noteOptions.DATE]: new Date().toISOString()
-        };
-    }
-
-    /**
-     * Get a note by page number
-     * @param {number} page - The page number
-     * @returns {Promise<Object>} - The note or null if not found
-     */
-    static async getNoteByPage(page) {
-        const db = await this.init();
-        const note = await db.get(this.NOTES_STORE, page);
-        return note || null;
-    }
-
-    /**
-     * Save a note
-     * @param {Object} note - The note object to save
-     * @returns {Promise<number>} - The page number of the saved note
-     */
-    static async saveNote(note) {
-        const db = await this.init();
-        // Ensure date is always current when saving
-        note[noteOptions.DATE] = new Date().toISOString();
-        this.validateNote(note);
-        await db.put(this.NOTES_STORE, note);
-        return note[noteOptions.PAGE];
-    }
-
-    /**
-     * Delete a note by page number
-     * @param {number} page - The page number of the note to delete
-     * @returns {Promise<void>}
-     */
-    static async deleteNoteByPage(page) {
-        const db = await this.init();
-        return db.delete(this.NOTES_STORE, page);
-    }
-
-    /**
-     * Get all notes
-     * @returns {Promise<Array<Object>>} - Array of all notes
-     */
-    static async getAllNotes() {
-        const db = await this.init();
-        return db.getAll(this.NOTES_STORE);
-    }
-
-    /**
-     * Get all notes sorted by page number
-     * @returns {Promise<Array<Object>>} - Array of all notes sorted by page
-     */
-    static async getAllNotesSortedByPage() {
-        const notes = await this.getAllNotes();
-        return notes.sort((a, b) => a[noteOptions.PAGE] - b[noteOptions.PAGE]);
-    }
-
-    /**
-     * Get all notes sorted by date (most recent first)
-     * @returns {Promise<Array<Object>>} - Array of all notes sorted by date
-     */
-    static async getAllNotesSortedByDate() {
-        const notes = await this.getAllNotes();
-        return notes.sort((a, b) => new Date(b[noteOptions.DATE]) - new Date(a[noteOptions.DATE]));
-    }
-
-    /**
-     * Get the highest note page number currently in use
-     * @returns {Promise<number>} - The highest page number or 0 if no notes exist
-     */
-    static async getHighestNotePageNumber() {
-        const notes = await this.getAllNotes();
-        if (notes.length === 0) return 0;
-
-        return Math.max(...notes.map(note => note[noteOptions.PAGE]));
-    }
-
-    /* IMPORT/EXPORT METHODS */
-
-    /**
-     * Clear all content from the current spellbook
-     * @returns {Promise<void>}
-     */
-    static async clearAllContent() {
-        const db = await this.init();
-        await db.clear(this.SPELLS_STORE);
-        await db.clear(this.NOTES_STORE);
-    }
-
-    /**
-     * Import spellbook data (both spells and notes)
-     * @param {Object} data - Object containing arrays of spells and notes
-     * @returns {Promise<void>}
-     */
-    static async importSpellbookData(data) {
-        const db = await this.init();
-
-        // Import font if available
-        if (data.font) {
-            await this.saveFont(data.font);
-        }
-
-        // Start a transaction for both stores
-        const tx = db.transaction([this.SPELLS_STORE, this.NOTES_STORE], 'readwrite');
-
-        // Import spells
-        if (data.spells && Array.isArray(data.spells)) {
-            for (const spell of data.spells) {
-                try {
-                    // Create a clean spell object without _iconObjectUrl
-                    const { _iconObjectUrl, ...cleanSpell } = spell;
-
-                    // Convert base64 icon data back to File/Blob if it exists
-                    if (cleanSpell[spellOptions.ICONURL] && cleanSpell[spellOptions.ICONURL].data) {
-                        const base64Data = cleanSpell[spellOptions.ICONURL].data;
-                        const iconData = base64Data.split(',')[1];
-                        const byteCharacters = atob(iconData);
-                        const byteArrays = [];
-
-                        for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-                            const slice = byteCharacters.slice(offset, offset + 512);
-                            const byteNumbers = new Array(slice.length);
-                            for (let i = 0; i < slice.length; i++) {
-                                byteNumbers[i] = slice.charCodeAt(i);
-                            }
-                            const byteArray = new Uint8Array(byteNumbers);
-                            byteArrays.push(byteArray);
-                        }
-
-                        cleanSpell[spellOptions.ICONURL] = new File(
-                            byteArrays,
-                            cleanSpell[spellOptions.ICONURL].name || 'image.png',
-                            { type: cleanSpell[spellOptions.ICONURL].type || 'image/png' }
-                        );
-                    }
-
-                    this.validateSpell(cleanSpell);
-                    await tx.objectStore(this.SPELLS_STORE).put(cleanSpell);
-                } catch (error) {
-                    console.error(`Error importing spell:`, error);
-                }
-            }
-        }
-
-        // Import notes
-        if (data.notes && Array.isArray(data.notes)) {
-            for (const note of data.notes) {
-                try {
-                    this.validateNote(note);
-                    await tx.objectStore(this.NOTES_STORE).put(note);
-                } catch (error) {
-                    console.error(`Error importing note:`, error);
-                }
-            }
-        }
-
-        // Complete the transaction
         await tx.done;
     }
 
-    /**
-     * Export all data from the current spellbook
-     * @returns {Promise<Object>} - Object containing all spells and notes
-     */
+    // Atomically: creates a new blank page record AND inserts its id into
+    // the order array at afterIndex + 1. Both writes succeed or both fail.
+    static async insertPageAfter(afterIndex, newPage) {
+        await this._insertPageAtIndex(afterIndex + 1, newPage);
+    }
+
+    // Atomically: deletes the page record AND removes its id from the order array.
+    static async deletePage(id) {
+        const db = await this.init();
+        const tx = db.transaction([this.PAGES_STORE, this.ORDER_STORE], 'readwrite');
+
+        const orderRecord = await tx.objectStore(this.ORDER_STORE).get('order');
+        if (orderRecord) {
+            orderRecord.ids = orderRecord.ids.filter((existingId) => existingId !== id);
+            await tx.objectStore(this.ORDER_STORE).put(orderRecord);
+        }
+
+        await tx.objectStore(this.PAGES_STORE).delete(id);
+        await tx.done;
+    }
+
+    static async deleteSpellbook(dbName) {
+        const currentName = await this.getCurrentSpellbookName();
+        if (dbName === currentName) {
+            throw new Error('Cannot delete the currently active spellbook');
+        }
+        const spellbookList = await this.listAllSpellbooks();
+        const updatedList = spellbookList.filter((name) => name !== dbName);
+        await SettingsDB.set(settingsOptions.SPELLBOOK_LIST, updatedList);
+        await window.indexedDB.deleteDatabase(dbName);
+    }
+
+    static async renameSpellbook(oldName, newName) {
+        const data = await this.exportSpellbookData();
+
+        await this.createNewSpellbook(newName);
+        await this.importSpellbookData(data);
+        await this.deleteSpellbook(oldName);
+
+        const spellbookList = await this.listAllSpellbooks();
+        const updatedList = spellbookList.map((name) =>
+            name === oldName ? newName : name,
+        );
+        await SettingsDB.set(settingsOptions.SPELLBOOK_LIST, updatedList);
+
+        await this.switchSpellbook(newName);
+    }
+
+    /* LEGACY MIGRATION (v1 spells -> v2 pages) */
+
+    // Builds a page object from a legacy spell record, using
+    // spell.template.json as the layout/settings source and only pulling
+    // actual content (text / imageFile) from the old spell fields.
+    static _buildPageFromSpell(spell) {
+        const templateElements = spellTemplate.pages?.[0]?.elements ?? [];
+
+        const elements = templateElements.map((templateEl) => {
+            const spellKey = SPELL_TEMPLATE_ELEMENT_MAP[templateEl.id];
+            const props = { ...templateEl.props };
+
+            if (spellKey) {
+                if (templateEl.type === 'image') {
+                    const iconValue = spell[spellKey];
+                    props.imageFile = iconValue instanceof Blob ? iconValue : null;
+                } else {
+                    const rawValue = spell[spellKey];
+                    props.text =
+                        rawValue !== undefined && rawValue !== null
+                            ? String(rawValue)
+                            : '';
+                }
+            }
+
+            return {
+                id: crypto.randomUUID(),
+                type: templateEl.type,
+                top: templateEl.top,
+                left: templateEl.left,
+                widthUnits: templateEl.widthUnits,
+                heightUnits: templateEl.heightUnits,
+                zIndex: templateEl.zIndex,
+                props,
+            };
+        });
+
+        return {
+            id: crypto.randomUUID(),
+            elements,
+            settings: { showOnOverview: false, name: spell[spellOptions.NAME] || '' },
+        };
+    }
+
+    // Runs once when upgrading a database from v1 (spells/notes stores) to
+    // v2 (pages/pageOrder stores). Reads every legacy spell, converts each
+    // into a page via _buildPageFromSpell, and writes them into the new
+    // stores in the old pages' original order. The old 'spells' store is
+    // deliberately left untouched on disk for now (see commented-out
+    // deleteObjectStore calls in init's upgrade callback) until this has
+    // been tested.
+    static async _migrateSpellsToPages(db, oldVersion, transaction) {
+        if (oldVersion >= 2 || !db.objectStoreNames.contains('spells')) {
+            return;
+        }
+
+        const spells = await transaction.objectStore('spells').getAll();
+        if (!spells.length) return;
+
+        spells.sort(
+            (a, b) => (a[spellOptions.PAGE] ?? 0) - (b[spellOptions.PAGE] ?? 0),
+        );
+
+        const pagesStore = transaction.objectStore(this.PAGES_STORE);
+        const orderStore = transaction.objectStore(this.ORDER_STORE);
+
+        const orderRecord = (await orderStore.get('order')) ?? {
+            key: 'order',
+            ids: [],
+        };
+
+        for (const spell of spells) {
+            const page = this._buildPageFromSpell(spell);
+            await pagesStore.put(page);
+            orderRecord.ids.push(page.id);
+        }
+
+        await orderStore.put(orderRecord);
+    }
+
+    /* IMPORT/EXPORT */
+
+    // Recursively walks a plain JS value (arrays/objects) looking for
+    // Blob/File instances and replaces them with a serializable marker.
+    // Used only for export — elements can freely store Blob/File in their
+    // props (e.g. Image's imageFile) without PageDB needing to know about
+    // specific element types.
+    static async _serializeBlobs(value) {
+        if (value instanceof Blob) {
+            return {
+                __blob: true,
+                data: await this.fileToBase64(value),
+                type: value.type,
+                name: value.name || null,
+            };
+        }
+        if (Array.isArray(value)) {
+            return Promise.all(value.map((item) => this._serializeBlobs(item)));
+        }
+        if (value && typeof value === 'object') {
+            const entries = await Promise.all(
+                Object.entries(value).map(async ([key, val]) => [
+                    key,
+                    await this._serializeBlobs(val),
+                ]),
+            );
+            return Object.fromEntries(entries);
+        }
+        return value;
+    }
+
+    // Reverse of _serializeBlobs: walks a plain JS value looking for the
+    // { __blob: true, ... } marker and reconstructs a File from its base64 data.
+    static async _deserializeBlobs(value) {
+        if (value && typeof value === 'object' && value.__blob) {
+            const res = await fetch(value.data);
+            const blob = await res.blob();
+            return new File([blob], value.name || 'file', {
+                type: value.type || blob.type,
+            });
+        }
+        if (Array.isArray(value)) {
+            return Promise.all(value.map((item) => this._deserializeBlobs(item)));
+        }
+        if (value && typeof value === 'object') {
+            const entries = await Promise.all(
+                Object.entries(value).map(async ([key, val]) => [
+                    key,
+                    await this._deserializeBlobs(val),
+                ]),
+            );
+            return Object.fromEntries(entries);
+        }
+        return value;
+    }
+
+    // New format only, per your instruction.
     static async exportSpellbookData() {
         const fontData = await this.getFont();
-        const spells = await this.getAllSpells();
+        const pages = await this.loadAllPagesInOrder();
 
-        // Convert Blob/File icons to base64
-        const processedSpells = await Promise.all(spells.map(async spell => {
-            const cleanSpell = { ...spell };
-            if (cleanSpell[spellOptions.ICONURL] instanceof Blob) {
-                cleanSpell[spellOptions.ICONURL] = {
-                    data: await this.fileToBase64(cleanSpell[spellOptions.ICONURL]),
-                    type: cleanSpell[spellOptions.ICONURL].type,
-                    name: cleanSpell[spellOptions.ICONURL].name
-                };
-            }
-            delete cleanSpell._iconObjectUrl;
-            return cleanSpell;
-        }));
-
-        // Process font data to base64 if it's a Blob/File
         if (fontData && fontData.data instanceof Blob) {
             fontData.data = await this.fileToBase64(fontData.data);
         }
 
         return {
-            spells: processedSpells,
-            notes: await this.getAllNotes(),
+            pages: await this._serializeBlobs(pages),
             name: this.activeDBName,
             exportDate: new Date().toISOString(),
-            font: fontData
+            font: fontData,
         };
     }
 
-    /**
-     * Save font data for the current spellbook
-     * @param {Object} fontData - Object containing font data and name
-     * @returns {Promise<void>}
-     */
+    // Accepts both new-format ({ pages: [...] }) and old-format
+    // ({ spells: [...], notes: [...] }) exports.
+    static async importSpellbookData(data) {
+        if (data.font) {
+            await this.saveFont(data.font);
+        }
+
+        if (data.pages && Array.isArray(data.pages)) {
+            await this._importNewFormat(data.pages);
+        } else if (data.spells || data.notes) {
+            await this._importLegacyFormat(data);
+        }
+    }
+
+    static async _importNewFormat(pages) {
+        const deserializedPages = await this._deserializeBlobs(pages);
+        const db = await this.init();
+        const tx = db.transaction([this.PAGES_STORE, this.ORDER_STORE], 'readwrite');
+
+        for (const page of deserializedPages) {
+            await tx.objectStore(this.PAGES_STORE).put(page);
+        }
+        await tx.objectStore(this.ORDER_STORE).put({
+            key: 'order',
+            ids: deserializedPages.map((p) => p.id),
+        });
+
+        await tx.done;
+    }
+
+    // Legacy spells/notes imports are converted into single-element pages,
+    // ordered by their old page number, so old exports remain importable
+    // without you having to write a separate migration path right now.
+    static async _importLegacyFormat(data) {
+        const legacyPages = [];
+
+        if (Array.isArray(data.spells)) {
+            for (const spell of data.spells) {
+                legacyPages.push({
+                    sourcePage: spell[spellOptions.PAGE],
+                    page: {
+                        id: crypto.randomUUID(),
+                        elements: [
+                            {
+                                id: crypto.randomUUID(),
+                                type: 'legacy-spell',
+                                props: spell,
+                            },
+                        ],
+                        settings: { showOnOverview: false, name: '' },
+                    },
+                });
+            }
+        }
+
+        if (Array.isArray(data.notes)) {
+            for (const note of data.notes) {
+                legacyPages.push({
+                    sourcePage: note[noteOptions.PAGE],
+                    page: {
+                        id: crypto.randomUUID(),
+                        elements: [
+                            {
+                                id: crypto.randomUUID(),
+                                type: 'legacy-note',
+                                props: note,
+                            },
+                        ],
+                        settings: { showOnOverview: false, name: '' },
+                    },
+                });
+            }
+        }
+
+        legacyPages.sort((a, b) => a.sourcePage - b.sourcePage);
+        await this._importNewFormat(legacyPages.map((entry) => entry.page));
+    }
+
+    /* FONT (unchanged from SpellbookDB) */
+
     static async saveFont(fontData) {
         const db = await this.init();
         await db.put(this.SETTINGS_STORE, {
             key: 'font',
             data: fontData.data,
-            name: fontData.name
+            name: fontData.name,
         });
     }
 
-    /**
-     * Get font data for the current spellbook
-     * @returns {Promise<Object>} - Font data object or null if no font is set
-     */
     static async getFont() {
         const db = await this.init();
         if (!db.objectStoreNames.contains(this.SETTINGS_STORE)) {
             return null;
         }
-        return await db.get(this.SETTINGS_STORE, 'font');
+        return db.get(this.SETTINGS_STORE, 'font');
     }
 
-    /**
-     * Remove font data for the current spellbook
-     * @returns {Promise<void>}
-     */
     static async removeFont() {
         const db = await this.init();
         await db.delete(this.SETTINGS_STORE, 'font');
     }
 
-    /**
-     * Convert a File object to base64 string
-     * @param {File} file - The file to convert
-     * @returns {Promise<string>} - Base64 string representation of the file
-     */
     static async fileToBase64(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
+            reader.onerror = (error) => reject(error);
         });
-    }
-
-    /**
-     * Save an image to a spell
-     * @param {number} page - The page number of the spell
-     * @param {File} imageFile - The image file to save
-     * @returns {Promise<string>} - Object URL to reference the stored blob
-     */
-    static async saveSpellImage(page, imageFile) {
-        try {
-            // Get current spell or create a new one
-            let spell = await this.getSpellByPage(page);
-
-            if (!spell) {
-                // Create new spell if it doesn't exist
-                spell = this.createEmptySpell(page);
-            }
-
-            // Store the raw blob/file in IndexedDB
-            spell[spellOptions.ICONURL] = imageFile;
-
-            // Remove any existing _iconObjectUrl before saving
-            if ('_iconObjectUrl' in spell) {
-                delete spell._iconObjectUrl;
-            }
-
-            // Save the updated spell
-            await this.saveSpell(spell);
-
-            // Create and return an object URL for immediate display
-            return URL.createObjectURL(imageFile);
-        } catch (error) {
-            console.error('Error saving spell image:', error);
-            throw error;
-        }
     }
 }

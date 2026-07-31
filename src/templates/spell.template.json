@@ -1,0 +1,153 @@
+{
+    "pages": [
+        {
+            "id": "spell",
+            "elements": [
+                {
+                    "id": "image",
+                    "type": "image",
+                    "top": 12,
+                    "left": 15,
+                    "widthUnits": 40,
+                    "heightUnits": 40,
+                    "zIndex": 0,
+                    "props": {
+                        "imageFile": null,
+                        "alt": "Uploaded image"
+                    }
+                },
+                {
+                    "id": "description",
+                    "type": "text",
+                    "top": 68,
+                    "left": 12,
+                    "widthUnits": 104,
+                    "heightUnits": 110,
+                    "zIndex": 6,
+                    "props": {
+                        "text": "New text block"
+                    }
+                },
+                {
+                    "id": "title",
+                    "type": "title",
+                    "top": 12,
+                    "left": 56,
+                    "widthUnits": 60,
+                    "heightUnits": 15,
+                    "zIndex": 2,
+                    "props": {
+                        "text": "New Title cool ",
+                        "titleOptions": {
+                            "color": "#000000",
+                            "bold": false,
+                            "italic": false,
+                            "alignment": "left",
+                            "skew": 0,
+                            "rotation": 0
+                        }
+                    }
+                },
+                {
+                    "id": "text-1",
+                    "type": "text",
+                    "top": 27,
+                    "left": 56,
+                    "widthUnits": 60,
+                    "heightUnits": 10,
+                    "zIndex": 3,
+                    "props": {
+                        "text": "Test",
+                        "textOptions": {
+                            "color": "#000000",
+                            "alignment": "left",
+                            "skew": 0,
+                            "rotation": 0,
+                            "direction": "horizontal"
+                        }
+                    }
+                },
+                {
+                    "id": "text-2",
+                    "type": "text",
+                    "top": 37,
+                    "left": 56,
+                    "widthUnits": 60,
+                    "heightUnits": 10,
+                    "zIndex": 4,
+                    "props": {
+                        "text": "New text block",
+                        "textOptions": {
+                            "color": "#000000",
+                            "alignment": "left",
+                            "skew": 0,
+                            "rotation": 0,
+                            "direction": "horizontal"
+                        }
+                    }
+                },
+                {
+                    "id": "text-3",
+                    "type": "text",
+                    "top": 47,
+                    "left": 56,
+                    "widthUnits": 60,
+                    "heightUnits": 10,
+                    "zIndex": 5,
+                    "props": {
+                        "text": "New text block",
+                        "textOptions": {
+                            "color": "#000000",
+                            "alignment": "left",
+                            "skew": 0,
+                            "rotation": 0,
+                            "direction": "horizontal"
+                        }
+                    }
+                },
+                {
+                    "id": "text-4",
+                    "type": "text",
+                    "top": 57,
+                    "left": 56,
+                    "widthUnits": 60,
+                    "heightUnits": 10,
+                    "zIndex": 6,
+                    "props": {
+                        "text": "New text block",
+                        "textOptions": {
+                            "color": "#000000",
+                            "alignment": "left",
+                            "skew": 0,
+                            "rotation": 0,
+                            "direction": "horizontal"
+                        }
+                    }
+                },
+                {
+                    "id": "text-5",
+                    "type": "text",
+                    "top": 12,
+                    "left": 116,
+                    "widthUnits": 7,
+                    "heightUnits": 8,
+                    "zIndex": 7,
+                    "props": {
+                        "text": "13",
+                        "textOptions": {
+                            "color": "#000000",
+                            "alignment": "center",
+                            "skew": 0,
+                            "rotation": 0,
+                            "direction": "vertical"
+                        }
+                    }
+                }
+            ],
+            "settings": {
+                "showOnOverview": false,
+                "name": ""
+            }
+        }
+    ]
+}
