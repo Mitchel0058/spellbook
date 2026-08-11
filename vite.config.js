@@ -6,7 +6,7 @@ import basicSsl from '@vitejs/plugin-basic-ssl';
 export default defineConfig({
     base: '/spellbook/',
     plugins: [
-        // basicSsl(),
+        basicSsl(),
         svelte(),
         VitePWA({
             registerType: 'autoUpdate',

@@ -33,9 +33,9 @@
         if (!pageEl) return;
         const observer = new ResizeObserver(([entry]) => {
             const { width, height } = entry.contentRect;
-            // Matches --unit-width: 0.7246% / --unit-height: 0.5263%
-            unitWidthPx = width * 0.007246;
-            unitHeightPx = height * 0.005263;
+            // Matches --unit-width: 0.7246376811594203% / --unit-height: 0.5263157894736842%
+            unitWidthPx = width * 0.007246376811594203;
+            unitHeightPx = height * 0.005263157894736842;
         });
         observer.observe(pageEl);
         return () => observer.disconnect();

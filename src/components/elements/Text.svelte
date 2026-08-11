@@ -1,6 +1,7 @@
 <script>
     import { appState, AppMode } from "../../context/appState.svelte.js";
     import { getPageOptionsModal } from "../../context/pageOptionsModal.svelte.js";
+    import BorderFrame from "../BorderFrame.svelte";
 
     let {
         text = "",
@@ -18,9 +19,22 @@
     let textOptions = $state({
         color: "#000000",
         alignment: "left",
+        verticalAlignment: "baseline",
         skew: 0,
         rotation: 0,
         direction: "vertical",
+        border: false,
+        borderColor: "#000000",
+        showPatterns: true,
+        showCorners: true,
+        inside: true,
+        insideColor: "#8f563b",
+        insideColor2: "#a67048",
+        insideFillColor: "#bb8854",
+        fill: true,
+        outerOverlay: true,
+        outerOverlayColor: "#fbf236",
+        outerOverlayOpacity: 0.25,
         ...initialTextOptions,
     });
 
@@ -39,6 +53,16 @@
                 { value: "center", label: "Center" },
                 { value: "right", label: "Right" },
                 { value: "justify", label: "Justify" },
+            ],
+        },
+        {
+            key: "verticalAlignment",
+            label: "Vertical Alignment",
+            type: "select",
+            choices: [
+                { value: "baseline", label: "Baseline" },
+                { value: "center", label: "Center" },
+                { value: "end", label: "End" },
             ],
         },
         {
@@ -65,6 +89,80 @@
                 { value: "vertical", label: "Vertical" },
                 { value: "horizontal", label: "Horizontal" },
             ],
+        },
+        {
+            key: "border",
+            label: "Show Border",
+            type: "checkbox",
+        },
+        {
+            key: "borderColor",
+            label: "Border Color",
+            type: "color",
+            showIf: { key: "border", value: true },
+        },
+        {
+            key: "showPatterns",
+            label: "Show Patterns",
+            type: "checkbox",
+            showIf: { key: "border", value: true },
+        },
+        {
+            key: "showCorners",
+            label: "Show Corners",
+            type: "checkbox",
+            showIf: { key: "border", value: true },
+        },
+        {
+            key: "inside",
+            label: "Show Inside Border",
+            type: "checkbox",
+            showIf: { key: "border", value: true },
+        },
+        {
+            key: "insideColor",
+            label: "Inside Border Color",
+            type: "color",
+            showIf: { key: "border", value: true },
+        },
+        {
+            key: "insideColor2",
+            label: "Inside Border Color 2",
+            type: "color",
+            showIf: { key: "border", value: true },
+        },
+        {
+            key: "fill",
+            label: "Fill Border",
+            type: "checkbox",
+            showIf: { key: "border", value: true },
+        },
+        {
+            key: "insideFillColor",
+            label: "Inside Fill Color",
+            type: "color",
+            showIf: { key: "border", value: true },
+        },
+        {
+            key: "outerOverlay",
+            label: "Show Outer Overlay",
+            type: "checkbox",
+            showIf: { key: "border", value: true },
+        },
+        {
+            key: "outerOverlayColor",
+            label: "Outer Overlay Color",
+            type: "color",
+            showIf: { key: "border", value: true },
+        },
+        {
+            key: "outerOverlayOpacity",
+            label: "Outer Overlay Opacity",
+            type: "range",
+            min: 0,
+            max: 1,
+            step: 0.01,
+            showIf: { key: "border", value: true },
         },
         {
             key: "delete",
@@ -115,50 +213,75 @@
     });
 </script>
 
-<div
-    class="text"
-    class:no-scroll={isLayoutMode}
-    class:horizontal={textOptions.direction === "horizontal"}
-    class:has-transform={textOptions.rotation !== 0 || textOptions.skew !== 0}
-    class:scroll-fade-x={textOptions.rotation === 0 &&
-        textOptions.skew === 0 &&
-        textOptions.direction === "horizontal"}
-    class:scroll-fade-y={textOptions.rotation === 0 &&
-        textOptions.skew === 0 &&
-        textOptions.direction !== "horizontal"}
-    onpointerdown={handlePointerDown}
-    onpointerup={handlePointerUp}
-    onpointerleave={handlePointerUp}
-    onclick={handleClick}
-    role="presentation"
->
+{#snippet textContent()}
     <div
-        class="text-transform-wrapper"
-        style="transform: rotate({textOptions.rotation}deg) skew({textOptions.skew}deg);"
+        class="text"
+        class:no-scroll={isLayoutMode}
+        class:horizontal={textOptions.direction === "horizontal"}
+        class:has-transform={textOptions.rotation !== 0 ||
+            textOptions.skew !== 0}
+        class:scroll-fade-x={textOptions.rotation === 0 &&
+            textOptions.skew === 0 &&
+            textOptions.direction === "horizontal"}
+        class:scroll-fade-y={textOptions.rotation === 0 &&
+            textOptions.skew === 0 &&
+            textOptions.direction !== "horizontal"}
+        onpointerdown={handlePointerDown}
+        onpointerup={handlePointerUp}
+        onpointerleave={handlePointerUp}
+        onclick={handleClick}
+        role="presentation"
     >
-        {#if isEditing}
-            <textarea
-                class="editable"
-                value={content}
-                oninput={(e) => {
-                    content = e.target.value;
-                    onChange({
-                        text: content,
-                        textOptions: { ...textOptions },
-                    });
-                }}
-                style="color: {textOptions.color}; text-align: {textOptions.alignment};"
-            ></textarea>
-        {:else}
-            <p
-                class="display-text"
-                style="color: {textOptions.color}; text-align: {textOptions.alignment};"
-            >
-                {content}
-            </p>
-        {/if}
+        <div
+            class="text-transform-wrapper"
+            style="transform: rotate({textOptions.rotation}deg) skew({textOptions.skew}deg);"
+        >
+            {#if isEditing}
+                <textarea
+                    class="editable"
+                    value={content}
+                    oninput={(e) => {
+                        content = e.target.value;
+                        onChange({
+                            text: content,
+                            textOptions: { ...textOptions },
+                        });
+                    }}
+                    style="color: {textOptions.color}; text-align: {textOptions.alignment}; align-content: {textOptions.verticalAlignment};"
+                ></textarea>
+            {:else}
+                <p
+                    class="display-text"
+                    style="color: {textOptions.color}; text-align: {textOptions.alignment}; align-content: {textOptions.verticalAlignment};"
+                >
+                    {content}
+                </p>
+            {/if}
+        </div>
     </div>
-</div>
+{/snippet}
+
+{#if textOptions.border}
+    <BorderFrame
+        color={textOptions.borderColor}
+        showPatterns={textOptions.showPatterns}
+        showCorners={textOptions.showCorners}
+        inside={textOptions.inside}
+        insideColor1={textOptions.insideColor}
+        insideColor2={textOptions.insideColor2}
+        fill={textOptions.fill}
+        insideFillColor={textOptions.insideFillColor}
+        outerOverlay={textOptions.outerOverlay}
+        outerOverlayColor={textOptions.outerOverlayColor}
+        outerOverlayOpacity={textOptions.outerOverlayOpacity}
+    >
+        {#snippet children()}
+            {@render textContent()}
+        {/snippet}
+    </BorderFrame>
+{:else}
+    {@render textContent()}
+{/if}
 
 <style>
     .text {

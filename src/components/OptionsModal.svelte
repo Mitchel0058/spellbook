@@ -1,12 +1,17 @@
 <script>
     let { modal, rightPage } = $props();
+
+    function isVisible(option) {
+        if (!option.showIf) return true;
+        const { key, value, values } = option.showIf;
+        const current = modal.state.values[key];
+        if (values) return values.includes(current);
+        return current === value;
+    }
 </script>
 
 {#if modal.state.open}
-    <div
-        class="options-overlay"
-        class:right-page-offset-px-layout={rightPage}
-    >
+    <div class="options-overlay" class:right-page-offset-px-layout={rightPage}>
         <img
             class="options-bg"
             src="assets/img/spellbook_modal.svg"
@@ -28,124 +33,129 @@
 
             <div class="options-body">
                 {#each modal.state.schema as option (option.key)}
-                    <div class="option-row">
-                        <label for={option.key}>{option.label}</label>
+                    {#if isVisible(option)}
+                        <div class="option-row">
+                            <label for={option.key}>{option.label}</label>
 
-                        {#if option.type === "select"}
-                            <select
-                                id={option.key}
-                                bind:value={modal.state.values[option.key]}
-                                onchange={modal.notifyChange}
-                            >
-                                {#each option.choices as choice (choice.value)}
-                                    <option value={choice.value}
-                                        >{choice.label}</option
-                                    >
-                                {/each}
-                            </select>
-                        {:else if option.type === "number"}
-                            <input
-                                id={option.key}
-                                type="number"
-                                min={option.min}
-                                max={option.max}
-                                step={option.step ?? 1}
-                                bind:value={modal.state.values[option.key]}
-                                oninput={modal.notifyChange}
-                            />
-                        {:else if option.type === "range"}
-                            <input
-                                id={option.key}
-                                type="range"
-                                min={option.min}
-                                max={option.max}
-                                step={option.step ?? 1}
-                                bind:value={modal.state.values[option.key]}
-                                oninput={modal.notifyChange}
-                            />
-                            <span class="range-value"
-                                >{modal.state.values[option.key]}</span
-                            >
-                        {:else if option.type === "checkbox"}
-                            <input
-                                id={option.key}
-                                type="checkbox"
-                                bind:checked={modal.state.values[option.key]}
-                                onchange={modal.notifyChange}
-                            />
-                        {:else if option.type === "text"}
-                            <input
-                                id={option.key}
-                                type="text"
-                                bind:value={modal.state.values[option.key]}
-                                oninput={modal.notifyChange}
-                            />
-                        {:else if option.type === "color"}
-                            <input
-                                id={option.key}
-                                type="color"
-                                bind:value={modal.state.values[option.key]}
-                                oninput={modal.notifyChange}
-                            />
-                        {:else if option.type === "choice-group"}
-                            <div class="choice-group">
-                                {#each option.choices as choice (choice.value)}
-                                    <button
-                                        type="button"
-                                        class="choice-button"
-                                        onclick={choice.onClick}
-                                    >
-                                        {choice.label}
-                                    </button>
-                                {/each}
-                            </div>
-                        {:else if option.type === "delete-button"}
-                            <button
-                                type="button"
-                                class="delete-button"
-                                onclick={() => {
-                                    if (
-                                        window.confirm(
-                                            option.confirmMessage ??
-                                                "Delete this element? This cannot be undone.",
-                                        )
-                                    ) {
-                                        option.onDelete?.();
-                                        modal.close();
-                                    }
-                                }}
-                            >
-                                {option.label}
-                            </button>
-                        {:else if option.type === "image"}
-                            <div class="image-option">
+                            {#if option.type === "select"}
+                                <select
+                                    id={option.key}
+                                    bind:value={modal.state.values[option.key]}
+                                    onchange={modal.notifyChange}
+                                >
+                                    {#each option.choices as choice (choice.value)}
+                                        <option value={choice.value}
+                                            >{choice.label}</option
+                                        >
+                                    {/each}
+                                </select>
+                            {:else if option.type === "number"}
                                 <input
                                     id={option.key}
-                                    type="file"
-                                    accept="image/*"
-                                    onchange={(e) => {
-                                        const file = e.target.files[0];
-                                        if (!file) return;
-                                        modal.state.values[option.key] = file;
-                                        modal.notifyChange();
-                                    }}
+                                    type="number"
+                                    min={option.min}
+                                    max={option.max}
+                                    step={option.step ?? 1}
+                                    bind:value={modal.state.values[option.key]}
+                                    oninput={modal.notifyChange}
                                 />
-                                {#if modal.state.values[option.key]}
-                                    <button
-                                        type="button"
-                                        class="options-close"
-                                        onclick={() => {
+                            {:else if option.type === "range"}
+                                <input
+                                    id={option.key}
+                                    type="range"
+                                    min={option.min}
+                                    max={option.max}
+                                    step={option.step ?? 1}
+                                    bind:value={modal.state.values[option.key]}
+                                    oninput={modal.notifyChange}
+                                />
+                                <span class="range-value"
+                                    >{modal.state.values[option.key]}</span
+                                >
+                            {:else if option.type === "checkbox"}
+                                <input
+                                    id={option.key}
+                                    type="checkbox"
+                                    bind:checked={
+                                        modal.state.values[option.key]
+                                    }
+                                    onchange={modal.notifyChange}
+                                />
+                            {:else if option.type === "text"}
+                                <input
+                                    id={option.key}
+                                    type="text"
+                                    bind:value={modal.state.values[option.key]}
+                                    oninput={modal.notifyChange}
+                                />
+                            {:else if option.type === "color"}
+                                <input
+                                    id={option.key}
+                                    type="color"
+                                    bind:value={modal.state.values[option.key]}
+                                    oninput={modal.notifyChange}
+                                />
+                            {:else if option.type === "choice-group"}
+                                <div class="choice-group">
+                                    {#each option.choices as choice (choice.value)}
+                                        <button
+                                            type="button"
+                                            class="choice-button"
+                                            onclick={choice.onClick}
+                                        >
+                                            {choice.label}
+                                        </button>
+                                    {/each}
+                                </div>
+                            {:else if option.type === "delete-button"}
+                                <button
+                                    type="button"
+                                    class="delete-button"
+                                    onclick={() => {
+                                        if (
+                                            window.confirm(
+                                                option.confirmMessage ??
+                                                    "Delete this element? This cannot be undone.",
+                                            )
+                                        ) {
+                                            option.onDelete?.();
+                                            modal.close();
+                                        }
+                                    }}
+                                >
+                                    {option.label}
+                                </button>
+                            {:else if option.type === "image"}
+                                <div class="image-option">
+                                    <input
+                                        id={option.key}
+                                        type="file"
+                                        accept="image/*"
+                                        onchange={(e) => {
+                                            const file = e.target.files[0];
+                                            if (!file) return;
                                             modal.state.values[option.key] =
-                                                null;
+                                                file;
                                             modal.notifyChange();
                                         }}
-                                    >
-                                        Remove
-                                    </button>
-                                {/if}
-                            </div>
-                        {/if}
-                    </div>
+                                    />
+                                    {#if modal.state.values[option.key]}
+                                        <button
+                                            type="button"
+                                            class="options-close"
+                                            onclick={() => {
+                                                modal.state.values[option.key] =
+                                                    null;
+                                                modal.notifyChange();
+                                            }}
+                                        >
+                                            Remove
+                                        </button>
+                                    {/if}
+                                </div>
+                            {/if}
+                        </div>
+                    {/if}
                 {/each}
             </div>
         </div>

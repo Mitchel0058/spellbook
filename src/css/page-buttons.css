@@ -1,9 +1,0 @@
-/* Button positioning for different page types */
-
-/* Base button styles */
-.square-button {
-    position: absolute;
-    width: calc(var(--unit-width) * 9);
-    height: calc(var(--unit-height) * 9);
-    z-index: 100;
-}

@@ -1,6 +1,7 @@
 <script>
     import { appState, AppMode } from "../../context/appState.svelte.js";
     import { getPageOptionsModal } from "../../context/pageOptionsModal.svelte.js";
+    import BorderFrame from "../BorderFrame.svelte";
 
     let {
         text = "",
@@ -22,6 +23,18 @@
         alignment: "left",
         skew: 0,
         rotation: 0,
+        border: false,
+        borderColor: "#000000",
+        showPatterns: true,
+        showCorners: true,
+        inside: true,
+        insideColor: "#8f563b",
+        insideColor2: "#a67048",
+        insideFillColor: "#bb8854",
+        fill: true,
+        outerOverlay: true,
+        outerOverlayColor: "#fbf236",
+        outerOverlayOpacity: 0.25,
         ...initialTitleOptions,
     });
 
@@ -66,6 +79,80 @@
             min: -180,
             max: 180,
             step: 1,
+        },
+        {
+            key: "border",
+            label: "Show Border",
+            type: "checkbox",
+        },
+        {
+            key: "borderColor",
+            label: "Border Color",
+            type: "color",
+            showIf: { key: "border", value: true },
+        },
+        {
+            key: "showPatterns",
+            label: "Show Patterns",
+            type: "checkbox",
+            showIf: { key: "border", value: true },
+        },
+        {
+            key: "showCorners",
+            label: "Show Corners",
+            type: "checkbox",
+            showIf: { key: "border", value: true },
+        },
+        {
+            key: "inside",
+            label: "Show Inside Border",
+            type: "checkbox",
+            showIf: { key: "border", value: true },
+        },
+        {
+            key: "insideColor",
+            label: "Inside Border Color",
+            type: "color",
+            showIf: { key: "border", value: true },
+        },
+        {
+            key: "insideColor2",
+            label: "Inside Border Color 2",
+            type: "color",
+            showIf: { key: "border", value: true },
+        },
+        {
+            key: "fill",
+            label: "Fill Border",
+            type: "checkbox",
+            showIf: { key: "border", value: true },
+        },
+        {
+            key: "insideFillColor",
+            label: "Inside Fill Color",
+            type: "color",
+            showIf: { key: "border", value: true },
+        },
+        {
+            key: "outerOverlay",
+            label: "Show Outer Overlay",
+            type: "checkbox",
+            showIf: { key: "border", value: true },
+        },
+        {
+            key: "outerOverlayColor",
+            label: "Outer Overlay Color",
+            type: "color",
+            showIf: { key: "border", value: true },
+        },
+        {
+            key: "outerOverlayOpacity",
+            label: "Outer Overlay Opacity",
+            type: "range",
+            min: 0,
+            max: 1,
+            step: 0.01,
+            showIf: { key: "border", value: true },
         },
         {
             key: "delete",
@@ -116,56 +203,81 @@
     });
 </script>
 
-<div
-    class="title"
-    class:no-scroll={isLayoutMode}
-    class:has-transform={titleOptions.rotation !== 0 || titleOptions.skew !== 0}
-    onpointerdown={handlePointerDown}
-    onpointerup={handlePointerUp}
-    onpointerleave={handlePointerUp}
-    onclick={handleClick}
-    role="presentation"
->
+{#snippet titleContent()}
     <div
-        class="title-transform-wrapper"
-        class:scroll-fade-x={titleOptions.rotation === 0 ||
-            titleOptions.skew === 0}
-        style="transform: rotate({titleOptions.rotation}deg) skew({titleOptions.skew}deg);"
+        class="title"
+        class:no-scroll={isLayoutMode}
+        class:has-transform={titleOptions.rotation !== 0 ||
+            titleOptions.skew !== 0}
+        onpointerdown={handlePointerDown}
+        onpointerup={handlePointerUp}
+        onpointerleave={handlePointerUp}
+        onclick={handleClick}
+        role="presentation"
     >
-        {#if isEditing}
-            <input
-                type="text"
-                class="editable"
-                value={content}
-                oninput={(e) => {
-                    content = e.target.value;
-                    onChange({
-                        text: content,
-                        titleOptions: { ...titleOptions },
-                    });
-                }}
-                style="
+        <div
+            class="title-transform-wrapper"
+            class:scroll-fade-x={titleOptions.rotation === 0 ||
+                titleOptions.skew === 0}
+            style="transform: rotate({titleOptions.rotation}deg) skew({titleOptions.skew}deg);"
+        >
+            {#if isEditing}
+                <input
+                    type="text"
+                    class="editable"
+                    value={content}
+                    oninput={(e) => {
+                        content = e.target.value;
+                        onChange({
+                            text: content,
+                            titleOptions: { ...titleOptions },
+                        });
+                    }}
+                    style="
                     color: {titleOptions.color};
                     text-align: {titleOptions.alignment};
                     font-weight: {titleOptions.bold ? 'bold' : 'normal'};
                     font-style: {titleOptions.italic ? 'italic' : 'normal'};
                 "
-            />
-        {:else}
-            <p
-                class="display-title"
-                style="
+                />
+            {:else}
+                <p
+                    class="display-title"
+                    style="
                     color: {titleOptions.color};
                     text-align: {titleOptions.alignment};
                     font-weight: {titleOptions.bold ? 'bold' : 'normal'};
                     font-style: {titleOptions.italic ? 'italic' : 'normal'};
                 "
-            >
-                {content}
-            </p>
-        {/if}
+                >
+                    {content}
+                </p>
+            {/if}
+        </div>
     </div>
-</div>
+{/snippet}
+
+{#if titleOptions.border}
+    <BorderFrame
+        color={titleOptions.borderColor}
+        showPatterns={titleOptions.showPatterns}
+        showCorners={titleOptions.showCorners}
+        inside={titleOptions.inside}
+        insideColor1={titleOptions.insideColor}
+        insideColor2={titleOptions.insideColor2}
+        fill={titleOptions.fill}
+        insideFillColor={titleOptions.insideFillColor}
+        outerOverlay={titleOptions.outerOverlay}
+        outerOverlayColor={titleOptions.outerOverlayColor}
+        outerOverlayOpacity={titleOptions.outerOverlayOpacity}
+    >
+        {#snippet children()}
+            {@render titleContent()}
+        {/snippet}
+    </BorderFrame>
+{:else}
+    {@render titleContent()}
+{/if}
 
 <style>
     .title {
