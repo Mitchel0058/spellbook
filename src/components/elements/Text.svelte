@@ -18,8 +18,11 @@
 
     let textOptions = $state({
         color: "#000000",
+        bold: false,
+        italic: false,
         alignment: "left",
         verticalAlignment: "baseline",
+        fontSize: 1,
         skew: 0,
         rotation: 0,
         direction: "vertical",
@@ -40,9 +43,36 @@
 
     const optionsSchema = [
         {
+            key: "direction",
+            label: "Text Direction",
+            type: "select",
+            choices: [
+                { value: "vertical", label: "Vertical" },
+                { value: "horizontal", label: "Horizontal" },
+            ],
+        },
+        {
+            key: "fontSize",
+            label: "Font Size",
+            type: "range",
+            min: 0.3,
+            max: 3,
+            step: 0.1,
+        },
+        {
             key: "color",
             label: "Text Color",
             type: "color",
+        },
+        {
+            key: "bold",
+            label: "Bold",
+            type: "checkbox",
+        },
+        {
+            key: "italic",
+            label: "Italic",
+            type: "checkbox",
         },
         {
             key: "alignment",
@@ -80,15 +110,6 @@
             min: -180,
             max: 180,
             step: 1,
-        },
-        {
-            key: "direction",
-            label: "Text Direction",
-            type: "select",
-            choices: [
-                { value: "vertical", label: "Vertical" },
-                { value: "horizontal", label: "Horizontal" },
-            ],
         },
         {
             key: "border",
@@ -226,6 +247,7 @@
         class:scroll-fade-y={textOptions.rotation === 0 &&
             textOptions.skew === 0 &&
             textOptions.direction !== "horizontal"}
+        style="font-size: calc(var(--reactive-font-size) * {textOptions.fontSize});"
         onpointerdown={handlePointerDown}
         onpointerup={handlePointerUp}
         onpointerleave={handlePointerUp}
@@ -247,12 +269,24 @@
                             textOptions: { ...textOptions },
                         });
                     }}
-                    style="color: {textOptions.color}; text-align: {textOptions.alignment}; align-content: {textOptions.verticalAlignment};"
+                    style="
+                        color: {textOptions.color};
+                        text-align: {textOptions.alignment};
+                        align-content: {textOptions.verticalAlignment};
+                        font-weight: {textOptions.bold ? 'bold' : 'normal'};
+                        font-style: {textOptions.italic ? 'italic' : 'normal'};
+                    "
                 ></textarea>
             {:else}
                 <p
                     class="display-text"
-                    style="color: {textOptions.color}; text-align: {textOptions.alignment}; align-content: {textOptions.verticalAlignment};"
+                    style="
+                        color: {textOptions.color};
+                        text-align: {textOptions.alignment};
+                        align-content: {textOptions.verticalAlignment};
+                        font-weight: {textOptions.bold ? 'bold' : 'normal'};
+                        font-style: {textOptions.italic ? 'italic' : 'normal'};
+                    "
                 >
                     {content}
                 </p>
@@ -290,7 +324,6 @@
         position: relative;
         width: 100%;
         height: 100%;
-        font-size: var(--reactive-font-size);
         color: black;
 
         overflow: auto;
@@ -299,23 +332,6 @@
 
         -ms-overflow-style: none;
         scrollbar-width: none;
-
-        /* -webkit-mask-image: linear-gradient(
-            to bottom,
-            rgba(0, 0, 0, 0),
-            rgba(0, 0, 0, 0.2) calc(var(--unit-height) * 3),
-            rgba(0, 0, 0, 1) calc(var(--unit-height) * 10),
-            rgba(0, 0, 0, 1) 90%,
-            rgba(0, 0, 0, 0)
-        );
-        mask-image: linear-gradient(
-            to bottom,
-            rgba(0, 0, 0, 0),
-            rgba(0, 0, 0, 0.2) calc(var(--unit-height) * 3),
-            rgba(0, 0, 0, 1) calc(var(--unit-height) * 10),
-            rgba(0, 0, 0, 1) 90%,
-            rgba(0, 0, 0, 0)
-        ); */
     }
 
     .text::-webkit-scrollbar,
@@ -344,12 +360,6 @@
         overflow: visible;
     }
 
-    /* .text::after {
-        content: "";
-        display: block;
-        height: 25%;
-    } */
-
     .display-text,
     .editable {
         margin: 0;
@@ -361,7 +371,7 @@
     }
 
     .editable {
-        font-size: var(--reactive-font-size) !important;
+        font-size: inherit !important;
         padding: 0;
         border: none;
         background: #0001;

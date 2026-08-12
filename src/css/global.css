@@ -98,7 +98,7 @@ html {
    --fade-length is the % of the element's own width used for the fade,
    independently on each side (0% = no fade needed on that side right now). */
 .scroll-fade-x {
-    --fade-length: 10%;
+    --fade-length: 20%;
     --fade-left: 0%;
     --fade-right: 0%;
     -webkit-mask-image: linear-gradient(to right,
@@ -115,7 +115,7 @@ html {
 
 /* Vertical scroll fade: same idea, top/bottom edges. */
 .scroll-fade-y {
-    --fade-length: 10%;
+    --fade-length: 20%;
     --fade-top: 0%;
     --fade-bottom: 0%;
     -webkit-mask-image: linear-gradient(to bottom,
