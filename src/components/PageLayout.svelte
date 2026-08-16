@@ -18,6 +18,11 @@
 
     // Pure read, safe for $derived
     let page = $derived(pageData.getPage(pageNumber) ?? { elements: [] });
+    let focusedElementId = $state(null);
+    $effect(() => {
+        pageNumber;
+        focusedElementId = null;
+    });
 
     export function openAddElementPicker() {
         pageOptionsModal.open({
@@ -69,6 +74,30 @@
                             },
                         }),
                     ),
+                },
+            ],
+            values: {},
+        });
+    }
+
+    export function openElementPickerModal() {
+        pageOptionsModal.open({
+            title: "Select Element for Focus",
+            schema: [
+                {
+                    key: "focusedElement",
+                    label: "Choose Element",
+                    type: "choice-group",
+                    choices: page.elements.map((el) => ({
+                        value: el.id,
+                        label: elementRegistry[el.type]?.label ?? el.type,
+                        highlighted: focusedElementId === el.id,
+                        onClick: () => {
+                            focusedElementId =
+                                focusedElementId === el.id ? null : el.id;
+                            openElementPickerModal();
+                        },
+                    })),
                 },
             ],
             values: {},
@@ -139,13 +168,22 @@
     yPosition={50}
     {rightPage}
 />
+<SquareButton
+    buttonType={ButtonType.SETTINGS}
+    onClick={openElementPickerModal}
+    xPosition={116}
+    yPosition={60}
+    {rightPage}
+/>
+
 {#each page.elements as element (element.id)}
     <DraggableBox
         top={element.top}
         left={element.left}
         widthUnits={element.widthUnits}
         heightUnits={element.heightUnits}
-        zIndex={element.zIndex}
+        zIndex={focusedElementId === element.id ? 200 : element.zIndex}
+        isFocused={focusedElementId === element.id}
         elementType={element.type}
         elementProps={element.props}
         onDelete={() => pageData.deleteElement(pageNumber, element.id)}

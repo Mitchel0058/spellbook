@@ -64,4 +64,18 @@
         max-height: 100vh;
         max-height: 100svh;
     }
+
+    .page-img {
+        width: 100%;
+        max-height: 100vh;
+        /* TODO: option to not stretch to fill the page */
+        height: 100vh;
+        max-height: 100svh;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
 </style>

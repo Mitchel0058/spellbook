@@ -29,6 +29,7 @@
         onChange = () => {},
         onPropsChange = () => {},
         rightPage = false,
+        isFocused = false,
     } = $props();
 
     let posTop = $state(untrack(() => top));
@@ -171,6 +172,7 @@
     bind:this={boxEl}
     class="draggable-box"
     class:layout-mode={isLayoutMode}
+    class:focused={isFocused}
     style="top: {cssTop}; left: {cssLeft}; width: {cssWidth}; height: {cssHeight}; z-index: {zIndex};"
     role="application"
     onpointerdown={(e) => startDrag("move", e)}
@@ -277,6 +279,11 @@
         cursor: move;
         background: rgba(100, 100, 100, 0.15);
         pointer-events: auto; /* only capture pointer events in layout mode */
+    }
+
+    .draggable-box.focused {
+        outline: gold 6px solid;
+        outline-offset: 2px;
     }
 
     .content {

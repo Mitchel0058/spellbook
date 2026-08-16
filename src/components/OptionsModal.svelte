@@ -101,6 +101,7 @@
                                         <button
                                             type="button"
                                             class="choice-button"
+                                            class:choice-highlighted={choice.highlighted}
                                             onclick={choice.onClick}
                                         >
                                             {choice.label}
@@ -263,6 +264,11 @@
         padding: 0.5rem 0.75rem;
         text-align: center;
         color: #b00020;
+        font-weight: bold;
+    }
+
+    .choice-button.choice-highlighted {
+        background: rgba(255, 215, 0, 0.1);
         font-weight: bold;
     }
 </style>

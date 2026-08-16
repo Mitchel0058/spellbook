@@ -52,20 +52,6 @@ html {
     max-height: 100svh;
 }
 
-.page-img {
-    width: 100%;
-    max-height: 100vh;
-    /* TODO: option to not stretch to fill the page */
-    height: 100vh;
-    max-height: 100svh;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
-
 .next-page {
     width: calc(var(--unit-width) * 16);
     height: 100%;
@@ -96,7 +82,7 @@ html {
 /* Scroll fade */
 /* Horizontal scroll fade: mask left/right edges based on scroll position.
    --fade-length is the % of the element's own width used for the fade,
-   independently on each side (0% = no fade needed on that side right now). */
+   independently on each side (0% = no fade needed on that side) */
 .scroll-fade-x {
     --fade-length: 20%;
     --fade-left: 0%;
@@ -113,7 +99,7 @@ html {
             rgba(0, 0, 0, 0) 100%);
 }
 
-/* Vertical scroll fade: same idea, top/bottom edges. */
+/* Vertical scroll fade */
 .scroll-fade-y {
     --fade-length: 20%;
     --fade-top: 0%;
