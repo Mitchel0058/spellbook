@@ -251,6 +251,10 @@
                                 await PageDB.switchSpellbook(name);
                                 await refreshData();
                                 await settings.loadCustomFont();
+                                // reload page without param
+                                window.location.href =
+                                    window.location.origin +
+                                    window.location.pathname;
                             }}
                         >
                             {name}

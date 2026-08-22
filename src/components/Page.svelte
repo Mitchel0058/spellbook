@@ -23,6 +23,10 @@
     let unitWidthPx = $state(0);
     let unitHeightPx = $state(0);
 
+    export function getElement() {
+        return pageEl;
+    }
+
     // Measures this specific page's own box and exposes one "unit" as real
     // pixels, scoped as an inheritable CSS var on this page's root element.
     // Unlike --unit-width (a %), this stays correct for descendants no
