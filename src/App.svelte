@@ -9,9 +9,7 @@
     } from "./context/settings.svelte.js";
     import Settings from "./components/Settings.svelte";
     import Overview from "./components/Overview.svelte";
-    import SquareButton from "./components/SquareButton.svelte";
     import { appState, AppMode } from "./context/appState.svelte.js";
-    import { ButtonType } from "./constants/buttonType.js";
     import { pageData } from "./context/pageData.svelte.js";
     import { initScrollFade } from "./lib/scrollFade.js";
     import { tick } from "svelte";
@@ -333,17 +331,6 @@
         flip.animating = true;
     }
 
-    function toggleLayoutMode() {
-        appState.mode =
-            appState.mode !== AppMode.LAYOUT ? AppMode.LAYOUT : AppMode.VIEWING;
-    }
-    function toggleEditMode() {
-        appState.mode =
-            appState.mode !== AppMode.EDITING
-                ? AppMode.EDITING
-                : AppMode.VIEWING;
-    }
-
     async function callDeletePage(pageNumber) {
         await pageData.deletePage(pageNumber);
         pageNumber = Math.max(pageNumber - 1, 0);
@@ -376,40 +363,11 @@
         {#if slotKind(leftSlot) === "overview"}
             <Overview onSelectPage={(slot) => (pageNumber = slot)} />
         {:else}
-            <div
-                style="position: absolute; top: calc(var(--unit-height) * 167); left: calc(var(--unit-width) * 118); font-size: var(--reactive-font-size)"
-            >
-                {leftSlot}
-            </div>
             <PageLayout
                 bind:this={leftPageLayout}
                 pageNumber={leftSlot - 1}
                 onPageAdded={(newIndex) => (pageNumber = newIndex + 1)}
                 onPageDeleted={callDeletePage}
-            />
-            <SquareButton
-                buttonType={ButtonType.REORDER}
-                onClick={toggleLayoutMode}
-                xPosition={116}
-                yPosition={20}
-            />
-            <SquareButton
-                buttonType={ButtonType.EDIT}
-                onClick={toggleEditMode}
-                xPosition={116}
-                yPosition={30}
-            />
-            <SquareButton
-                buttonType={ButtonType.MENU}
-                onClick={() => leftPageLayout?.openAddElementPicker()}
-                xPosition={72}
-                yPosition={0}
-            />
-            <SquareButton
-                buttonType={ButtonType.ADD}
-                onClick={() => leftPageLayout?.openAddPagePicker()}
-                xPosition={82}
-                yPosition={0}
             />
         {/if}
 
@@ -446,44 +404,11 @@
             {#if slotKind(rightSlot) === "overview"}
                 <Overview onSelectPage={(slot) => (pageNumber = slot)} />
             {:else}
-                <div
-                    style="position: absolute; top: calc(var(--unit-height) * 167); left: calc(var(--unit-width) * 118); font-size: var(--reactive-font-size)"
-                >
-                    {rightSlot}
-                </div>
                 <PageLayout
                     bind:this={rightPageLayout}
                     pageNumber={rightSlot - 1}
                     onPageAdded={(newIndex) => (pageNumber = newIndex)}
                     onPageDeleted={callDeletePage}
-                    rightPage={true}
-                />
-                <SquareButton
-                    buttonType={ButtonType.REORDER}
-                    onClick={toggleLayoutMode}
-                    xPosition={116}
-                    yPosition={20}
-                    rightPage={true}
-                />
-                <SquareButton
-                    buttonType={ButtonType.EDIT}
-                    onClick={toggleEditMode}
-                    xPosition={116}
-                    yPosition={30}
-                    rightPage={true}
-                />
-                <SquareButton
-                    buttonType={ButtonType.MENU}
-                    onClick={() => rightPageLayout?.openAddElementPicker()}
-                    xPosition={72}
-                    yPosition={0}
-                    rightPage={true}
-                />
-                <SquareButton
-                    buttonType={ButtonType.ADD}
-                    onClick={() => rightPageLayout?.openAddPagePicker()}
-                    xPosition={82}
-                    yPosition={0}
                     rightPage={true}
                 />
             {/if}

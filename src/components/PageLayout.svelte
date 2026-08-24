@@ -25,6 +25,17 @@
         focusedElementId = null;
     });
 
+    function toggleLayoutMode() {
+        appState.mode =
+            appState.mode !== AppMode.LAYOUT ? AppMode.LAYOUT : AppMode.VIEWING;
+    }
+    function toggleEditMode() {
+        appState.mode =
+            appState.mode !== AppMode.EDITING
+                ? AppMode.EDITING
+                : AppMode.VIEWING;
+    }
+
     export function openAddElementPicker() {
         pageOptionsModal.open({
             title: "Add Element",
@@ -176,6 +187,40 @@
     yPosition={60}
     {rightPage}
 />
+<SquareButton
+    buttonType={ButtonType.REORDER}
+    onClick={toggleLayoutMode}
+    xPosition={116}
+    yPosition={20}
+    {rightPage}
+/>
+<SquareButton
+    buttonType={ButtonType.EDIT}
+    onClick={toggleEditMode}
+    xPosition={116}
+    yPosition={30}
+    {rightPage}
+/>
+<SquareButton
+    buttonType={ButtonType.MENU}
+    onClick={openAddElementPicker}
+    xPosition={72}
+    yPosition={0}
+    {rightPage}
+/>
+<SquareButton
+    buttonType={ButtonType.ADD}
+    onClick={openAddPagePicker}
+    xPosition={82}
+    yPosition={0}
+    {rightPage}
+/>
+
+<div
+    style="position: absolute; top: calc(var(--unit-height) * 167); left: calc(var(--unit-width) * 118); font-size: var(--reactive-font-size)"
+>
+    {pageNumber + 1}
+</div>
 
 {#each page.elements as element (element.id)}
     <DraggableBox
