@@ -1,54 +1,61 @@
-// Transient state for the page-flip animation. Not persisted, reset after each flip.
+export const DURATION_MS = 600;
 
-// The one valid rotation magnitude for a given hinge — there is no second
-// sign that also looks correct for the same hinge; the other sign always
-// swings the panel behind the book. "Reverse" flips (e.g. single-page
-// previous) don't use a different angle — they play this same sweep
-// backward in time (start at the angle, animate down to 0).
 export function flipAngleForHinge(hinge) {
     return hinge === "left" ? -180 : 180;
 }
 
+// flips: every currently-animating panel, rendered independently in PageFlip.
+// holds: per-side pins ("left"/"right", double-page only) so the container
+// NOT covered by a given panel keeps showing old content until that panel's
+// own animation finishes. Multiple flips can pin the same side at once;
+// whichever pinned it first stays authoritative until all of them clear.
 export const flipState = $state({
-    active: false,
-    animating: false,
-    hinge: "right", // "left" | "right" - which edge the panel's transform-origin sits on
-
-    startRotation: 0,
-    endRotation: 0,
-
-    rect: null,
-
-    // Content visible the instant the panel mounts, before any transition —
-    // must exactly match whatever the real page underneath looks like at
-    // that moment, or it'll flash.
-    startSlot: null,
-    startBlank: false,
-    startRightPage: false,
-
-    // Content revealed once the transition finishes.
-    endSlot: null,
-    endBlank: false,
-    endRightPage: false,
-
-    holdLeftSlot: null,
-    holdRightSlot: null,
-    pendingPageNumber: null,
-
-    onComplete: null,
+    flips: [],
+    holds: { left: [], right: [] },
 });
 
-export function resetFlipState() {
-    flipState.active = false;
-    flipState.animating = false;
-    flipState.rect = null;
-    flipState.startSlot = null;
-    flipState.startBlank = false;
-    flipState.startRightPage = false;
-    flipState.endSlot = null;
-    flipState.endBlank = false;
-    flipState.endRightPage = false;
-    flipState.holdLeftSlot = null;
-    flipState.holdRightSlot = null;
-    flipState.pendingPageNumber = null;
+let idCounter = 1;
+export function nextFlipId() {
+    return idCounter++;
+}
+
+export function heldSlot(side, rawSlot) {
+    const list = flipState.holds[side];
+    return list.length > 0 ? list[0].slot : rawSlot;
+}
+
+export function pushHold(side, flipId, slot) {
+    flipState.holds[side] = [...flipState.holds[side], { flipId, slot }];
+}
+
+export function releaseHold(side, flipId) {
+    flipState.holds[side] = flipState.holds[side].filter((h) => h.flipId !== flipId);
+}
+
+export function removeFlip(flipId) {
+    flipState.flips = flipState.flips.filter((f) => f.id !== flipId);
+}
+
+// Safety net: if transitionend never fires (e.g. a browser paint race
+// swallows the transition), the flip would sit in flipState.flips forever,
+// holding a pinned side and freezing that slot. This forces the same
+// completion path once the animation should long since have finished, and
+// logs so we can tell how often it's actually happening.
+export function finishFlip(flip) {
+    if (flip.completed) return;
+    flip.completed = true;
+    flip.onComplete?.();
+}
+
+export function scheduleFlipFailsafe(flip, graceMs = 300) {
+    setTimeout(() => {
+        if (flip.completed) return;
+        console.warn("[flip] failsafe triggered - transitionend never fired", {
+            id: flip.id,
+            hinge: flip.hinge,
+            startSlot: flip.startSlot,
+            endSlot: flip.endSlot,
+        });
+        finishFlip(flip);
+    }, DURATION_MS + graceMs);
 }

@@ -1,5 +1,9 @@
 <script>
-    import { flipState } from "../context/flipState.svelte.js";
+    import {
+        flipState,
+        DURATION_MS,
+        finishFlip,
+    } from "../context/flipState.svelte.js";
     import { pageData } from "../context/pageData.svelte.js";
     import { PageType } from "../constants/pageType.js";
     import Page from "./Page.svelte";
@@ -7,155 +11,139 @@
     import Overview from "./Overview.svelte";
     import Settings from "./Settings.svelte";
 
-    const DURATION_MS = 600;
     const PERSPECTIVE_PX = 1600;
 
     let maxPage = $derived(pageData.pages.length);
 
-    // Mirrors slotKind() in home.svelte.
     function slotKind(slot) {
         if (slot === 0) return "overview";
         if (slot >= 1 && slot <= maxPage) return "page";
         return "settings";
     }
 
-    let rotation = $derived(
-        flipState.animating ? flipState.endRotation : flipState.startRotation,
-    );
-    let transformOrigin = $derived(
-        flipState.hinge === "left" ? "0% 50%" : "100% 50%",
-    );
+    function rotationFor(flip) {
+        return flip.animating ? flip.endRotation : flip.startRotation;
+    }
+    function transformOriginFor(flip) {
+        return flip.hinge === "left" ? "0% 50%" : "100% 50%";
+    }
 
-    // .front is geometrically visible whenever the panel's own rotation is
-    // ~0deg; .back (which carries its own baked-in 180deg) is visible
-    // whenever the panel's rotation is ~180deg. Every flip has one endpoint
-    // at 0 and the other at the hinge's flip angle — exactly one of
-    // start/end always belongs in .front, the other in .back. This must be
-    // computed, not assumed, because a reverse-playback flip (rotation runs
-    // from the flip angle down to 0) puts its "start" content in .back.
-    let frontContent = $derived(
-        flipState.startRotation === 0
+    // Lower id = older flip. Before the midpoint the oldest panel should sit
+    // on top (its outgoing content is still what's "settled"); after the
+    // midpoint the newest panel should take over. Base offset just keeps
+    // both comfortably above ordinary page content.
+    const Z_BASE = 1000;
+    function earlyZIndex(flip) {
+        return Z_BASE - flip.id; // smaller id -> higher z
+    }
+    function lateZIndex(flip) {
+        return Z_BASE + flip.id; // larger id -> higher z
+    }
+
+    // Whichever of start/end sits at rotation 0 is geometrically visible as
+    // .front; whichever sits at the flip angle is visible as .back (which
+    // carries its own baked-in 180deg). This must be computed per flip,
+    // since reverse-playback flips (single-page next) start at the angle.
+    function frontContentFor(flip) {
+        return flip.startRotation === 0
             ? {
-                  slot: flipState.startSlot,
-                  blank: flipState.startBlank,
-                  rightPage: flipState.startRightPage,
+                  slot: flip.startSlot,
+                  blank: flip.startBlank,
+                  rightPage: flip.startRightPage,
               }
             : {
-                  slot: flipState.endSlot,
-                  blank: flipState.endBlank,
-                  rightPage: flipState.endRightPage,
-              },
-    );
-    let backContent = $derived(
-        flipState.startRotation === 0
+                  slot: flip.endSlot,
+                  blank: flip.endBlank,
+                  rightPage: flip.endRightPage,
+              };
+    }
+    function backContentFor(flip) {
+        return flip.startRotation === 0
             ? {
-                  slot: flipState.endSlot,
-                  blank: flipState.endBlank,
-                  rightPage: flipState.endRightPage,
+                  slot: flip.endSlot,
+                  blank: flip.endBlank,
+                  rightPage: flip.endRightPage,
               }
             : {
-                  slot: flipState.startSlot,
-                  blank: flipState.startBlank,
-                  rightPage: flipState.startRightPage,
-              },
-    );
+                  slot: flip.startSlot,
+                  blank: flip.startBlank,
+                  rightPage: flip.startRightPage,
+              };
+    }
 
-    function handleTransitionEnd(e) {
+    function handleTransitionEnd(flip, e) {
         if (e.target !== e.currentTarget) return;
         if (e.propertyName !== "transform") return;
-        flipState.onComplete?.();
+        finishFlip(flip);
     }
 </script>
 
-{#if flipState.active && flipState.rect}
+{#each flipState.flips as flip (flip.id)}
     <div
         class="flip-panel"
-        style:top="{flipState.rect.top}px"
-        style:left="{flipState.rect.left}px"
-        style:width="{flipState.rect.width}px"
-        style:height="{flipState.rect.height}px"
-        style:transform-origin={transformOrigin}
-        style:transform="perspective({PERSPECTIVE_PX}px) rotateY({rotation}deg)"
-        style:transition-duration="{DURATION_MS}ms"
-        ontransitionend={handleTransitionEnd}
+        style:top="{flip.rect.top}px"
+        style:left="{flip.rect.left}px"
+        style:width="{flip.rect.width}px"
+        style:height="{flip.rect.height}px"
+        style:transform-origin={transformOriginFor(flip)}
+        style:transform="perspective({PERSPECTIVE_PX}px) rotateY({rotationFor(
+            flip,
+        )}deg)"
+        style:z-index={flip.animating ? lateZIndex(flip) : earlyZIndex(flip)}
+        style:transition-duration="{DURATION_MS}ms, 0ms"
+        style:transition-delay="0ms, {DURATION_MS / 2}ms"
+        ontransitionend={(e) => handleTransitionEnd(flip, e)}
     >
-        <div class="face front">
-            {#if frontContent.blank || frontContent.slot == null}
+        {#snippet face(content)}
+            {#if content.blank || content.slot == null}
                 <Page
-                    pageType={frontContent.rightPage
+                    pageType={content.rightPage
                         ? PageType.BLANK_RIGHT
                         : PageType.BLANK}
-                    rightPage={frontContent.rightPage}
+                    rightPage={content.rightPage}
                 />
-            {:else if slotKind(frontContent.slot) === "page"}
+            {:else if slotKind(content.slot) === "page"}
                 <Page
-                    pageType={frontContent.rightPage
+                    pageType={content.rightPage
                         ? PageType.BLANK_RIGHT
                         : PageType.BLANK}
-                    rightPage={frontContent.rightPage}
+                    rightPage={content.rightPage}
                 >
                     <PageLayout
-                        pageNumber={frontContent.slot - 1}
-                        rightPage={frontContent.rightPage}
+                        pageNumber={content.slot - 1}
+                        rightPage={content.rightPage}
                     />
                 </Page>
-            {:else if slotKind(frontContent.slot) === "overview"}
+            {:else if slotKind(content.slot) === "overview"}
                 <Page
-                    pageType={frontContent.rightPage
+                    pageType={content.rightPage
                         ? PageType.BLANK_RIGHT
                         : PageType.BLANK}
-                    rightPage={frontContent.rightPage}
+                    rightPage={content.rightPage}
                 >
                     <Overview onSelectPage={() => {}} />
                 </Page>
             {:else}
                 <Settings />
             {/if}
+        {/snippet}
+
+        <div class="face front">
+            {@render face(frontContentFor(flip))}
         </div>
         <div class="face back">
-            {#if backContent.blank || backContent.slot == null}
-                <Page
-                    pageType={backContent.rightPage
-                        ? PageType.BLANK_RIGHT
-                        : PageType.BLANK}
-                    rightPage={backContent.rightPage}
-                />
-            {:else if slotKind(backContent.slot) === "page"}
-                <Page
-                    pageType={backContent.rightPage
-                        ? PageType.BLANK_RIGHT
-                        : PageType.BLANK}
-                    rightPage={backContent.rightPage}
-                >
-                    <PageLayout
-                        pageNumber={backContent.slot - 1}
-                        rightPage={backContent.rightPage}
-                    />
-                </Page>
-            {:else if slotKind(backContent.slot) === "overview"}
-                <Page
-                    pageType={backContent.rightPage
-                        ? PageType.BLANK_RIGHT
-                        : PageType.BLANK}
-                    rightPage={backContent.rightPage}
-                >
-                    <Overview onSelectPage={() => {}} />
-                </Page>
-            {:else}
-                <Settings />
-            {/if}
+            {@render face(backContentFor(flip))}
         </div>
     </div>
-{/if}
+{/each}
 
 <style>
     .flip-panel {
         position: fixed;
         transform-style: preserve-3d;
-        transition-property: transform;
-        transition-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+        transition-property: transform, z-index;
+        transition-timing-function: cubic-bezier(0.45, 0, 0.55, 1), step-end;
         pointer-events: none;
-        z-index: 1000;
     }
     .face {
         position: absolute;

@@ -18,8 +18,12 @@
     import PageFlip from "./components/PageFlip.svelte";
     import {
         flipState,
-        resetFlipState,
         flipAngleForHinge,
+        heldSlot,
+        pushHold,
+        releaseHold,
+        nextFlipId,
+        scheduleFlipFailsafe,
     } from "./context/flipState.svelte.js";
     import { preloadPageImages } from "./lib/preloadImage.js";
 
@@ -39,8 +43,26 @@
     let rightPageComponent = $state(null);
     let preloadSlot = $state(null);
 
-    let leftSlot = $derived(flipState.holdLeftSlot ?? pageNumber);
-    let rightSlot = $derived(flipState.holdRightSlot ?? pageNumber + 1);
+    let leftSlot = $derived(heldSlot("left", pageNumber));
+    let rightSlot = $derived(heldSlot("right", pageNumber + 1));
+
+    // Bumped synchronously the instant a flip is requested, so rapid clicks
+    // always compute the correct next target even while earlier flips' image
+    // preloads are still in flight. `pageNumber` (the reactive value that
+    // actually drives rendering) only updates once each flip's own preload
+    // resolves, exactly as before — this counter never drives rendering itself.
+    let logicalPageNumber = pageNumber;
+    $effect(() => {
+        if (flipState.flips.length === 0) {
+            logicalPageNumber = pageNumber;
+        }
+    });
+
+    function pageForSlotOrNull(slot) {
+        return slot != null && slotKind(slot) === "page"
+            ? pageData.getPage(slot - 1)
+            : null;
+    }
 
     // Resolves a slot number to what should render there:
     // 0 -> overview, 1..maxPage -> real page (index slot-1), maxPage+1 -> settings
@@ -131,7 +153,6 @@
     }
 
     function startFlip(direction) {
-        if (flipState.active) return;
         if (isDoublePage) {
             startDoubleFlip(direction);
         } else {
@@ -140,19 +161,18 @@
     }
 
     async function startDoubleFlip(direction) {
-        const newPageNumber =
+        const oldLogical = logicalPageNumber;
+        const newLogical =
             direction === "next"
-                ? Math.min(pageNumber + 2, maxPage)
-                : Math.max(pageNumber - 2, 0);
-        if (newPageNumber === pageNumber) return;
+                ? Math.min(oldLogical + 2, maxPage)
+                : Math.max(oldLogical - 2, 0);
+        if (newLogical === oldLogical) return;
+        logicalPageNumber = newLogical;
 
         if (!leftPageComponent || !rightPageComponent) {
-            pageNumber = newPageNumber;
+            pageNumber = newLogical;
             return;
         }
-
-        const oldLeftSlot = leftSlot;
-        const oldRightSlot = rightSlot;
 
         const sourceEl =
             direction === "next"
@@ -161,153 +181,157 @@
         const rect = sourceEl.getBoundingClientRect();
 
         const hinge = direction === "next" ? "left" : "right";
-        const flipAngle = flipAngleForHinge(hinge);
+        const holdSide = direction === "next" ? "left" : "right";
+        const oldHeldSlot = holdSide === "left" ? leftSlot : rightSlot;
 
         let startSlot, startRightPage, endSlot, endRightPage;
         if (direction === "next") {
-            startSlot = oldRightSlot;
+            startSlot = rightSlot;
             startRightPage = true;
-            endSlot = newPageNumber; // new left slot
+            endSlot = newLogical; // new left slot
             endRightPage = false;
         } else {
-            startSlot = oldLeftSlot;
+            startSlot = leftSlot;
             startRightPage = false;
-            endSlot = newPageNumber + 1; // new right slot
+            endSlot = newLogical + 1; // new right slot
             endRightPage = true;
         }
 
         await Promise.all([
-            preloadPageImages(
-                slotKind(startSlot) === "page"
-                    ? pageData.getPage(startSlot - 1)
-                    : null,
-            ),
-            preloadPageImages(
-                slotKind(endSlot) === "page"
-                    ? pageData.getPage(endSlot - 1)
-                    : null,
-            ),
+            preloadPageImages(pageForSlotOrNull(startSlot)),
+            preloadPageImages(pageForSlotOrNull(endSlot)),
         ]);
 
-        flipState.rect = {
-            top: rect.top,
-            left: rect.left,
-            width: rect.width,
-            height: rect.height,
+        const flip = $state({
+            id: nextFlipId(),
+            hinge,
+            rect: {
+                top: rect.top,
+                left: rect.left,
+                width: rect.width,
+                height: rect.height,
+            },
+            startRotation: 0,
+            endRotation: flipAngleForHinge(hinge),
+            startSlot,
+            startBlank: false,
+            startRightPage,
+            endSlot,
+            endBlank: false,
+            endRightPage,
+            animating: false,
+        });
+        flip.onComplete = () => {
+            releaseHold(holdSide, flip.id);
+            flipState.flips = flipState.flips.filter((f) => f.id !== flip.id);
         };
-        flipState.hinge = hinge;
-        flipState.startRotation = 0;
-        flipState.endRotation = flipAngle;
-        flipState.startSlot = startSlot;
-        flipState.startRightPage = startRightPage;
-        flipState.startBlank = false;
-        flipState.endSlot = endSlot;
-        flipState.endRightPage = endRightPage;
-        flipState.endBlank = false;
-        if (direction === "next") {
-            flipState.holdLeftSlot = oldLeftSlot;
-        } else {
-            flipState.holdRightSlot = oldRightSlot;
-        }
 
-        pageNumber = newPageNumber;
-        flipState.active = true;
-        flipState.animating = false;
+        pushHold(holdSide, flip.id, oldHeldSlot);
+        pageNumber = newLogical;
+        flipState.flips = [...flipState.flips, flip];
+        scheduleFlipFailsafe(flip);
 
         await tick();
-        requestAnimationFrame(() => {
-            flipState.animating = true;
-        });
+        await new Promise((r) => requestAnimationFrame(r));
+        await new Promise((r) => requestAnimationFrame(r));
+        flip.animating = true;
     }
 
     async function startSingleFlip(direction) {
-        const newPageNumber =
+        const oldLogical = logicalPageNumber;
+        const newLogical =
             direction === "next"
-                ? Math.min(pageNumber + 1, maxPage + 1)
-                : Math.max(pageNumber - 1, 0);
-        if (newPageNumber === pageNumber) return;
+                ? Math.min(oldLogical + 1, maxPage + 1)
+                : Math.max(oldLogical - 1, 0);
+        if (newLogical === oldLogical) return;
+        logicalPageNumber = newLogical;
 
         if (!leftPageComponent) {
-            pageNumber = newPageNumber;
+            pageNumber = newLogical;
             return;
         }
 
         const rect = leftPageComponent.getElement().getBoundingClientRect();
-
         const hinge = "right"; // single-page mode always hinges on the right edge
         const flipAngle = flipAngleForHinge(hinge);
-        flipState.hinge = hinge;
+
+        let startRotation,
+            endRotation,
+            startSlot,
+            startBlank,
+            endSlot,
+            endBlank;
+        if (direction === "next") {
+            // Reverse playback: flipAngle -> 0, settling flat to reveal the new page.
+            startRotation = flipAngle;
+            endRotation = 0;
+            startSlot = null;
+            startBlank = true;
+            endSlot = newLogical;
+            endBlank = false;
+        } else {
+            // Forward playback: 0 -> flipAngle, lifting the current page away.
+            startRotation = 0;
+            endRotation = flipAngle;
+            startSlot = leftSlot;
+            startBlank = false;
+            endSlot = null;
+            endBlank = true;
+        }
+
+        await Promise.all([
+            preloadPageImages(pageForSlotOrNull(startSlot)),
+            preloadPageImages(pageForSlotOrNull(endSlot)),
+        ]);
+
+        const flip = $state({
+            id: nextFlipId(),
+            hinge,
+            rect: {
+                top: rect.top,
+                left: rect.left,
+                width: rect.width,
+                height: rect.height,
+            },
+            startRotation,
+            endRotation,
+            startSlot,
+            startBlank,
+            startRightPage: false,
+            endSlot,
+            endBlank,
+            endRightPage: false,
+            animating: false,
+        });
 
         if (direction === "next") {
-            await warmUpOffscreen(newPageNumber);
-
-            // Reverse playback: flipAngle -> 0. Real page swap is deferred to
-            // animation-end; the start content (new page) is shown on the
-            // panel throughout, so it must not be applied to pageNumber yet
-            // or the panel and the real page would show the same thing twice.
-            await preloadPageImages(
-                slotKind(newPageNumber) === "page"
-                    ? pageData.getPage(newPageNumber - 1)
-                    : null,
-            );
-
-            flipState.startRotation = flipAngle;
-            flipState.endRotation = 0;
-            flipState.startSlot = null;
-            flipState.startBlank = true;
-            flipState.startRightPage = false;
-            flipState.endSlot = newPageNumber;
-            flipState.endBlank = false;
-            flipState.endRightPage = false;
-            flipState.pendingPageNumber = newPageNumber;
+            // Deferred: the flip's start face (blank) covers the real page
+            // until the flip visually completes, so pageNumber only updates then.
+            flip.onComplete = () => {
+                pageNumber = newLogical;
+                flipState.flips = flipState.flips.filter(
+                    (f) => f.id !== flip.id,
+                );
+            };
         } else {
-            // Forward playback: 0 -> flipAngle. Real page swaps instantly, so
-            // the start content (current page) deliberately matches the
-            // already-changed... wait: for previous, the *old* left page is
-            // still what should show at start (nothing has advanced past it
-            // yet) — the real pageNumber changes now, ahead of the panel,
-            // and the panel's start face covers that until it rotates away.
-            await preloadPageImages(
-                slotKind(leftSlot) === "page"
-                    ? pageData.getPage(leftSlot - 1)
-                    : null,
-            );
-
-            flipState.startRotation = 0;
-            flipState.endRotation = flipAngle;
-            flipState.startSlot = leftSlot;
-            flipState.startBlank = false;
-            flipState.startRightPage = false;
-            flipState.endSlot = null;
-            flipState.endBlank = true;
-            flipState.endRightPage = false;
-            flipState.pendingPageNumber = null;
-
-            pageNumber = newPageNumber;
+            // Instant: real page swaps right away; the flip's start face (the
+            // outgoing page) covers it on top until the panel rotates away.
+            pageNumber = newLogical;
+            flip.onComplete = () => {
+                flipState.flips = flipState.flips.filter(
+                    (f) => f.id !== flip.id,
+                );
+            };
         }
 
-        flipState.rect = {
-            top: rect.top,
-            left: rect.left,
-            width: rect.width,
-            height: rect.height,
-        };
-        flipState.active = true;
-        flipState.animating = false;
+        flipState.flips = [...flipState.flips, flip];
+        scheduleFlipFailsafe(flip);
 
         await tick();
-        requestAnimationFrame(() => {
-            flipState.animating = true;
-        });
+        await new Promise((r) => requestAnimationFrame(r));
+        await new Promise((r) => requestAnimationFrame(r));
+        flip.animating = true;
     }
-
-    function handleFlipComplete() {
-        if (flipState.pendingPageNumber != null) {
-            pageNumber = flipState.pendingPageNumber;
-        }
-        resetFlipState();
-    }
-    flipState.onComplete = handleFlipComplete;
 
     function toggleLayoutMode() {
         appState.mode =
