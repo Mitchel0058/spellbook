@@ -1,3 +1,5 @@
+import { getObjectUrl } from "./blobUrlCache.js";
+
 // Force-decodes every image blob used on a page's elements before it's
 // displayed, so the browser's decode cache is warm by the time Image.svelte
 // mints its own object URL and renders it — avoiding the blank-flash on
@@ -5,23 +7,20 @@
 
 async function decodeBlob(blob) {
     if (!blob) return;
-    const url = URL.createObjectURL(blob);
+    const url = getObjectUrl(blob);
     try {
-        if (typeof createImageBitmap === "function") {
-            const bitmap = await createImageBitmap(blob);
-            bitmap.close?.();
+        const img = new Image();
+        img.src = url;
+        if (typeof img.decode === "function") {
+            await img.decode();
         } else {
             await new Promise((resolve) => {
-                const img = new Image();
                 img.onload = () => resolve();
                 img.onerror = () => resolve();
-                img.src = url;
             });
         }
     } catch {
         // Non-image blob or decode failure — don't block the flip on it.
-    } finally {
-        URL.revokeObjectURL(url);
     }
 }
 

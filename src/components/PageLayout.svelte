@@ -6,6 +6,7 @@
     import SquareButton from "./SquareButton.svelte";
     import { ButtonType } from "../constants/buttonType.js";
     import { pageTemplates } from "../constants/pageTemplates.js";
+    import { appState, AppMode } from "../context/appState.svelte.js";
 
     let {
         pageNumber,

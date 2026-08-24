@@ -1,6 +1,7 @@
 <script>
     import { appState, AppMode } from "../../context/appState.svelte.js";
     import { getPageOptionsModal } from "../../context/pageOptionsModal.svelte.js";
+    import { getObjectUrl } from "../../lib/blobUrlCache.js";
     import BorderFrame from "../BorderFrame.svelte";
 
     let {
@@ -35,16 +36,13 @@
         ...initialImageOptions,
     });
 
-    // Regenerates the object URL whenever imageFile changes, and revokes
-    // it automatically before the next run / on destroy.
+    // Looks up the shared, stable object URL for this file rather than
+    // minting a new one — every mount of this component for the same file
+    // (real page, flip-panel copy, etc.) then points at the identical URL,
+    // so the browser's decode/paint work is actually shared instead of
+    // repeated on every swap.
     $effect(() => {
-        if (!imageFile) {
-            imageSrc = null;
-            return;
-        }
-        const url = URL.createObjectURL(imageFile);
-        imageSrc = url;
-        return () => URL.revokeObjectURL(url);
+        imageSrc = imageFile ? getObjectUrl(imageFile) : null;
     });
 
     const optionsSchema = [
