@@ -342,14 +342,21 @@
         Loading animation not yet implemented
     </h1>
 {:else if slotKind(leftSlot) === "settings"}
-    <Settings />
-    {#if leftSlot > 0 && appState.mode == AppMode.VIEWING}
-        <button
-            class="interact previous-page"
-            onclick={previousPage}
-            title="Previous Page"
-        ></button>
-    {/if}
+    <Page
+        pageType={PageType.TITLE_RIGHT}
+        rightPage="true"
+        bind:this={leftPageComponent}
+    >
+        {#if !isDoublePage && appState.mode == AppMode.VIEWING}
+            <button
+                class="interact previous-page"
+                onclick={previousPage}
+                title="Previous Page"
+                rightPage={true}
+            ></button>
+        {/if}
+        <Settings />
+    </Page>
 {:else}
     <Page pageType={PageType.BLANK} bind:this={leftPageComponent}>
         {#if leftSlot > 0 && appState.mode == AppMode.VIEWING}
@@ -386,14 +393,13 @@
 
 {#if isDoublePage}
     {#if slotKind(rightSlot) === "settings"}
-        <Settings />
-        {#if appState.mode == AppMode.VIEWING}
-            <button
-                class="interact next-page"
-                onclick={nextPage}
-                title="Next Page"
-            ></button>
-        {/if}
+        <Page
+            pageType={PageType.TITLE_RIGHT}
+            rightPage="true"
+            bind:this={rightPageComponent}
+        >
+            <Settings />
+        </Page>
     {:else}
         <Page
             pageType={PageType.BLANK_RIGHT}

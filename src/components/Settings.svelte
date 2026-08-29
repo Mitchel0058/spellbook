@@ -1,6 +1,4 @@
 <script>
-    import Page from "./Page.svelte";
-    import { PageType } from "../constants/pageType";
     import { getSettingsContext } from "../context/settings.svelte.js";
     import { settingsOptions } from "../constants/settingsOptions";
     import { PageDB } from "../utils/db";
@@ -200,156 +198,150 @@
     }
 </script>
 
-<Page pageType={PageType.TITLE_RIGHT}>
-    <div class="text-overlay" id="title">Settings</div>
-    <div class="container right-page-offset">
-        <div class="container-line">
-            <label class="file-input-label" for="spellbookName">
-                Name:
-                <br />
-                <input
-                    type="text"
-                    bind:value={spellbookName}
-                    id="spellbookName"
-                    class="input"
-                />
-            </label>
-            <button class="settings-button" onclick={handleSpellbookNameChange}
-                >Change</button
-            >
-        </div>
-
-        <div class="container-line">
-            <label class="file-input-label">
-                Spellbook Font
-                <input
-                    type="file"
-                    accept=".ttf,.otf,.woff,.woff2"
-                    onchange={handleFontUpload}
-                    class="file-input"
-                />
-            </label>
-            <button class="settings-button" onclick={handleRemoveFont}>X</button
-            >
-        </div>
-
-        <div>
-            Change Spellbook
-            <div>
-                <div>
-                    Current: <i
-                        >{settings.values[
-                            settingsOptions.CURRENT_SPELLBOOK_DB
-                        ]}</i
-                    >
-                </div>
-                {#each (settings.values[settingsOptions.SPELLBOOK_LIST] || []).filter((name) => name !== settings.values[settingsOptions.CURRENT_SPELLBOOK_DB]) as name (name)}
-                    <div class="spellbook-item">
-                        <button
-                            class="spellbook-button"
-                            onclick={async () => {
-                                await PageDB.switchSpellbook(name);
-                                await refreshData();
-                                await settings.loadCustomFont();
-                                // reload page without param
-                                window.location.href =
-                                    window.location.origin +
-                                    window.location.pathname;
-                            }}
-                        >
-                            {name}
-                        </button>
-                        <button
-                            class="settings-button"
-                            onclick={() => handleDeleteSpellbook(name)}
-                        >
-                            Delete
-                        </button>
-                    </div>
-                {/each}
-            </div>
-        </div>
-
-        <div class="container-line">
-            <label for="newSpellbookName">
-                Create new spellbook
-                <input
-                    type="text"
-                    id="newSpellbookName"
-                    bind:value={newSpellbookName}
-                    class="input"
-                />
-            </label>
-            <button class="settings-button" onclick={handleCreateNewSpellbook}
-                >Add</button
-            >
-        </div>
-
-        <div>
-            <label for="exportSpellbook">Export Spellbook</label>
+<div class="text-overlay" id="title">Settings</div>
+<div class="container right-page-offset">
+    <div class="container-line">
+        <label class="file-input-label" for="spellbookName">
+            Name:
             <br />
-            <button
-                id="exportSpellbook"
-                class="settings-button"
-                onclick={handleExportSpellbook}>Export</button
-            >
-        </div>
-
-        <div>
-            <label for="importSpellbook">Import Spellbook</label>
             <input
-                type="file"
-                accept=".spellbook,.json"
-                id="importSpellbook"
-                onchange={handleImportSpellbookSelect}
-                class="file-input"
-            />
-            {#if importData}
-                <div>
-                    <p>Import "{importData.name || "Unnamed Spellbook"}"?</p>
-                    <button onclick={handleImportConfirm}>Confirm Import</button
-                    >
-                    <button onclick={handleImportCancel}>Cancel</button>
-                </div>
-            {/if}
-        </div>
-
-        <div>
-            General Settings
-            <hr class="hr-break" />
-        </div>
-
-        <label>
-            Fontsize:
-            <input
-                type="number"
-                value={fontAddition}
-                oninput={(e) => handleFontAdditionChange(e.target.value)}
+                type="text"
+                bind:value={spellbookName}
+                id="spellbookName"
                 class="input"
             />
         </label>
-
-        <label>
-            Animations:
-            <input
-                type="checkbox"
-                checked={settings.values[settingsOptions.ANIMATION]}
-                onchange={(e) => handleAnimationToggle(e.target.checked)}
-            />
-        </label>
-
-        <label>
-            Page Fit:
-            <input
-                type="checkbox"
-                checked={settings.values[settingsOptions.PAGEFIT]}
-                onchange={(e) => handlePageFitToggle(e.target.checked)}
-            />
-        </label>
-
-        <div class="container-after"></div>
+        <button class="settings-button" onclick={handleSpellbookNameChange}
+            >Change</button
+        >
     </div>
-</Page>
+
+    <div class="container-line">
+        <label class="file-input-label">
+            Spellbook Font
+            <input
+                type="file"
+                accept=".ttf,.otf,.woff,.woff2"
+                onchange={handleFontUpload}
+                class="file-input"
+            />
+        </label>
+        <button class="settings-button" onclick={handleRemoveFont}>X</button>
+    </div>
+
+    <div>
+        Change Spellbook
+        <div>
+            <div>
+                Current: <i
+                    >{settings.values[settingsOptions.CURRENT_SPELLBOOK_DB]}</i
+                >
+            </div>
+            {#each (settings.values[settingsOptions.SPELLBOOK_LIST] || []).filter((name) => name !== settings.values[settingsOptions.CURRENT_SPELLBOOK_DB]) as name (name)}
+                <div class="spellbook-item">
+                    <button
+                        class="spellbook-button"
+                        onclick={async () => {
+                            await PageDB.switchSpellbook(name);
+                            await refreshData();
+                            await settings.loadCustomFont();
+                            // reload page without param
+                            window.location.href =
+                                window.location.origin +
+                                window.location.pathname;
+                        }}
+                    >
+                        {name}
+                    </button>
+                    <button
+                        class="settings-button"
+                        onclick={() => handleDeleteSpellbook(name)}
+                    >
+                        Delete
+                    </button>
+                </div>
+            {/each}
+        </div>
+    </div>
+
+    <div class="container-line">
+        <label for="newSpellbookName">
+            Create new spellbook
+            <input
+                type="text"
+                id="newSpellbookName"
+                bind:value={newSpellbookName}
+                class="input"
+            />
+        </label>
+        <button class="settings-button" onclick={handleCreateNewSpellbook}
+            >Add</button
+        >
+    </div>
+
+    <div>
+        <label for="exportSpellbook">Export Spellbook</label>
+        <br />
+        <button
+            id="exportSpellbook"
+            class="settings-button"
+            onclick={handleExportSpellbook}>Export</button
+        >
+    </div>
+
+    <div>
+        <label for="importSpellbook">Import Spellbook</label>
+        <input
+            type="file"
+            accept=".spellbook,.json"
+            id="importSpellbook"
+            onchange={handleImportSpellbookSelect}
+            class="file-input"
+        />
+        {#if importData}
+            <div>
+                <p>Import "{importData.name || "Unnamed Spellbook"}"?</p>
+                <button onclick={handleImportConfirm}>Confirm Import</button>
+                <button onclick={handleImportCancel}>Cancel</button>
+            </div>
+        {/if}
+    </div>
+
+    <div>
+        General Settings
+        <hr class="hr-break" />
+    </div>
+
+    <label>
+        Fontsize:
+        <input
+            type="number"
+            value={fontAddition}
+            oninput={(e) => handleFontAdditionChange(e.target.value)}
+            class="input"
+        />
+    </label>
+
+    <label>
+        Animations:
+        <input
+            type="checkbox"
+            checked={settings.values[settingsOptions.ANIMATION]}
+            onchange={(e) => handleAnimationToggle(e.target.checked)}
+        />
+    </label>
+
+    <label>
+        Page Fit:
+        <input
+            type="checkbox"
+            checked={settings.values[settingsOptions.PAGEFIT]}
+            onchange={(e) => handlePageFitToggle(e.target.checked)}
+        />
+    </label>
+
+    <div class="container-after"></div>
+</div>
 
 <style>
     .text-overlay {
@@ -410,6 +402,7 @@
         top: calc(var(--unit-height) * 32);
         font-size: var(--reactive-font-size);
         padding-top: calc(var(--unit-height) * 6);
+        overflow-x: hidden;
 
         display: flex;
         flex-direction: column;

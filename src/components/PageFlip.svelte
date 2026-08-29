@@ -101,6 +101,7 @@
                         ? PageType.BLANK_RIGHT
                         : PageType.BLANK}
                     rightPage={content.rightPage}
+                    showBackground={false}
                 />
             {:else if slotKind(content.slot) === "page"}
                 <Page
@@ -108,6 +109,7 @@
                         ? PageType.BLANK_RIGHT
                         : PageType.BLANK}
                     rightPage={content.rightPage}
+                    showBackground={false}
                 >
                     <PageLayout
                         pageNumber={content.slot - 1}
@@ -120,11 +122,18 @@
                         ? PageType.BLANK_RIGHT
                         : PageType.BLANK}
                     rightPage={content.rightPage}
+                    showBackground={false}
                 >
                     <Overview onSelectPage={() => {}} />
                 </Page>
             {:else}
-                <Settings />
+                <Page
+                    pageType={PageType.TITLE_RIGHT}
+                    rightPage={true}
+                    showBackground={true}
+                >
+                    <Settings />
+                </Page>
             {/if}
         {/snippet}
 
