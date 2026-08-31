@@ -32,19 +32,39 @@
         return pageEl;
     }
 
+    // Matches --unit-width: 0.7246376811594203% / --unit-height: 0.5263157894736842%
+    const UNIT_WIDTH_RATIO = 0.007246376811594203;
+    const UNIT_HEIGHT_RATIO = 0.005263157894736842;
+
+    // Sets --unit-width-px/--unit-height-px synchronously, before any
+    // descendant (e.g. BorderFrame) ever gets its first paint. Using
+    // getBoundingClientRect() + setProperty() directly here, rather than
+    // relying only on the ResizeObserver below or Svelte's own reactive
+    // style write, avoids a race: both of those are asynchronous, so a
+    // descendant reading these vars on mount could otherwise see the
+    // unset/default value for a frame.
+    function measurePage(node) {
+        const { width, height } = node.getBoundingClientRect();
+        unitWidthPx = width * UNIT_WIDTH_RATIO;
+        unitHeightPx = height * UNIT_HEIGHT_RATIO;
+        node.style.setProperty("--unit-width-px", `${unitWidthPx}px`);
+        node.style.setProperty("--unit-height-px", `${unitHeightPx}px`);
+    }
+
     // Measures this specific page's own box and exposes one "unit" as real
     // pixels, scoped as an inheritable CSS var on this page's root element.
     // Unlike --unit-width (a %), this stays correct for descendants no
     // matter how deeply nested or how their own containing block is sized,
     // since px custom properties inherit as-is rather than being
     // recomputed against each element's own containing block.
+    // (Initial value is set synchronously by the measurePage action above;
+    // this observer only needs to catch later resizes.)
     $effect(() => {
         if (!pageEl) return;
         const observer = new ResizeObserver(([entry]) => {
             const { width, height } = entry.contentRect;
-            // Matches --unit-width: 0.7246376811594203% / --unit-height: 0.5263157894736842%
-            unitWidthPx = width * 0.007246376811594203;
-            unitHeightPx = height * 0.005263157894736842;
+            unitWidthPx = width * UNIT_WIDTH_RATIO;
+            unitHeightPx = height * UNIT_HEIGHT_RATIO;
         });
         observer.observe(pageEl);
         return () => observer.disconnect();
@@ -56,6 +76,7 @@
 <div
     class="page-root"
     bind:this={pageEl}
+    use:measurePage
     style="--unit-width-px: {unitWidthPx}px; --unit-height-px: {unitHeightPx}px;"
 >
     {#if showBackground}

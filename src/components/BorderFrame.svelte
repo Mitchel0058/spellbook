@@ -28,6 +28,7 @@
     let contentHeightPx = $state(0);
     let unitX = $state(8);
     let unitY = $state(8);
+    let ready = $state(false);
 
     $effect(() => {
         if (!frameEl) return;
@@ -46,6 +47,7 @@
                 contentHeightPx = entry.contentRect.height;
             }
             readUnitVars();
+            ready = true;
         });
         ro.observe(frameEl);
 
@@ -63,6 +65,19 @@
             if (rafId !== null) cancelAnimationFrame(rafId);
         };
     });
+
+    function measureFrame(node) {
+        const cs = getComputedStyle(node);
+        const w = parseFloat(cs.getPropertyValue("--unit-width-px"));
+        const h = parseFloat(cs.getPropertyValue("--unit-height-px"));
+        if (Number.isFinite(w) && w > 0) unitX = w;
+        if (Number.isFinite(h) && h > 0) unitY = h;
+
+        const rect = node.getBoundingClientRect();
+        contentWidthPx = rect.width;
+        contentHeightPx = rect.height;
+        ready = true;
+    }
 
     let unitsX = $derived(
         Number.isFinite(contentWidthPx / unitX)
@@ -425,6 +440,7 @@
 <div class="border-frame">
     <svg
         class="border-overlay"
+        class:is-ready={ready}
         shape-rendering="crispEdges"
         style="left: {-marginX}px; top: {-marginY}px; width: {svgWidth}px; height: {svgHeight}px;"
         viewBox="0 0 {svgWidth} {svgHeight}"
@@ -602,7 +618,7 @@
         {/if}
     </svg>
 
-    <div class="border-frame__content" bind:this={frameEl}>
+    <div class="border-frame__content" bind:this={frameEl} use:measureFrame>
         {@render children?.()}
     </div>
 </div>
@@ -622,5 +638,10 @@
     .border-overlay {
         position: absolute;
         pointer-events: none;
+        opacity: 0;
+        transition: opacity 0ms ease-out;
+    }
+    .border-overlay.is-ready {
+        opacity: 1;
     }
 </style>
