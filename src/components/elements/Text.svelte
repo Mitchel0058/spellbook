@@ -22,6 +22,7 @@
         italic: false,
         alignment: "left",
         verticalAlignment: "baseline",
+        fadeLength: 20,
         fontSize: 1,
         skew: 0,
         rotation: 0,
@@ -94,6 +95,14 @@
                 { value: "center", label: "Center" },
                 { value: "end", label: "End" },
             ],
+        },
+        {
+            key: "fadeLength",
+            label: "Text Fade",
+            type: "range",
+            min: 0,
+            max: 100,
+            step: 1,
         },
         {
             key: "skew",
@@ -247,7 +256,8 @@
         class:scroll-fade-y={textOptions.rotation === 0 &&
             textOptions.skew === 0 &&
             textOptions.direction !== "horizontal"}
-        style="font-size: calc(var(--reactive-font-size) * {textOptions.fontSize});"
+        style="font-size: calc(var(--reactive-font-size) * {textOptions.fontSize});
+                --fade-length: {textOptions.fadeLength}%;"
         onpointerdown={handlePointerDown}
         onpointerup={handlePointerUp}
         onpointerleave={handlePointerUp}
