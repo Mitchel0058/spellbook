@@ -8,6 +8,50 @@
         if (values) return values.includes(current);
         return current === value;
     }
+
+    function getDefaultValue(option) {
+        if (option.default !== undefined) return option.default;
+        if (
+            modal.state.defaultValues &&
+            Object.prototype.hasOwnProperty.call(
+                modal.state.defaultValues,
+                option.key,
+            )
+        ) {
+            return modal.state.defaultValues[option.key];
+        }
+        return option.min ?? 0;
+    }
+
+    function normalizeHexColor(value) {
+        if (typeof value !== "string") return null;
+        const trimmed = value.trim();
+        const withoutHash = trimmed.startsWith("#")
+            ? trimmed.slice(1)
+            : trimmed;
+
+        if (
+            !/^[0-9a-fA-F]{3}$/.test(withoutHash) &&
+            !/^[0-9a-fA-F]{6}$/.test(withoutHash)
+        ) {
+            return null;
+        }
+
+        const expanded =
+            withoutHash.length === 3
+                ? withoutHash
+                      .split("")
+                      .map((char) => char + char)
+                      .join("")
+                : withoutHash;
+
+        return `#${expanded.toLowerCase()}`;
+    }
+
+    function resetRange(option) {
+        modal.state.values[option.key] = getDefaultValue(option);
+        modal.notifyChange();
+    }
 </script>
 
 {#if modal.state.open}
@@ -60,18 +104,29 @@
                                     oninput={modal.notifyChange}
                                 />
                             {:else if option.type === "range"}
-                                <input
-                                    id={option.key}
-                                    type="range"
-                                    min={option.min}
-                                    max={option.max}
-                                    step={option.step ?? 1}
-                                    bind:value={modal.state.values[option.key]}
-                                    oninput={modal.notifyChange}
-                                />
-                                <span class="range-value"
-                                    >{modal.state.values[option.key]}</span
-                                >
+                                <div class="range-control">
+                                    <input
+                                        id={option.key}
+                                        type="range"
+                                        min={option.min}
+                                        max={option.max}
+                                        step={option.step ?? 1}
+                                        bind:value={
+                                            modal.state.values[option.key]
+                                        }
+                                        oninput={modal.notifyChange}
+                                    />
+                                    <span class="range-value"
+                                        >{modal.state.values[option.key]}</span
+                                    >
+                                    <button
+                                        type="button"
+                                        class="range-reset"
+                                        onclick={() => resetRange(option)}
+                                    >
+                                        ⟳
+                                    </button>
+                                </div>
                             {:else if option.type === "checkbox"}
                                 <input
                                     id={option.key}
@@ -89,12 +144,41 @@
                                     oninput={modal.notifyChange}
                                 />
                             {:else if option.type === "color"}
-                                <input
-                                    id={option.key}
-                                    type="color"
-                                    bind:value={modal.state.values[option.key]}
-                                    oninput={modal.notifyChange}
-                                />
+                                <div class="color-control">
+                                    <input
+                                        type="text"
+                                        class="color-text"
+                                        value={normalizeHexColor(
+                                            modal.state.values[option.key],
+                                        ) ?? "#000000"}
+                                        placeholder="#RRGGBB"
+                                        oninput={(event) => {
+                                            const value = event.target.value;
+                                            const nextValue =
+                                                normalizeHexColor(value);
+                                            if (!nextValue) return;
+                                            modal.state.values[option.key] =
+                                                nextValue;
+                                            modal.notifyChange();
+                                        }}
+                                    />
+                                    <input
+                                        id={option.key}
+                                        type="color"
+                                        value={normalizeHexColor(
+                                            modal.state.values[option.key],
+                                        ) ?? "#000000"}
+                                        onchange={(event) => {
+                                            const nextValue = normalizeHexColor(
+                                                event.target.value,
+                                            );
+                                            if (!nextValue) return;
+                                            modal.state.values[option.key] =
+                                                nextValue;
+                                            modal.notifyChange();
+                                        }}
+                                    />
+                                </div>
                             {:else if option.type === "choice-group"}
                                 <div class="choice-group">
                                     {#each option.choices as choice (choice.value)}
@@ -166,14 +250,14 @@
 <style>
     .options-overlay {
         position: absolute;
-        top: calc(var(--unit-height) * 24);
-        left: calc(var(--unit-width) * 19);
-        width: calc(var(--unit-width) * 100);
-        height: calc(var(--unit-height) * 135);
-        max-height: 70%;
+        top: calc(var(--unit-height-px) * 24);
+        left: calc(var(--unit-width-px) * 19);
+        width: calc(var(--unit-width-px) * 100);
+        height: calc(var(--unit-height-px) * 135);
+        max-height: calc(var(--unit-height-px) * 135);
         z-index: 9999;
         pointer-events: auto;
-        padding: calc(var(--unit-height) * 5) calc(var(--unit-width) * 5);
+        padding: calc(var(--unit-height-px) * 5) calc(var(--unit-width-px) * 5);
     }
 
     .options-bg {
@@ -192,7 +276,7 @@
         z-index: 1;
         display: flex;
         flex-direction: column;
-        gap: var(--unit-height);
+        gap: var(--unit-height-px);
         max-height: 100%;
         box-sizing: border-box;
     }
@@ -227,41 +311,64 @@
         flex-shrink: 0;
     }
 
+    .range-control {
+        display: flex;
+        justify-content: right;
+        gap: calc(var(--unit-width-px) * 4);
+        width: 100%;
+    }
+
     .range-value {
         min-width: 2ch;
         text-align: right;
     }
 
+    .range-reset {
+        all: unset;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .color-control {
+        display: flex;
+        justify-content: end;
+        gap: calc(var(--unit-width-px) * 4);
+        width: 100%;
+    }
+
+    .color-text {
+        width: calc(var(--unit-width-px) * 34);
+    }
+
     .choice-group {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: calc(var(--unit-height-px) * 4);
         width: 100%;
     }
 
     .choice-button {
         all: unset;
         cursor: pointer;
-        padding: 0.5rem 0.75rem;
         text-align: center;
     }
 
     .options-header-actions {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: calc(var(--unit-width-px) * 4);
     }
 
     .image-option {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: calc(var(--unit-width-px) * 4);
     }
 
     .delete-button {
         all: unset;
         cursor: pointer;
-        padding: 0.5rem 0.75rem;
+        padding: calc(var(--unit-height-px) * 2) calc(var(--unit-width-px) * 2);
         text-align: center;
         color: #b00020;
         font-weight: bold;

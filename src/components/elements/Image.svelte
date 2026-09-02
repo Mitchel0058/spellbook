@@ -21,6 +21,10 @@
     let imageOptions = $state({
         fit: "fill",
         borderRadius: 0,
+        mirrorX: false,
+        mirrorY: false,
+        skew: 0,
+        rotation: 0,
         border: false,
         borderColor: "#000000",
         showPatterns: true,
@@ -63,6 +67,36 @@
             type: "number",
             min: 0,
             max: 100,
+            step: 1,
+            default: 0,
+        },
+        {
+            key: "mirrorX",
+            label: "Mirror Horizontally",
+            type: "checkbox",
+        },
+        {
+            key: "mirrorY",
+            label: "Mirror Vertically",
+            type: "checkbox",
+        },
+        {
+            key: "skew",
+            label: "Skew",
+            type: "range",
+            min: -45,
+            max: 45,
+            step: 1,
+            default: 0,
+        },
+        {
+            key: "rotation",
+            label: "Rotation",
+            type: "range",
+            min: -180,
+            max: 180,
+            step: 1,
+            default: 0,
         },
         {
             key: "border",
@@ -136,6 +170,7 @@
             min: 0,
             max: 1,
             step: 0.01,
+            default: 0.25,
             showIf: { key: "border", value: true },
         },
         {
@@ -199,7 +234,9 @@
         onpointerup={handlePointerUp}
         onpointerleave={handlePointerUp}
         onclick={handleClick}
-        style="border-radius: {imageOptions.borderRadius}%;"
+        style="border-radius: {imageOptions.borderRadius}%;
+                transform: rotate({imageOptions.rotation}deg) skew({imageOptions.skew}deg) scaleX({imageOptions.mirrorX ? -1 : 1}) scaleY({imageOptions.mirrorY ? -1 : 1});
+                transform-origin: center;"
     >
         {#if imageSrc}
             <img

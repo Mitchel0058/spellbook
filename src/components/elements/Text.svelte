@@ -26,6 +26,8 @@
         fontSize: 1,
         skew: 0,
         rotation: 0,
+        mirrorX: false,
+        mirrorY: false,
         direction: "vertical",
         border: false,
         borderColor: "#000000",
@@ -59,6 +61,7 @@
             min: 0.3,
             max: 3,
             step: 0.1,
+            default: 1,
         },
         {
             key: "color",
@@ -103,6 +106,7 @@
             min: 0,
             max: 100,
             step: 1,
+            default: 20,
         },
         {
             key: "skew",
@@ -111,6 +115,7 @@
             min: -45,
             max: 45,
             step: 1,
+            default: 0,
         },
         {
             key: "rotation",
@@ -119,6 +124,17 @@
             min: -180,
             max: 180,
             step: 1,
+            default: 0,
+        },
+        {
+            key: "mirrorX",
+            label: "Mirror Horizontally",
+            type: "checkbox",
+        },
+        {
+            key: "mirrorY",
+            label: "Mirror Vertically",
+            type: "checkbox",
         },
         {
             key: "border",
@@ -192,6 +208,7 @@
             min: 0,
             max: 1,
             step: 0.01,
+            default: 0.25,
             showIf: { key: "border", value: true },
         },
         {
@@ -249,12 +266,18 @@
         class:no-scroll={isLayoutMode}
         class:horizontal={textOptions.direction === "horizontal"}
         class:has-transform={textOptions.rotation !== 0 ||
-            textOptions.skew !== 0}
+            textOptions.skew !== 0 ||
+            textOptions.mirrorX ||
+            textOptions.mirrorY}
         class:scroll-fade-x={textOptions.rotation === 0 &&
             textOptions.skew === 0 &&
+            !textOptions.mirrorX &&
+            !textOptions.mirrorY &&
             textOptions.direction === "horizontal"}
         class:scroll-fade-y={textOptions.rotation === 0 &&
             textOptions.skew === 0 &&
+            !textOptions.mirrorX &&
+            !textOptions.mirrorY &&
             textOptions.direction !== "horizontal"}
         style="font-size: calc(var(--reactive-font-size) * {textOptions.fontSize});
                 --fade-length: {textOptions.fadeLength}%;"
@@ -266,7 +289,11 @@
     >
         <div
             class="text-transform-wrapper"
-            style="transform: rotate({textOptions.rotation}deg) skew({textOptions.skew}deg);"
+            style="transform: rotate({textOptions.rotation}deg) skew({textOptions.skew}deg) scaleX({textOptions.mirrorX
+                ? -1
+                : 1}) scaleY({textOptions.mirrorY
+                ? -1
+                : 1}); transform-origin: center;"
         >
             {#if isEditing}
                 <textarea
