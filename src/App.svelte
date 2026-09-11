@@ -22,8 +22,10 @@
         releaseHold,
         nextFlipId,
         scheduleFlipFailsafe,
+        DURATION_MS,
     } from "./context/flipState.svelte.js";
     import { preloadPageImages } from "./lib/preloadImage.js";
+    import { registerPageNavigator } from "./context/pageNav.svelte.js";
 
     const settings = createSettingsContext();
 
@@ -32,9 +34,24 @@
         const page = parseInt(params.get("page"), 10);
         return Number.isNaN(page) ? 0 : page;
     }
-    let pageNumber = $state(getPageFromUrl());
+
+    // In double-page mode, spreads are fixed as [even, even+1] — the even
+    // slot is always left, the odd slot after it always right (0|1 is the
+    // overview's own first spread and already satisfies this). This holds
+    // no matter how pageNumber got set — URL, resize into double mode, or
+    // a direct jump — so a page never swaps sides on its own. Only
+    // inserting/deleting pages, which renumbers everything after the
+    // change point, is allowed to shift it.
+    function snapToPairedLeftSlot(slot) {
+        return slot % 2 === 0 ? slot : slot - 1;
+    }
 
     let isDoublePage = $state(window.innerWidth > window.innerHeight);
+    let pageNumber = $state(
+        isDoublePage
+            ? snapToPairedLeftSlot(getPageFromUrl())
+            : getPageFromUrl(),
+    );
     let page = $derived(pageData.getPage(pageNumber) ?? { elements: [] });
     let maxPage = $derived(pageData.pages.length);
     let leftPageComponent = $state(null);
@@ -50,9 +67,20 @@
     // actually drives rendering) only updates once each flip's own preload
     // resolves, exactly as before — this counter never drives rendering itself.
     let logicalPageNumber = pageNumber;
+    // Set by navigateToSlot when double-page +/- 2 stepping can't land exactly on the requested target.
+    // Corrected here, once every in-flight flip has cleared
+    // reusing the same signal this effect already used to resync logicalPageNumber,
+    // so the correction never races an in-progress flip's own pageNumber assignment.
+    let pendingNavTarget = null;
     $effect(() => {
         if (flipState.flips.length === 0) {
-            logicalPageNumber = pageNumber;
+            if (pendingNavTarget !== null) {
+                pageNumber = pendingNavTarget;
+                logicalPageNumber = pendingNavTarget;
+                pendingNavTarget = null;
+            } else {
+                logicalPageNumber = pageNumber;
+            }
         }
     });
 
@@ -107,8 +135,16 @@
     });
 
     $effect(() => {
+        return registerPageNavigator(navigateToSlot);
+    });
+
+    $effect(() => {
         const handleResize = () => {
-            isDoublePage = window.innerWidth > window.innerHeight;
+            const nowDouble = window.innerWidth > window.innerHeight;
+            isDoublePage = nowDouble;
+            if (nowDouble) {
+                pageNumber = snapToPairedLeftSlot(pageNumber);
+            }
         };
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
@@ -123,7 +159,8 @@
 
     $effect(() => {
         const handlePopState = () => {
-            pageNumber = getPageFromUrl();
+            const target = getPageFromUrl();
+            pageNumber = isDoublePage ? snapToPairedLeftSlot(target) : target;
         };
         window.addEventListener("popstate", handlePopState);
         return () => window.removeEventListener("popstate", handlePopState);
@@ -155,6 +192,55 @@
             startDoubleFlip(direction);
         } else {
             startSingleFlip(direction);
+        }
+    }
+
+    // Lets other components (PageLink) jump straight to a slot. Fires
+    // startFlip() repeatedly, spaced so the whole hop takes ~totalMs.
+    // Flips are allowed to overlap (flipState.flips is an array built for
+    // exactly this), and the final exact landing is handled by the
+    // pendingNavTarget effect above rather than forced here, since forcing
+    // it immediately would race the last flip's own onComplete.
+    const RAPID_NAV_TOTAL_MS = 200;
+
+    async function navigateToSlot(
+        targetSlot,
+        { totalMs = RAPID_NAV_TOTAL_MS } = {},
+    ) {
+        const upperBound = isDoublePage ? maxPage : maxPage + 1;
+        let clampedTarget = Math.max(0, Math.min(targetSlot, upperBound));
+        if (isDoublePage) {
+            clampedTarget = snapToPairedLeftSlot(clampedTarget);
+        }
+
+        if (
+            !settings.values[settingsOptions.ANIMATION] ||
+            clampedTarget === logicalPageNumber
+        ) {
+            pendingNavTarget = null;
+            pageNumber = clampedTarget;
+            logicalPageNumber = clampedTarget;
+            return;
+        }
+
+        const stepSize = isDoublePage ? 2 : 1;
+        const direction =
+            clampedTarget > logicalPageNumber ? "next" : "previous";
+        const stepsNeeded = Math.max(
+            1,
+            Math.ceil(Math.abs(clampedTarget - logicalPageNumber) / stepSize),
+        );
+        const perStepDelay = Math.max(DURATION_MS / 4, totalMs / stepsNeeded);
+
+        pendingNavTarget = clampedTarget;
+
+        while (
+            direction === "next"
+                ? logicalPageNumber < clampedTarget
+                : logicalPageNumber > clampedTarget
+        ) {
+            startFlip(direction); // not awaited — flips animate concurrently
+            await new Promise((r) => setTimeout(r, perStepDelay));
         }
     }
 

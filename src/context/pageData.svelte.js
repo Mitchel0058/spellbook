@@ -1,5 +1,4 @@
 import { PageDB } from '../utils/db.js';
-import { elementRegistry } from '../constants/elementTypes.js';
 import { pageTemplates } from '../constants/pageTemplates.js';
 
 function makeId() {
@@ -25,6 +24,8 @@ function makeBlankPage() {
 // element layout + each element's own "settings" (via templateProps)
 // carry over. Falls back to a blank page for unknown/blank templates.
 async function buildPageFromTemplate(templateKey) {
+    const { elementRegistry } = await import('../constants/elementTypes.js');
+
     const template = pageTemplates[templateKey];
     const templateData = template ? await template.load() : null;
 

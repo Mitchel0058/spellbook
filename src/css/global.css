@@ -79,6 +79,23 @@ html {
     /* background-color: #3eafd820;  */
 }
 
+/* width */
+::-webkit-scrollbar {
+    width: calc(var(--unit-width-px) * 4);
+    height: calc(var(--unit-height-px) * 4);
+    background: #A67048;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #663931;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #442924;
+}
+
 /* Scroll fade */
 /* Horizontal scroll fade: mask left/right edges based on scroll position.
    --fade-length is the % of the element's own width used for the fade,

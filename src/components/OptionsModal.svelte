@@ -78,7 +78,11 @@
             <div class="options-body">
                 {#each modal.state.schema as option (option.key)}
                     {#if isVisible(option)}
-                        <div class="option-row">
+                        <div
+                            class="option-row"
+                            class:option-row-stacked={option.type ===
+                                "page-select"}
+                        >
                             <label for={option.key}>{option.label}</label>
 
                             {#if option.type === "select"}
@@ -238,6 +242,54 @@
                                         </button>
                                     {/if}
                                 </div>
+                            {:else if option.type === "page-select"}
+                                <div class="page-select">
+                                    {#each option.choices as choice (choice.value)}
+                                        <label class="page-select-row">
+                                            <input
+                                                type="checkbox"
+                                                checked={(
+                                                    modal.state.values[
+                                                        option.key
+                                                    ] ?? []
+                                                ).includes(choice.value)}
+                                                onchange={() => {
+                                                    const current =
+                                                        modal.state.values[
+                                                            option.key
+                                                        ] ?? [];
+                                                    const isSelected =
+                                                        current.includes(
+                                                            choice.value,
+                                                        );
+                                                    modal.state.values[
+                                                        option.key
+                                                    ] = isSelected
+                                                        ? current.filter(
+                                                              (v) =>
+                                                                  v !==
+                                                                  choice.value,
+                                                          )
+                                                        : option.choices
+                                                              .map(
+                                                                  (c) =>
+                                                                      c.value,
+                                                              )
+                                                              .filter(
+                                                                  (v) =>
+                                                                      v ===
+                                                                          choice.value ||
+                                                                      current.includes(
+                                                                          v,
+                                                                      ),
+                                                              );
+                                                    modal.notifyChange();
+                                                }}
+                                            />
+                                            {choice.label}
+                                        </label>
+                                    {/each}
+                                </div>
                             {/if}
                         </div>
                     {/if}
@@ -377,5 +429,24 @@
     .choice-button.choice-highlighted {
         background: rgba(255, 215, 0, 0.1);
         font-weight: bold;
+    }
+
+    .option-row-stacked {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .page-select {
+        display: flex;
+        flex-direction: column;
+        gap: calc(var(--unit-height-px) * 2);
+        max-height: calc(var(--unit-height-px) * 60);
+        overflow-y: auto;
+    }
+
+    .page-select-row {
+        display: flex;
+        align-items: center;
+        gap: calc(var(--unit-width-px) * 3);
     }
 </style>
