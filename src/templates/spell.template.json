@@ -30,7 +30,7 @@
                 },
                 {
                     "id": "title",
-                    "type": "title",
+                    "type": "text",
                     "top": 12,
                     "left": 56,
                     "widthUnits": 60,
@@ -38,7 +38,7 @@
                     "zIndex": 2,
                     "props": {
                         "text": "New Title cool ",
-                        "titleOptions": {
+                        "textOptions": {
                             "color": "#000000",
                             "bold": false,
                             "italic": false,

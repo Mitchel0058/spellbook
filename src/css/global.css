@@ -96,6 +96,39 @@ html {
     background: #442924;
 }
 
+input[type="text"],
+input[type="number"],
+input[type="color"],
+input[type="checkbox"] {
+    background: #BB8854;
+    border: 2px solid #A67048;
+}
+
+input[type=checkbox]:checked::before {
+  background-color: #B00020;
+}
+input[type=checkbox]:not(:checked)::before {
+  background-color: #B00020;
+}
+
+input[type="range"] {
+    accent-color: #B00020;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+    background: #A67048;
+}
+
+input[type=range]::-moz-range-track {
+    background: #A67048;
+    height: 100%;
+}
+
+select {
+    background: #BB8854;
+    border: 2px solid #A67048;
+}
+
 /* Scroll fade */
 /* Horizontal scroll fade: mask left/right edges based on scroll position.
    --fade-length is the % of the element's own width used for the fade,

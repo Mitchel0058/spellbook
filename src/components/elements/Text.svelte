@@ -2,6 +2,8 @@
     import { appState, AppMode } from "../../context/appState.svelte.js";
     import { getPageOptionsModal } from "../../context/pageOptionsModal.svelte.js";
     import BorderFrame from "../BorderFrame.svelte";
+    import SymbolIcon from "../SymbolIcon.svelte";
+    import { SYMBOLS } from "../../lib/symbols.js";
 
     let {
         text = "",
@@ -41,6 +43,10 @@
         outerOverlay: true,
         outerOverlayColor: "#fbf236",
         outerOverlayOpacity: 0.25,
+        symbol: "none",
+        symbolPosition: "front",
+        symbolAlign: "center",
+        symbolColor: "#000000",
         ...initialTextOptions,
     });
 
@@ -135,6 +141,48 @@
             key: "mirrorY",
             label: "Mirror Vertically",
             type: "checkbox",
+        },
+        {
+            key: "symbol",
+            label: "Symbol",
+            type: "symbol-select",
+            choices: [
+                { value: "none", label: "None" },
+                ...Object.values(SYMBOLS).map((s) => ({
+                    value: s.id,
+                    label: s.label,
+                    width: s.width,
+                    height: s.height,
+                    cells: s.cells,
+                })),
+            ],
+        },
+        {
+            key: "symbolPosition",
+            label: "Symbol Position",
+            type: "select",
+            choices: [
+                { value: "front", label: "Before Text (Left)" },
+                { value: "behind", label: "After Text (Right)" },
+            ],
+            showIf: { key: "symbol", values: Object.keys(SYMBOLS) },
+        },
+        {
+            key: "symbolAlign",
+            label: "Symbol Alignment",
+            type: "select",
+            choices: [
+                { value: "top", label: "Top" },
+                { value: "center", label: "Center" },
+                { value: "bottom", label: "Bottom" },
+            ],
+            showIf: { key: "symbol", values: Object.keys(SYMBOLS) },
+        },
+        {
+            key: "symbolColor",
+            label: "Symbol Color",
+            type: "color",
+            showIf: { key: "symbol", values: Object.keys(SYMBOLS) },
         },
         {
             key: "border",
@@ -332,6 +380,34 @@
     </div>
 {/snippet}
 
+{#snippet contentWithSymbol()}
+    <div class="text-symbol-wrapper">
+        {#if textOptions.symbol && textOptions.symbol !== "none" && textOptions.symbolPosition === "front"}
+            <div
+                class="symbol-layer symbol-position-front symbol-align-{textOptions.symbolAlign}"
+            >
+                <SymbolIcon
+                    symbol={SYMBOLS[textOptions.symbol]}
+                    color={textOptions.symbolColor}
+                />
+            </div>
+        {/if}
+
+        {@render textContent()}
+
+        {#if textOptions.symbol && textOptions.symbol !== "none" && textOptions.symbolPosition === "behind"}
+            <div
+                class="symbol-layer symbol-position-behind symbol-align-{textOptions.symbolAlign}"
+            >
+                <SymbolIcon
+                    symbol={SYMBOLS[textOptions.symbol]}
+                    color={textOptions.symbolColor}
+                />
+            </div>
+        {/if}
+    </div>
+{/snippet}
+
 {#if textOptions.border}
     <BorderFrame
         color={textOptions.borderColor}
@@ -347,11 +423,11 @@
         outerOverlayOpacity={textOptions.outerOverlayOpacity}
     >
         {#snippet children()}
-            {@render textContent()}
+            {@render contentWithSymbol()}
         {/snippet}
     </BorderFrame>
 {:else}
-    {@render textContent()}
+    {@render contentWithSymbol()}
 {/if}
 
 <style>
@@ -417,5 +493,37 @@
         color: inherit;
         -ms-overflow-style: none;
         scrollbar-width: none;
+    }
+
+    .text-symbol-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    .symbol-layer {
+        position: absolute;
+        pointer-events: none;
+    }
+
+    .symbol-layer.symbol-position-front {
+        right: calc(100% + var(--unit-width-px));
+    }
+
+    .symbol-layer.symbol-position-behind {
+        left: calc(100% + var(--unit-width-px));
+    }
+
+    .symbol-layer.symbol-align-top {
+        top: 0;
+    }
+
+    .symbol-layer.symbol-align-center {
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .symbol-layer.symbol-align-bottom {
+        bottom: 0;
     }
 </style>

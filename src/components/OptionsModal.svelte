@@ -81,7 +81,8 @@
                         <div
                             class="option-row"
                             class:option-row-stacked={option.type ===
-                                "page-select"}
+                                "page-select" ||
+                                option.type === "symbol-select"}
                         >
                             <label for={option.key}>{option.label}</label>
 
@@ -290,6 +291,48 @@
                                         </label>
                                     {/each}
                                 </div>
+                            {:else if option.type === "symbol-select"}
+                                <div class="symbol-select">
+                                    {#each option.choices as choice (choice.value)}
+                                        <button
+                                            type="button"
+                                            class="symbol-choice"
+                                            class:symbol-choice-selected={modal
+                                                .state.values[option.key] ===
+                                                choice.value}
+                                            title={choice.label}
+                                            onclick={() => {
+                                                modal.state.values[option.key] =
+                                                    choice.value;
+                                                modal.notifyChange();
+                                            }}
+                                        >
+                                            {#if choice.cells}
+                                                <svg
+                                                    viewBox="0 0 {choice.width} {choice.height}"
+                                                    preserveAspectRatio="xMidYMid meet"
+                                                    shape-rendering="crispEdges"
+                                                    class="symbol-choice-svg"
+                                                >
+                                                    {#each choice.cells as [x, y]}
+                                                        <rect
+                                                            {x}
+                                                            {y}
+                                                            width="1"
+                                                            height="1"
+                                                            fill="currentColor"
+                                                        />
+                                                    {/each}
+                                                </svg>
+                                            {:else}
+                                                <span
+                                                    class="symbol-choice-label"
+                                                    >{choice.label}</span
+                                                >
+                                            {/if}
+                                        </button>
+                                    {/each}
+                                </div>
                             {/if}
                         </div>
                     {/if}
@@ -448,5 +491,41 @@
         display: flex;
         align-items: center;
         gap: calc(var(--unit-width-px) * 3);
+    }
+
+    .symbol-select {
+        display: flex;
+        flex-wrap: wrap;
+        gap: calc(var(--unit-width-px) * 3);
+        justify-content: flex-end;
+        width: 100%;
+    }
+
+    .symbol-choice {
+        all: unset;
+        cursor: pointer;
+        box-sizing: border-box;
+        width: calc(var(--unit-width-px) * 14);
+        height: calc(var(--unit-height-px) * 14);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        color: #000;
+    }
+
+    .symbol-choice-selected {
+        border-color: currentColor;
+        background: rgba(255, 215, 0, 0.15);
+    }
+
+    .symbol-choice-svg {
+        width: 80%;
+        height: 80%;
+    }
+
+    .symbol-choice-label {
+        font-size: 0.75rem;
+        text-align: center;
     }
 </style>
