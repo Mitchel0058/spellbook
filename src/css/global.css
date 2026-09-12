@@ -1,5 +1,5 @@
 :root {
-    --reactive-font-size: 3vh;
+    --reactive-font-size: calc(var(--unit-width-px) * 8);
     --text-red: rgb(120, 0, 0);
     --dark-red: rgb(80, 0, 0);
     --dark-brown: #a67048;

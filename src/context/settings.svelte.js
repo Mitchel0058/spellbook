@@ -55,8 +55,8 @@ class SettingsStore {
             // Update font size
             // TODO: change how font size works
             const fontAddition = this.values[settingsOptions.FONTADDITION] || 0;
-            const fontSize = 1 + (fontAddition / 10);
-            document.documentElement.style.setProperty('--reactive-font-size', `calc(${fontSize}vh + 1rem)`);
+            const fontSize = (fontAddition / 10);
+            document.documentElement.style.setProperty('--font-size-addition', `${fontSize}rem`);
         } catch (error) {
             console.error('Error loading font:', error);
         }
