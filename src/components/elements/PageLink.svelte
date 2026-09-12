@@ -485,6 +485,8 @@
 
     .rows.no-scroll {
         overflow: hidden;
+        pointer-events: none;
+        touch-action: none;
     }
 
     .row {

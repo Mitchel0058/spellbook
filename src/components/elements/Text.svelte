@@ -447,6 +447,12 @@
         scrollbar-width: none;
     }
 
+    .text.no-scroll {
+        pointer-events: none;
+        touch-action: none;
+        overflow: hidden;
+    }
+
     .text::-webkit-scrollbar,
     .text::-webkit-scrollbar-button {
         display: none;

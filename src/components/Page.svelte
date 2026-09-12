@@ -137,5 +137,6 @@
         height: 100svh;
         width: 100%;
         z-index: 0;
+        user-select: none;
     }
 </style>

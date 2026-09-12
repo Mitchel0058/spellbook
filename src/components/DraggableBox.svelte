@@ -279,6 +279,7 @@
         cursor: move;
         background: rgba(100, 100, 100, 0.15);
         pointer-events: auto; /* only capture pointer events in layout mode */
+        touch-action: none;
     }
 
     .draggable-box.focused {

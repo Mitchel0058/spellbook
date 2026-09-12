@@ -7,6 +7,7 @@
     import { ButtonType } from "../constants/buttonType.js";
     import { pageTemplates } from "../constants/pageTemplates.js";
     import { appState, AppMode } from "../context/appState.svelte.js";
+    import DrawingLayer from "./DrawingLayer.svelte";
 
     let {
         pageNumber,
@@ -33,6 +34,13 @@
         appState.mode =
             appState.mode !== AppMode.EDITING
                 ? AppMode.EDITING
+                : AppMode.VIEWING;
+    }
+
+    function toggleDrawingMode() {
+        appState.mode =
+            appState.mode !== AppMode.DRAWING
+                ? AppMode.DRAWING
                 : AppMode.VIEWING;
     }
 
@@ -215,6 +223,13 @@
     yPosition={0}
     {rightPage}
 />
+<SquareButton
+    buttonType={ButtonType.FONT}
+    onClick={toggleDrawingMode}
+    xPosition={116}
+    yPosition={70}
+    {rightPage}
+/>
 
 <div
     style="position: absolute; top: calc(var(--unit-height) * 167); left: calc(var(--unit-width) * 118); font-size: var(--reactive-font-size)"
@@ -240,3 +255,11 @@
         {rightPage}
     />
 {/each}
+
+<DrawingLayer
+    {pageNumber}
+    drawing={page.drawing}
+    onDrawingChange={(dataUrl) =>
+        pageData.updatePageDrawing(pageNumber, dataUrl)}
+    {rightPage}
+/>

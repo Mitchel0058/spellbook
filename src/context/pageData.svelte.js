@@ -16,6 +16,7 @@ function makeBlankPage() {
         id: makeId(),
         elements: [],
         settings: { showOnOverview: false, name: '' },
+        drawing: null,
     };
 }
 
@@ -64,7 +65,9 @@ async function buildPageFromTemplate(templateKey) {
     return {
         id: makeId(),
         elements,
+        // Drawings are never copied from a template, same as page settings.
         settings: { showOnOverview: false, name: '' },
+        drawing: null,
     };
 }
 
@@ -129,6 +132,11 @@ class PageDataStore {
         const page = this.getPageOrThrow(pageIndex);
         const el = page.elements.find((e) => e.id === elementId);
         if (el) Object.assign(el, changes);
+    }
+
+    updatePageDrawing(pageIndex, dataUrl) {
+        const page = this.getPageOrThrow(pageIndex);
+        page.drawing = dataUrl;
     }
 
     updatePageSettings(pageIndex, changes) {

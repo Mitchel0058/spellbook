@@ -183,7 +183,7 @@
 
     let pressTimer = null;
     let longPressTriggered = false;
-    const LONG_PRESS_MS = 500;
+    const LONG_PRESS_MS = 300;
 
     function handlePointerDown() {
         if (!isEditing) return;
