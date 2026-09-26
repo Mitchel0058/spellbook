@@ -55,7 +55,7 @@
                             "color": "#000000",
                             "bold": false,
                             "italic": false,
-                            "alignment": "left",
+                            "alignment": "justify",
                             "verticalAlignment": "baseline",
                             "fadeLength": 30,
                             "fontSize": 0.9,
