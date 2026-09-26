@@ -163,15 +163,6 @@
         });
     }
 
-    async function handleSave() {
-        try {
-            await pageData.saveAll();
-            // show success feedback
-        } catch (e) {
-            console.error("Save failed:", e);
-            // show error feedback
-        }
-    }
 </script>
 
 <button

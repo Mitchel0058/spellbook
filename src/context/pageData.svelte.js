@@ -74,6 +74,7 @@ async function buildPageFromTemplate(templateKey) {
 class PageDataStore {
     pages = $state([]);
     loading = $state(true);
+    saveTimer = null;
 
     getPage(pageIndex) {
         return this.pages[pageIndex];
@@ -120,29 +121,47 @@ class PageDataStore {
             props: { ...defaultProps },
         };
         page.elements.push(element);
+        this.scheduleSave();
         return element;
     }
 
     deleteElement(pageIndex, elementId) {
         const page = this.getPageOrThrow(pageIndex);
         page.elements = page.elements.filter((el) => el.id !== elementId);
+        this.scheduleSave();
     }
 
     updateElement(pageIndex, elementId, changes) {
         const page = this.getPageOrThrow(pageIndex);
         const el = page.elements.find((e) => e.id === elementId);
-        if (el) Object.assign(el, changes);
+        if (el) {
+            Object.assign(el, changes);
+            this.scheduleSave();
+        }
     }
 
     updatePageDrawing(pageIndex, dataUrl) {
         const page = this.getPageOrThrow(pageIndex);
         page.drawing = dataUrl;
+        this.scheduleSave();
     }
 
     updatePageSettings(pageIndex, changes) {
         const page = this.getPageOrThrow(pageIndex);
         Object.assign(page.settings, changes);
-        this.savePage(page);
+        this.scheduleSave();
+    }
+
+    scheduleSave() {
+        clearTimeout(this.saveTimer);
+        this.saveTimer = setTimeout(async () => {
+            this.saveTimer = null;
+            try {
+                await this.saveAll();
+            } catch (error) {
+                console.error("Autosave failed:", error);
+            }
+        }, 300);
     }
 
     async savePage(page) {
