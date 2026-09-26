@@ -326,19 +326,8 @@
             textOptions.skew !== 0 ||
             textOptions.mirrorX ||
             textOptions.mirrorY}
-        class:scroll-fade-x={textOptions.rotation === 0 &&
-            textOptions.skew === 0 &&
-            !textOptions.mirrorX &&
-            !textOptions.mirrorY &&
-            textOptions.direction === "horizontal"}
-        class:scroll-fade-y={textOptions.rotation === 0 &&
-            textOptions.skew === 0 &&
-            !textOptions.mirrorX &&
-            !textOptions.mirrorY &&
-            textOptions.direction !== "horizontal"}
         style="height: calc(var(--unit-width-px) * {rowHeightUnits});
-                font-size: calc(var(--reactive-font-size) * {textOptions.fontSize});
-                --fade-length: {textOptions.fadeLength}%;"
+                font-size: calc(var(--reactive-font-size) * {textOptions.fontSize});"
         onclick={(event) => handleRowClick(event, link)}
         role="presentation"
     >
@@ -391,7 +380,11 @@
 
 {#snippet pageLinkContent()}
     <div class="pagelink" ondblclick={handleDoubleClick} role="presentation">
-        <div class="rows" class:no-scroll={isLayoutMode}>
+        <div
+            class="rows scroll-fade-y"
+            class:no-scroll={isLayoutMode}
+            style="--fade-length: {textOptions.fadeLength}%;"
+        >
             {#each links as link (link.pageId)}
                 {@render row(link)}
             {:else}
