@@ -200,8 +200,8 @@
     }
 </script>
 
-<div class="text-overlay" id="title">Settings</div>
-<div class="container right-page-offset">
+<div class="text-overlay">Settings</div>
+<div class="container right-page-offset scroll-fade-y">
     <div class="container-line">
         <label class="file-input-label" for="spellbookName">
             Name:
@@ -315,7 +315,7 @@
     </div>
 
     <label>
-        Fontsize:
+        Global Fontsize:
         <input
             type="number"
             value={fontAddition}
@@ -351,45 +351,13 @@
         font-size: var(--reactive-font-size);
         margin: 0;
         overflow-x: auto;
+        left: calc(var(--unit-width-px) * 20);
+        top: calc(var(--unit-height-px) * 8);
+        font-size: calc(var(--reactive-font-size) * 2);
         white-space: nowrap;
-        margin-left: calc(var(--unit-width) * -2);
-
-        padding-left: calc(var(--unit-width) * 2);
 
         -ms-overflow-style: none;
         scrollbar-width: none;
-
-        /* TODO: gradient on the left */
-
-        -webkit-mask-image: linear-gradient(
-            to right,
-            rgba(0, 0, 0, 0),
-            rgba(0, 0, 0, 0.3) 3%,
-            rgba(0, 0, 0, 1) 6%,
-            rgba(0, 0, 0, 1) 85%,
-            rgba(0, 0, 0, 0)
-        );
-        mask-image: linear-gradient(
-            to right,
-            rgba(0, 0, 0, 0),
-            rgba(0, 0, 0, 0.3) 3%,
-            rgba(0, 0, 0, 1) 6%,
-            rgba(0, 0, 0, 1) 85%,
-            rgba(0, 0, 0, 0)
-        );
-        align-content: center;
-
-        &::after {
-            content: "";
-            width: 20%;
-            padding-left: 3vh;
-        }
-
-        /* &::before {
-        content: '';
-        width: 20%;
-        padding-right: 3vh;
-    } */
 
         &::-webkit-scrollbar {
             display: none;
@@ -398,36 +366,19 @@
 
     .container {
         position: absolute;
-        width: calc(var(--unit-width) * 92);
-        height: calc(var(--unit-height) * 140);
-        left: calc(var(--unit-width) * 23);
-        top: calc(var(--unit-height) * 32);
+        box-sizing: border-box;
+        width: calc(var(--unit-width-px) * 108);
+        height: calc(var(--unit-height-px) * 140);
+        left: calc(var(--unit-width-px) * 12);
+        top: calc(var(--unit-height-px) * 26);
         font-size: var(--reactive-font-size);
-        padding-top: calc(var(--unit-height) * 6);
-        overflow-x: hidden;
 
         display: flex;
         flex-direction: column;
-        gap: calc(var(--unit-height) * 5);
+        gap: calc(var(--unit-height-px) * 5);
         overflow-y: auto;
         -ms-overflow-style: none;
         scrollbar-width: none;
-        -webkit-mask-image: linear-gradient(
-            to bottom,
-            rgba(0, 0, 0, 0),
-            rgba(0, 0, 0, 0.2) calc(var(--unit-height) * 3),
-            rgba(0, 0, 0, 1) calc(var(--unit-height) * 10),
-            rgba(0, 0, 0, 1) 90%,
-            rgba(0, 0, 0, 0)
-        );
-        mask-image: linear-gradient(
-            to bottom,
-            rgba(0, 0, 0, 0),
-            rgba(0, 0, 0, 0.2) calc(var(--unit-height) * 3),
-            rgba(0, 0, 0, 1) calc(var(--unit-height) * 10),
-            rgba(0, 0, 0, 1) 90%,
-            rgba(0, 0, 0, 0)
-        );
     }
 
     .container > * {
@@ -440,22 +391,32 @@
 
     .container-line {
         display: flex;
+        gap: calc(var(--unit-width-px) * 2);
         justify-content: space-between;
         align-items: center;
     }
 
+    .container-line > label {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
     .input {
+        box-sizing: border-box;
         border: none;
         background: #0001;
         font-size: var(--reactive-font-size);
-        max-width: 90%;
+        max-width: 100%;
     }
 
     .file-input-label {
-        overflow-x: auto;
+        min-width: 0;
     }
 
     .file-input {
+        display: block;
+        box-sizing: border-box;
+        width: 100%;
         max-width: 100%;
     }
 
@@ -463,51 +424,46 @@
         border: none;
         background: #0001;
         font-size: var(--reactive-font-size);
-        border: 1px solid;
+        border: calc(var(--unit-width-px) * 0.25) solid;
     }
 
     .settings-button {
         cursor: pointer;
         background: transparent;
         border: none !important;
-        /* border: 1px solid; */
         box-sizing: border-box;
         background-color: #0001;
-        border-radius: 10px;
         margin: 0;
-        padding: 3px;
         font: inherit;
-        min-width: fit-content;
+        min-width: 0;
+        flex-shrink: 0;
+        white-space: normal;
     }
 
     .spellbook-item {
         display: flex;
-        gap: calc(var(--unit-width) * 2);
+        gap: calc(var(--unit-width-px) * 2);
         justify-content: space-between;
-        margin-bottom: calc(var(--unit-height) * 1);
+        margin-bottom: calc(var(--unit-height-px) * 1);
     }
 
     .spellbook-button {
+        min-width: 0;
         cursor: pointer;
         background: transparent;
         border: none !important;
-        margin-left: 5px;
+        margin-left: calc(var(--unit-width-px) * 2);
         padding: 0;
         font: inherit;
         font-style: italic;
+        overflow-wrap: anywhere;
         /* text-decoration: underline; */
-    }
-
-    .container-after {
-        display: block;
-        flex-shrink: 0;
-        height: calc(var(--unit-height) * 10);
     }
 
     .hr-break {
         margin: 0;
         border-color: rgb(24, 24, 24);
         color: rgb(24, 24, 24);
-        border: 1px solid;
+        border: calc(var(--unit-width-px) * 0.25) solid;
     }
 </style>
