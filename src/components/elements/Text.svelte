@@ -18,6 +18,36 @@
     let isEditing = $derived(appState.mode === AppMode.EDITING);
     let isLayoutMode = $derived(appState.mode === AppMode.LAYOUT);
 
+    let symbolWidthUnits = $derived(
+        textOptions.symbol &&
+            textOptions.symbol !== "none" &&
+            SYMBOLS[textOptions.symbol]
+            ? SYMBOLS[textOptions.symbol].width
+            : 0,
+    );
+
+    let underlineExtendFront = $derived(
+        textOptions.underline &&
+            textOptions.underlineUnderSymbol &&
+            textOptions.symbol !== "none" &&
+            textOptions.symbolPosition === "front",
+    );
+
+    let underlineExtendBehind = $derived(
+        textOptions.underline &&
+            textOptions.underlineUnderSymbol &&
+            textOptions.symbol !== "none" &&
+            textOptions.symbolPosition === "behind",
+    );
+
+    let underlineExtendUnits = $derived(
+        underlineExtendFront
+            ? Math.max(0, symbolWidthUnits + 1 - textOptions.symbolOffsetX)
+            : underlineExtendBehind
+              ? Math.max(0, symbolWidthUnits + 1 + textOptions.symbolOffsetX)
+              : 0,
+    );
+
     let textOptions = $state({
         color: "#000000",
         bold: false,
@@ -47,6 +77,13 @@
         symbolPosition: "front",
         symbolAlign: "center",
         symbolColor: "#000000",
+        symbolOffsetX: 0,
+        symbolOffsetY: 0,
+        underline: false,
+        underlineColor: "#000000",
+        underlineOffsetX: 0,
+        underlineOffsetY: 0,
+        underlineUnderSymbol: false,
         ...initialTextOptions,
     });
 
@@ -183,6 +220,63 @@
             label: "Symbol Color",
             type: "color",
             showIf: { key: "symbol", values: Object.keys(SYMBOLS) },
+        },
+        {
+            key: "symbolOffsetX",
+            label: "Symbol Offset X",
+            type: "range",
+            min: -5,
+            max: 5,
+            step: 1,
+            default: 0,
+            showIf: { key: "symbol", values: Object.keys(SYMBOLS) },
+        },
+        {
+            key: "symbolOffsetY",
+            label: "Symbol Offset Y",
+            type: "range",
+            min: -5,
+            max: 5,
+            step: 1,
+            default: 0,
+            showIf: { key: "symbol", values: Object.keys(SYMBOLS) },
+        },
+        {
+            key: "underline",
+            label: "Show Underline",
+            type: "checkbox",
+        },
+        {
+            key: "underlineColor",
+            label: "Underline Color",
+            type: "color",
+            showIf: { key: "underline", value: true },
+        },
+        {
+            key: "underlineOffsetX",
+            label: "Underline Offset X",
+            type: "range",
+            min: -5,
+            max: 5,
+            step: 1,
+            default: 0,
+            showIf: { key: "underline", value: true },
+        },
+        {
+            key: "underlineOffsetY",
+            label: "Underline Offset Y",
+            type: "range",
+            min: -5,
+            max: 5,
+            step: 1,
+            default: 0,
+            showIf: { key: "underline", value: true },
+        },
+        {
+            key: "underlineUnderSymbol",
+            label: "Underline Under Symbol",
+            type: "checkbox",
+            showIf: { key: "underline", value: true },
         },
         {
             key: "border",
@@ -363,6 +457,7 @@
         {#if textOptions.symbol && textOptions.symbol !== "none" && textOptions.symbolPosition === "front"}
             <div
                 class="symbol-layer symbol-position-front symbol-align-{textOptions.symbolAlign}"
+                style="--symbol-offset-x: calc(var(--unit-width-px) * {textOptions.symbolOffsetX}); --symbol-offset-y: calc(var(--unit-height-px) * {textOptions.symbolOffsetY});"
             >
                 <SymbolIcon
                     symbol={SYMBOLS[textOptions.symbol]}
@@ -376,12 +471,22 @@
         {#if textOptions.symbol && textOptions.symbol !== "none" && textOptions.symbolPosition === "behind"}
             <div
                 class="symbol-layer symbol-position-behind symbol-align-{textOptions.symbolAlign}"
+                style="--symbol-offset-x: calc(var(--unit-width-px) * {textOptions.symbolOffsetX}); --symbol-offset-y: calc(var(--unit-height-px) * {textOptions.symbolOffsetY});"
             >
                 <SymbolIcon
                     symbol={SYMBOLS[textOptions.symbol]}
                     color={textOptions.symbolColor}
                 />
             </div>
+        {/if}
+
+        {#if textOptions.underline}
+            <div
+                class="underline-layer"
+                class:underline-extend-front={underlineExtendFront}
+                class:underline-extend-behind={underlineExtendBehind}
+                style="background-color: {textOptions.underlineColor}; --underline-offset-x: calc(var(--unit-width-px) * {textOptions.underlineOffsetX}); --underline-offset-y: calc(var(--unit-height-px) * {textOptions.underlineOffsetY}); --underline-extend: calc(var(--unit-width-px) * {underlineExtendUnits});"
+            ></div>
         {/if}
     </div>
 {/snippet}
@@ -488,6 +593,10 @@
     .symbol-layer {
         position: absolute;
         pointer-events: none;
+        transform: translate(
+            var(--symbol-offset-x, 0px),
+            var(--symbol-offset-y, 0px)
+        );
     }
 
     .symbol-layer.symbol-position-front {
@@ -504,10 +613,32 @@
 
     .symbol-layer.symbol-align-center {
         top: 50%;
-        transform: translateY(-50%);
+        transform: translateY(-50%)
+            translate(var(--symbol-offset-x, 0px), var(--symbol-offset-y, 0px));
     }
 
     .symbol-layer.symbol-align-bottom {
         bottom: 0;
+    }
+
+    .underline-layer {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: calc(-1 * var(--unit-height-px));
+        height: var(--unit-height-px);
+        pointer-events: none;
+        transform: translate(
+            var(--underline-offset-x, 0px),
+            var(--underline-offset-y, 0px)
+        );
+    }
+
+    .underline-layer.underline-extend-front {
+        left: calc(-1 * var(--underline-extend, 0px));
+    }
+
+    .underline-layer.underline-extend-behind {
+        right: calc(-1 * var(--underline-extend, 0px));
     }
 </style>
