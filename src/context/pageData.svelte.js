@@ -131,6 +131,40 @@ class PageDataStore {
         this.scheduleSave();
     }
 
+    async movePage(fromIndex, toIndex) {
+        if (
+            fromIndex === toIndex ||
+            fromIndex < 0 || fromIndex >= this.pages.length ||
+            toIndex < 0 || toIndex >= this.pages.length
+        ) {
+            return;
+        }
+        const [moved] = this.pages.splice(fromIndex, 1);
+        this.pages.splice(toIndex, 0, moved);
+        await PageDB.saveOrder(this.pages.map((p) => p.id));
+    }
+
+    async movePageForward(pageIndex) {
+        await this.movePage(pageIndex, pageIndex + 1);
+    }
+
+    async movePageBackward(pageIndex) {
+        await this.movePage(pageIndex, pageIndex - 1);
+    }
+
+    async swapPages(indexA, indexB) {
+        if (
+            indexA === indexB ||
+            indexA < 0 || indexA >= this.pages.length ||
+            indexB < 0 || indexB >= this.pages.length
+        ) {
+            return;
+        }
+        [this.pages[indexA], this.pages[indexB]] =
+            [this.pages[indexB], this.pages[indexA]];
+        await PageDB.saveOrder(this.pages.map((p) => p.id));
+    }
+
     updateElement(pageIndex, elementId, changes) {
         const page = this.getPageOrThrow(pageIndex);
         const el = page.elements.find((e) => e.id === elementId);

@@ -417,6 +417,19 @@
         flip.animating = true;
     }
 
+    // Used by PageLayout's onPageMoved: newIndex is the page's new 0-based
+    // array index after a move/swap. The page's display slot is always
+    // newIndex + 1, regardless of whether the move originated from the left
+    // or right page component. In double-page mode this snaps to the even
+    // left-slot of the spread containing that page — never an odd/single
+    // slot — using the same pairing rule as resize/URL navigation.
+    function navigateToMovedPage(newIndex) {
+        const targetSlot = newIndex + 1;
+        pageNumber = isDoublePage
+            ? snapToPairedLeftSlot(targetSlot)
+            : targetSlot;
+    }
+
     async function callDeletePage(pageNumber) {
         await pageData.deletePage(pageNumber);
         pageNumber = Math.max(pageNumber - 1, 0);
@@ -461,6 +474,7 @@
                 pageNumber={leftSlot - 1}
                 onPageAdded={(newIndex) => (pageNumber = newIndex + 1)}
                 onPageDeleted={callDeletePage}
+                onPageMoved={navigateToMovedPage}
             />
         {/if}
 
@@ -501,6 +515,7 @@
                     pageNumber={rightSlot - 1}
                     onPageAdded={(newIndex) => (pageNumber = newIndex)}
                     onPageDeleted={callDeletePage}
+                    onPageMoved={navigateToMovedPage}
                     rightPage={true}
                 />
             {/if}

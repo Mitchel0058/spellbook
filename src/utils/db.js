@@ -325,6 +325,14 @@ export class PageDB {
         return record?.ids ?? [];
     }
 
+    // Persists a full reordering of existing pages. Does NOT touch page
+    // records or page count — callers must ensure `ids` is a permutation
+    // of the current order array (same ids, same length).
+    static async saveOrder(ids) {
+        const db = await this.init();
+        await db.put(this.ORDER_STORE, { key: 'order', ids });
+    }
+
     /* PAGES */
 
     static async getPageById(id) {

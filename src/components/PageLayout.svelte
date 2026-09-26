@@ -13,6 +13,7 @@
         pageNumber,
         onPageAdded = () => {},
         onPageDeleted = () => {},
+        onPageMoved = () => {},
         rightPage = false,
     } = $props();
 
@@ -100,6 +101,58 @@
         });
     }
 
+    export function openMovePagePicker() {
+        pageOptionsModal.open({
+            title: "Move Page To",
+            schema: [
+                {
+                    key: "targetPosition",
+                    label: "Choose New Position",
+                    type: "choice-group",
+                    choices: pageData.pages.map((p, index) => ({
+                        value: index,
+                        label: `${index + 1}. ${p.settings.name || "Untitled"}`,
+                        highlighted: index === pageNumber,
+                        onClick: async () => {
+                            if (index !== pageNumber) {
+                                await pageData.movePage(pageNumber, index);
+                                onPageMoved(index);
+                            }
+                            pageOptionsModal.close();
+                        },
+                    })),
+                },
+            ],
+            values: {},
+        });
+    }
+
+    export function openSwapPagePicker() {
+        pageOptionsModal.open({
+            title: "Swap Page With",
+            schema: [
+                {
+                    key: "swapTarget",
+                    label: "Choose Page",
+                    type: "choice-group",
+                    choices: pageData.pages
+                        .map((p, index) => ({ p, index }))
+                        .filter(({ index }) => index !== pageNumber)
+                        .map(({ p, index }) => ({
+                            value: index,
+                            label: `${index + 1}. ${p.settings.name || "Untitled"}`,
+                            onClick: async () => {
+                                await pageData.swapPages(pageNumber, index);
+                                onPageMoved(index);
+                                pageOptionsModal.close();
+                            },
+                        })),
+                },
+            ],
+            values: {},
+        });
+    }
+
     export function openElementPickerModal() {
         pageOptionsModal.open({
             title: "Select Element for Focus",
@@ -144,6 +197,45 @@
                     type: "image",
                 },
                 {
+                    key: "position",
+                    label: "Position",
+                    type: "choice-group",
+                    choices: [
+                        {
+                            value: "moveBackward",
+                            label: "Move Backward",
+                            onClick: async () => {
+                                if (pageNumber > 0) {
+                                    await pageData.movePageBackward(pageNumber);
+                                    onPageMoved(pageNumber - 1);
+                                    pageOptionsModal.close();
+                                }
+                            },
+                        },
+                        {
+                            value: "moveForward",
+                            label: "Move Forward",
+                            onClick: async () => {
+                                if (pageNumber < pageData.pages.length - 1) {
+                                    await pageData.movePageForward(pageNumber);
+                                    onPageMoved(pageNumber + 1);
+                                    pageOptionsModal.close();
+                                }
+                            },
+                        },
+                        {
+                            value: "moveTo",
+                            label: "Move To…",
+                            onClick: openMovePagePicker,
+                        },
+                        {
+                            value: "swapWith",
+                            label: "Swap With…",
+                            onClick: openSwapPagePicker,
+                        },
+                    ],
+                },
+                {
                     key: "deletePage",
                     label: "Delete Page",
                     type: "delete-button",
@@ -162,7 +254,6 @@
             },
         });
     }
-
 </script>
 
 <button
