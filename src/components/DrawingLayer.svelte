@@ -33,16 +33,59 @@
     const CANVAS_H = UNITS_TALL * PIXELS_PER_UNIT;
 
     const MAX_UNDO_STEPS = 20;
+    const DRAWING_PREFERENCES_KEY = "spellbook-drawing-preferences";
+
+    function readDrawingPreferences() {
+        const defaults = { submode: "pixel", pixelSize: 1, penSize: 4 };
+        if (typeof localStorage === "undefined") return defaults;
+
+        try {
+            const saved = JSON.parse(
+                localStorage.getItem(DRAWING_PREFERENCES_KEY),
+            );
+            const clampSize = (value, fallback, max) => {
+                const size = Number(value);
+                return Number.isFinite(size)
+                    ? Math.max(1, Math.min(max, Math.round(size)))
+                    : fallback;
+            };
+            return {
+                submode:
+                    saved?.submode === "regular" || saved?.submode === "pixel"
+                        ? saved.submode
+                        : defaults.submode,
+                pixelSize: clampSize(saved?.pixelSize, defaults.pixelSize, 10),
+                penSize: clampSize(saved?.penSize, defaults.penSize, 60),
+            };
+        } catch {
+            return defaults;
+        }
+    }
+
+    const savedPreferences = readDrawingPreferences();
 
     let isDrawMode = $derived(appState.mode === AppMode.DRAWING);
 
     // --- Tool state ---
-    let submode = $state("regular"); // 'regular' | 'pixel'
+    let submode = $state(savedPreferences.submode); // 'regular' | 'pixel'
     let erasing = $state(false);
     let color = $state("#000000");
     let hexText = $derived(color.replace("#", ""));
-    let brushSize = $state(1); // regular: line width in backing px. pixel: grid cells per side.
+    let pixelSize = $state(savedPreferences.pixelSize);
+    let penSize = $state(savedPreferences.penSize);
+    let brushSize = $derived(submode === "pixel" ? pixelSize : penSize);
     let opacity = $state(1);
+
+    $effect(() => {
+        try {
+            localStorage.setItem(
+                DRAWING_PREFERENCES_KEY,
+                JSON.stringify({ submode, pixelSize, penSize }),
+            );
+        } catch {
+            // Storage may be unavailable, but drawing should continue to work.
+        }
+    });
 
     let mainCanvasEl = $state(null);
     let overlayCanvasEl = $state(null);
@@ -270,8 +313,13 @@
 
     function setSubmode(next) {
         submode = next;
-        const max = next === "pixel" ? 10 : 60;
-        if (brushSize > max) brushSize = max;
+    }
+
+    function setBrushSize(value) {
+        const max = submode === "pixel" ? 10 : 60;
+        const size = Math.max(1, Math.min(max, Math.round(Number(value))));
+        if (submode === "pixel") pixelSize = size;
+        else penSize = size;
     }
 
     function onHexInput(event) {
@@ -340,7 +388,8 @@
                 type="range"
                 min="1"
                 max={submode === "pixel" ? 10 : 60}
-                bind:value={brushSize}
+                value={brushSize}
+                oninput={(event) => setBrushSize(event.currentTarget.value)}
                 class="slider"
             />
         </label>
