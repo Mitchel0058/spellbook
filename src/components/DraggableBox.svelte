@@ -373,4 +373,19 @@
         right: -8px;
         cursor: nwse-resize;
     }
+
+    @media (pointer: coarse) {
+        .draggable-box.layout-mode .edge,
+        .draggable-box.layout-mode .corner:not(.bottom-right) {
+            display: none;
+        }
+
+        .draggable-box.layout-mode .corner.bottom-right {
+            width: calc(var(--unit-width-px) * 8);
+            height: calc(var(--unit-height-px) * 8);
+            right: calc(var(--unit-width-px) * -2);
+            bottom: calc(var(--unit-height-px) * -2);
+            background: color-mix(in srgb, var(--dark-red) 80%, transparent);
+        }
+    }
 </style>
