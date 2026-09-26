@@ -58,6 +58,7 @@
         fontSize: 1,
         skew: 0,
         rotation: 0,
+        rotateDecorations: false,
         mirrorX: false,
         mirrorY: false,
         direction: "vertical",
@@ -168,6 +169,12 @@
             max: 180,
             step: 1,
             default: 0,
+        },
+        {
+            key: "rotateDecorations",
+            label: "Rotate Symbol, Underline & Border",
+            type: "checkbox",
+            showIf: { key: "rotation", notValue: 0 },
         },
         {
             key: "mirrorX",
@@ -409,7 +416,7 @@
     >
         <div
             class="text-transform-wrapper"
-            style="transform: rotate({textOptions.rotation}deg) skew({textOptions.skew}deg) scaleX({textOptions.mirrorX
+            style="transform: rotate({textOptions.rotateDecorations ? 0 : textOptions.rotation}deg) skew({textOptions.skew}deg) scaleX({textOptions.mirrorX
                 ? -1
                 : 1}) scaleY({textOptions.mirrorY
                 ? -1
@@ -491,29 +498,46 @@
     </div>
 {/snippet}
 
-{#if textOptions.border}
-    <BorderFrame
-        color={textOptions.borderColor}
-        showPatterns={textOptions.showPatterns}
-        showCorners={textOptions.showCorners}
-        inside={textOptions.inside}
-        insideColor1={textOptions.insideColor}
-        insideColor2={textOptions.insideColor2}
-        fill={textOptions.fill}
-        insideFillColor={textOptions.insideFillColor}
-        outerOverlay={textOptions.outerOverlay}
-        outerOverlayColor={textOptions.outerOverlayColor}
-        outerOverlayOpacity={textOptions.outerOverlayOpacity}
-    >
-        {#snippet children()}
-            {@render contentWithSymbol()}
-        {/snippet}
-    </BorderFrame>
-{:else}
-    {@render contentWithSymbol()}
-{/if}
+<div
+    class="text-element-wrapper"
+    class:rotate-decorations={textOptions.rotateDecorations &&
+        textOptions.rotation !== 0}
+    style="--element-rotation: {textOptions.rotation}deg;"
+>
+    {#if textOptions.border}
+        <BorderFrame
+            color={textOptions.borderColor}
+            showPatterns={textOptions.showPatterns}
+            showCorners={textOptions.showCorners}
+            inside={textOptions.inside}
+            insideColor1={textOptions.insideColor}
+            insideColor2={textOptions.insideColor2}
+            fill={textOptions.fill}
+            insideFillColor={textOptions.insideFillColor}
+            outerOverlay={textOptions.outerOverlay}
+            outerOverlayColor={textOptions.outerOverlayColor}
+            outerOverlayOpacity={textOptions.outerOverlayOpacity}
+        >
+            {#snippet children()}
+                {@render contentWithSymbol()}
+            {/snippet}
+        </BorderFrame>
+    {:else}
+        {@render contentWithSymbol()}
+    {/if}
+</div>
 
 <style>
+    .text-element-wrapper {
+        width: 100%;
+        height: 100%;
+    }
+
+    .text-element-wrapper.rotate-decorations {
+        transform: rotate(var(--element-rotation));
+        transform-origin: center;
+    }
+
     .text {
         pointer-events: auto;
         user-select: auto;

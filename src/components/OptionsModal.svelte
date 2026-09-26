@@ -3,9 +3,10 @@
 
     function isVisible(option) {
         if (!option.showIf) return true;
-        const { key, value, values } = option.showIf;
+        const { key, value, values, notValue } = option.showIf;
         const current = modal.state.values[key];
         if (values) return values.includes(current);
+        if (notValue !== undefined) return current !== notValue;
         return current === value;
     }
 
@@ -52,6 +53,18 @@
         modal.state.values[option.key] = getDefaultValue(option);
         modal.notifyChange();
     }
+
+    function updateRangeFromInput(option, event) {
+        const value = Number(event.currentTarget.value);
+        if (!Number.isFinite(value)) return;
+
+        const min = option.min ?? -Infinity;
+        const max = option.max ?? Infinity;
+        const clamped = Math.min(max, Math.max(min, value));
+        modal.state.values[option.key] = clamped;
+        event.currentTarget.value = String(clamped);
+        modal.notifyChange();
+    }
 </script>
 
 {#if modal.state.open}
@@ -80,6 +93,7 @@
                     {#if isVisible(option)}
                         <div
                             class="option-row"
+                            class:option-row-range={option.type === "range"}
                             class:option-row-stacked={option.type ===
                                 "page-select" ||
                                 option.type === "symbol-select"}
@@ -121,9 +135,17 @@
                                         }
                                         oninput={modal.notifyChange}
                                     />
-                                    <span class="range-value"
-                                        >{modal.state.values[option.key]}</span
-                                    >
+                                    <input
+                                        class="range-value"
+                                        type="number"
+                                        min={option.min}
+                                        max={option.max}
+                                        step={option.step ?? 1}
+                                        value={modal.state.values[option.key]}
+                                        aria-label="{option.label} value"
+                                        oninput={(event) =>
+                                            updateRangeFromInput(option, event)}
+                                    />
                                     <button
                                         type="button"
                                         class="range-reset"
@@ -406,20 +428,40 @@
         flex-shrink: 0;
     }
 
+    .option-row-range {
+        display: grid;
+        grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+    }
+
+    .option-row-range label {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
     .range-control {
         display: flex;
-        justify-content: right;
+        flex: 0 0 auto;
+        min-width: 0;
         gap: calc(var(--unit-width-px) * 4);
         width: 100%;
     }
 
+    .range-control input[type="range"] {
+        flex: 1 1 0;
+        min-width: 0;
+        width: 0;
+    }
+
     .range-value {
-        min-width: 2ch;
+        box-sizing: border-box;
+        flex: 0 0 7ch;
+        min-width: 0;
         text-align: right;
     }
 
     .range-reset {
         all: unset;
+        flex: 0 0 auto;
         cursor: pointer;
         font-size: 1rem;
     }
