@@ -1,7 +1,12 @@
 <script>
     import { pageData } from "../context/pageData.svelte.js";
+    import {
+        getSettingsContext,
+        settingsOptions,
+    } from "../context/settings.svelte.js";
 
     let { onSelectPage = () => {} } = $props();
+    const settings = getSettingsContext();
 
     // Pages with showOnOverview = true, paired with their slot number
     // (slot = real array index + 1, since slot 0 is this Overview page).
@@ -32,6 +37,9 @@
     });
 </script>
 
+<div class="overview-title">
+    {settings.values[settingsOptions.CURRENT_SPELLBOOK_DB] || "Spellbook"}
+</div>
 <div class="overview-list">
     {#each entries as { page, slot } (page.id)}
         <button class="overview-row" onclick={() => onSelectPage(slot)}>
@@ -50,14 +58,26 @@
 <style>
     .overview-list {
         position: absolute;
-        top: calc(var(--unit-height) * 16);
+        top: calc(var(--unit-height) * 22);
         left: calc(var(--unit-width) * 20);
         width: calc(var(--unit-width) * 104);
-        height: calc(var(--unit-height) * 154);
+        height: calc(var(--unit-height) * 148);
         display: flex;
         flex-direction: column;
         gap: calc(var(--unit-height) * 2);
         overflow-y: auto;
+    }
+
+    .overview-title {
+        position: absolute;
+        top: calc(var(--unit-height) * 8);
+        left: calc(var(--unit-width) * 20);
+        width: calc(var(--unit-width) * 104);
+        overflow: hidden;
+        text-align: center;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: calc(var(--reactive-font-size) * 1.5);
     }
 
     .overview-row {
@@ -79,7 +99,7 @@
     }
 
     .overview-thumb.placeholder {
-        background: rgba(0, 0, 0, 0.00);
+        background: rgba(0, 0, 0, 0);
     }
 
     .overview-name {
@@ -87,10 +107,12 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        font-size: calc(var(--reactive-font-size) * 1);
     }
 
     .overview-pagenum {
         flex-shrink: 0;
         text-align: right;
+        font-size: calc(var(--reactive-font-size) * 1);
     }
 </style>
