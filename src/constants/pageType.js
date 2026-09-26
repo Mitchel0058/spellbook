@@ -20,6 +20,6 @@ export const pageImages = {
     [PageType.TITLE_RIGHT]: 'spellbook_right_title.svg',
     [PageType.SPELL]: 'spellbook_left_spell.svg',
     [PageType.SPELL_RIGHT]: 'spellbook_right_spell.svg',
-    [PageType.BLANK]: 'spellbook_left_blankV2.svg',
-    [PageType.BLANK_RIGHT]: 'spellbook_right_blank.svg'
+    [PageType.BLANK]: 'book_left.svg',
+    [PageType.BLANK_RIGHT]: 'book_right.svg'
 };

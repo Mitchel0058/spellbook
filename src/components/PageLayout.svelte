@@ -28,7 +28,7 @@
 
     function toggleLayoutMode() {
         appState.mode =
-            appState.mode !== AppMode.LAYOUT ? AppMode.LAYOUT : AppMode.VIEWING;
+            appState.mode !== AppMode.LAYOUT ? AppMode.LAYOUT : AppMode.EDITING;
     }
     function toggleEditMode() {
         appState.mode =
@@ -41,7 +41,7 @@
         appState.mode =
             appState.mode !== AppMode.DRAWING
                 ? AppMode.DRAWING
-                : AppMode.VIEWING;
+                : AppMode.EDITING;
     }
 
     export function openAddElementPicker() {
@@ -174,65 +174,91 @@
     }
 </script>
 
-<SquareButton
-    buttonType={ButtonType.CHECKEDBOX}
-    onClick={handleSave}
-    xPosition={116}
-    yPosition={40}
-    {rightPage}
-/>
-<SquareButton
-    buttonType={ButtonType.SETTINGS}
-    onClick={openPageSettingsPicker}
-    xPosition={116}
-    yPosition={50}
-    {rightPage}
-/>
-<SquareButton
-    buttonType={ButtonType.SETTINGS}
-    onClick={openElementPickerModal}
-    xPosition={116}
-    yPosition={60}
-    {rightPage}
-/>
-<SquareButton
-    buttonType={ButtonType.REORDER}
-    onClick={toggleLayoutMode}
-    xPosition={116}
-    yPosition={20}
-    {rightPage}
-/>
-<SquareButton
-    buttonType={ButtonType.EDIT}
-    onClick={toggleEditMode}
-    xPosition={116}
-    yPosition={30}
-    {rightPage}
-/>
-<SquareButton
-    buttonType={ButtonType.MENU}
-    onClick={openAddElementPicker}
-    xPosition={72}
-    yPosition={0}
-    {rightPage}
-/>
-<SquareButton
-    buttonType={ButtonType.ADD}
-    onClick={openAddPagePicker}
-    xPosition={82}
-    yPosition={0}
-    {rightPage}
-/>
-<SquareButton
-    buttonType={ButtonType.FONT}
-    onClick={toggleDrawingMode}
-    xPosition={116}
-    yPosition={70}
-    {rightPage}
-/>
+<button
+    class="interact edit-button"
+    onclick={toggleEditMode}
+    title={appState.mode === AppMode.EDITING
+        ? "Exit Edit Mode"
+        : "Enter Edit Mode"}
+    style={rightPage
+        ? "left: calc(var(--unit-width-px) * 1);"
+        : "right: calc(var(--unit-width-px) * 1);"}
+>
+</button>
+
+{#if appState.mode !== AppMode.VIEWING}
+    <button
+        class="interact add-element-button"
+        onclick={openAddElementPicker}
+        title="Add Elements"
+    >
+        <img
+            class="btn-image"
+            src="assets/img/buttons/btn_Add_Element.svg"
+            alt="Add Element"
+        />
+    </button>
+    <button
+        class="interact add-page-button"
+        onclick={openAddPagePicker}
+        title="Add Page"
+    >
+        <img
+            class="btn-image"
+            src="assets/img/buttons/btn_Add_Page.svg"
+            alt="Add Page"
+        />
+    </button>
+    <button
+        class="interact layout-button"
+        onclick={toggleLayoutMode}
+        title="Toggle Layout Mode"
+    >
+        <img
+            class="btn-image"
+            src="assets/img/buttons/btn_Layout.svg"
+            alt="Reorder Elements"
+        />
+    </button>
+    <button
+        class="interact settings-button"
+        onclick={openPageSettingsPicker}
+        title="Change Page Settings"
+    >
+        <img
+            class="btn-image"
+            src="assets/img/buttons/btn_Settings.svg"
+            alt="Settings"
+        />
+    </button>
+    <button
+        class="interact focus-button"
+        onclick={openElementPickerModal}
+        title="Choose Element Focus"
+    >
+        <img
+            class="btn-image"
+            src="assets/img/buttons/btn_Focus.svg"
+            alt="Focus Element"
+        />
+    </button>
+    <button
+        class="interact drawing-button"
+        onclick={toggleDrawingMode}
+        title="Toggle Drawing Mode"
+    >
+        <img
+            class="btn-image"
+            src="assets/img/buttons/btn_Drawmode.svg"
+            alt="Draw"
+        />
+    </button>
+{/if}
 
 <div
-    style="position: absolute; top: calc(var(--unit-height) * 167); left: calc(var(--unit-width) * 118); font-size: var(--reactive-font-size)"
+    style="position: absolute; top: calc(var(--unit-height-px) * 174); {rightPage
+        ? 'left: calc(var(--unit-width-px) * 120);'
+        : 'left: calc(var(--unit-width-px) * 122);'} font-size: var(--reactive-font-size)"
 >
     {pageNumber + 1}
 </div>
@@ -263,3 +289,70 @@
         pageData.updatePageDrawing(pageNumber, dataUrl)}
     {rightPage}
 />
+
+<style>
+    .edit-button {
+        position: absolute;
+        top: calc(var(--unit-height-px) * 7);
+        width: calc(var(--unit-width-px) * 15);
+        height: calc(var(--unit-height-px) * 15);
+        border: none;
+        cursor: pointer;
+        z-index: 100;
+    }
+
+    .add-element-button,
+    .add-page-button,
+    .layout-button,
+    .settings-button,
+    .focus-button,
+    .drawing-button {
+        position: absolute;
+        bottom: calc(var(--unit-height-px) * 3);
+        border: none;
+        cursor: pointer;
+        /* background-color: #0aa1; */
+    }
+
+    .add-element-button {
+        left: calc(var(--unit-width-px) * 22);
+        width: calc(var(--unit-width-px) * 15);
+        height: calc(var(--unit-height-px) * 16);
+    }
+
+    .add-page-button {
+        left: calc(var(--unit-width-px) * 37);
+        width: calc(var(--unit-width-px) * 15);
+        height: calc(var(--unit-height-px) * 16);
+    }
+
+    .layout-button {
+        left: calc(var(--unit-width-px) * 52);
+        width: calc(var(--unit-width-px) * 15);
+        height: calc(var(--unit-height-px) * 16);
+    }
+
+    .settings-button {
+        left: calc(var(--unit-width-px) * 69);
+        width: calc(var(--unit-width-px) * 16);
+        height: calc(var(--unit-height-px) * 16);
+    }
+
+    .focus-button {
+        left: calc(var(--unit-width-px) * 85);
+        width: calc(var(--unit-width-px) * 15);
+        height: calc(var(--unit-height-px) * 17);
+    }
+
+    .drawing-button {
+        left: calc(var(--unit-width-px) * 100);
+        width: calc(var(--unit-width-px) * 17);
+        height: calc(var(--unit-height-px) * 17);
+    }
+
+    .btn-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+</style>

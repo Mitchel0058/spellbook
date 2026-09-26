@@ -41,7 +41,7 @@
     let erasing = $state(false);
     let color = $state("#000000");
     let hexText = $derived(color.replace("#", ""));
-    let brushSize = $state(4); // regular: line width in backing px. pixel: grid cells per side.
+    let brushSize = $state(1); // regular: line width in backing px. pixel: grid cells per side.
     let opacity = $state(1);
 
     let mainCanvasEl = $state(null);
