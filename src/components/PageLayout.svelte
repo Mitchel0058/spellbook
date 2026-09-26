@@ -351,7 +351,7 @@
         left={element.left}
         widthUnits={element.widthUnits}
         heightUnits={element.heightUnits}
-        zIndex={focusedElementId === element.id ? 200 : element.zIndex}
+        zIndex={element.zIndex}
         isFocused={focusedElementId === element.id}
         elementType={element.type}
         elementProps={element.props}

@@ -2,6 +2,7 @@
     import { untrack } from "svelte";
     import { appState, AppMode } from "../context/appState.svelte.js";
     import { elementRegistry } from "../constants/elementTypes.js";
+    import { getPageOptionsModal } from "../context/pageOptionsModal.svelte.js";
 
     const styles = getComputedStyle(document.documentElement);
     const unitWidthPercent = parseFloat(
@@ -22,7 +23,7 @@
         left = (minLeft + maxLeft) / 2 - 25,
         widthUnits = 50,
         heightUnits = 50,
-        zIndex = 0,
+        zIndex = 50,
         elementType,
         elementProps = {},
         onDelete = () => {},
@@ -31,6 +32,8 @@
         rightPage = false,
         isFocused = false,
     } = $props();
+
+    const pageOptionsModal = getPageOptionsModal();
 
     let posTop = $state(untrack(() => top));
     let posLeft = $state(untrack(() => left));
@@ -43,6 +46,26 @@
     let cssHeight = $derived(`${unitsTall * unitHeightPercent}%`);
 
     const ElementComponent = $derived(elementRegistry[elementType]?.component);
+
+    function openElementOptions() {
+        if (!isLayoutMode) return;
+        pageOptionsModal.open({
+            title: "Element Options",
+            schema: [
+                {
+                    key: "zIndex",
+                    label: "Z-Index",
+                    type: "range",
+                    min: 40,
+                    max: 60,
+                    step: 1,
+                    default: 50,
+                },
+            ],
+            values: { zIndex: zIndex ?? 50 },
+            onChange: (values) => onChange({ zIndex: values.zIndex }),
+        });
+    }
 
     // --- Drag state (not reactive UI, just tracking during a gesture) ---
     let dragMode = null; // null | 'move' | 'top' | 'right' | 'bottom' | 'left' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
@@ -173,9 +196,10 @@
     class="draggable-box"
     class:layout-mode={isLayoutMode}
     class:focused={isFocused}
-    style="top: {cssTop}; left: {cssLeft}; width: {cssWidth}; height: {cssHeight}; z-index: {zIndex};"
+    style="top: {cssTop}; left: {cssLeft}; width: {cssWidth}; height: {cssHeight}; z-index: {isFocused ? 200 : zIndex};"
     role="application"
     onpointerdown={(e) => startDrag("move", e)}
+    ondblclick={openElementOptions}
     class:right-page-offset-px-layout={rightPage}
 >
     <div

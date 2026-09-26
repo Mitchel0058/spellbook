@@ -117,7 +117,7 @@ class PageDataStore {
             left: (LAYOUT_MIN_LEFT + LAYOUT_MAX_LEFT) / 2 - defaultSize.widthUnits / 2,
             widthUnits: defaultSize.widthUnits,
             heightUnits: defaultSize.heightUnits,
-            zIndex: page.elements.length,
+            zIndex: 50,
             props: { ...defaultProps },
         };
         page.elements.push(element);
