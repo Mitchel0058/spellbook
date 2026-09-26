@@ -17,6 +17,8 @@
     let imageFile = $state(initialImageFile);
     let imageSrc = $state(null);
     let isEditing = $derived(appState.mode === AppMode.EDITING);
+    let fileInput;
+    let uploadTimer = null;
 
     let imageOptions = $state({
         fit: "fill",
@@ -181,39 +183,29 @@
         },
     ];
 
-    let pressTimer = null;
-    let longPressTriggered = false;
-    const LONG_PRESS_MS = 300;
-
-    function handlePointerDown() {
-        if (!isEditing) return;
-        longPressTriggered = false;
-        pressTimer = setTimeout(() => {
-            longPressTriggered = true;
-            pageOptionsModal.open({
-                title: "Image Options",
-                schema: optionsSchema,
-                values: imageOptions,
-                onChange: () => {
-                    onChange({
-                        imageFile,
-                        alt,
-                        imageOptions: { ...imageOptions },
-                    });
-                },
-            });
-        }, LONG_PRESS_MS);
-    }
-
-    function handlePointerUp() {
-        clearTimeout(pressTimer);
-    }
-
     function handleClick(event) {
-        if (longPressTriggered) {
-            event.preventDefault();
-            longPressTriggered = false;
-        }
+        if (!isEditing) return;
+        event.preventDefault();
+        clearTimeout(uploadTimer);
+        uploadTimer = setTimeout(() => fileInput?.click(), 250);
+    }
+
+    function handleDoubleClick(event) {
+        if (!isEditing) return;
+        event.preventDefault();
+        clearTimeout(uploadTimer);
+        pageOptionsModal.open({
+            title: "Image Options",
+            schema: optionsSchema,
+            values: imageOptions,
+            onChange: () => {
+                onChange({
+                    imageFile,
+                    alt,
+                    imageOptions: { ...imageOptions },
+                });
+            },
+        });
     }
 
     function handleFileChange(event) {
@@ -230,12 +222,12 @@
     <label
         class="editable-image"
         class:editable={isEditing}
-        onpointerdown={handlePointerDown}
-        onpointerup={handlePointerUp}
-        onpointerleave={handlePointerUp}
         onclick={handleClick}
+        ondblclick={handleDoubleClick}
         style="border-radius: {imageOptions.borderRadius}%;
-                transform: rotate({imageOptions.rotation}deg) skew({imageOptions.skew}deg) scaleX({imageOptions.mirrorX ? -1 : 1}) scaleY({imageOptions.mirrorY ? -1 : 1});
+                transform: rotate({imageOptions.rotation}deg) skew({imageOptions.skew}deg) scaleX({imageOptions.mirrorX
+            ? -1
+            : 1}) scaleY({imageOptions.mirrorY ? -1 : 1});
                 transform-origin: center;"
     >
         {#if imageSrc}
@@ -255,9 +247,11 @@
 
         {#if isEditing}
             <input
+                bind:this={fileInput}
                 type="file"
                 accept="image/*"
                 onchange={handleFileChange}
+                onclick={(event) => event.stopPropagation()}
                 style="position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden;"
             />
         {/if}

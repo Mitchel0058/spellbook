@@ -115,6 +115,11 @@
                 choices: pageChoices,
             },
             {
+                key: "showPageNumber",
+                label: "Show Page number",
+                type: "checkbox",
+            },
+            {
                 key: "rowHeightUnits",
                 label: "Row Height (units)",
                 type: "number",
@@ -173,11 +178,6 @@
                 max: 100,
                 step: 1,
                 default: 20,
-            },
-            {
-                key: "showPageNumber",
-                label: "Show Page number",
-                type: "checkbox",
             },
             {
                 key: "skew",
@@ -279,56 +279,32 @@
         ];
     }
 
-    let pressTimer = null;
-    let longPressTriggered = false;
-    const LONG_PRESS_MS = 1000;
-
-    function handlePointerDown() {
+    function handleDoubleClick() {
         if (!isEditing) return;
-        longPressTriggered = false;
-        pressTimer = setTimeout(() => {
-            longPressTriggered = true;
-            modalValues = {
-                ...textOptions,
-                rowHeightUnits,
-                linkedPageIds: links.map((l) => l.pageId),
-            };
-            pageOptionsModal.open({
-                title: "Page Link Options",
-                schema: buildOptionsSchema(),
-                values: modalValues,
-                onChange: () => {
-                    const {
-                        rowHeightUnits: newRowHeightUnits,
-                        linkedPageIds,
-                        ...restTextOptions
-                    } = modalValues;
-                    textOptions = restTextOptions;
-                    rowHeightUnits = newRowHeightUnits;
-                    syncLinksWithPageIds(linkedPageIds ?? []);
-                    reportChange();
-                },
-            });
-        }, LONG_PRESS_MS);
-    }
-
-    function handlePointerUp() {
-        clearTimeout(pressTimer);
-    }
-
-    function handleContainerClick(event) {
-        if (longPressTriggered) {
-            event.preventDefault();
-            longPressTriggered = false;
-        }
+        modalValues = {
+            ...textOptions,
+            rowHeightUnits,
+            linkedPageIds: links.map((l) => l.pageId),
+        };
+        pageOptionsModal.open({
+            title: "Page Link Options",
+            schema: buildOptionsSchema(),
+            values: modalValues,
+            onChange: () => {
+                const {
+                    rowHeightUnits: newRowHeightUnits,
+                    linkedPageIds,
+                    ...restTextOptions
+                } = modalValues;
+                textOptions = restTextOptions;
+                rowHeightUnits = newRowHeightUnits;
+                syncLinksWithPageIds(linkedPageIds ?? []);
+                reportChange();
+            },
+        });
     }
 
     function handleRowClick(event, link) {
-        if (longPressTriggered) {
-            event.preventDefault();
-            longPressTriggered = false;
-            return;
-        }
         if (!isViewing) return;
         const idx = pageIndexFor(link.pageId);
         if (idx === -1) return;
@@ -414,21 +390,14 @@
 {/snippet}
 
 {#snippet pageLinkContent()}
-    <div
-        class="pagelink"
-        onpointerdown={handlePointerDown}
-        onpointerup={handlePointerUp}
-        onpointerleave={handlePointerUp}
-        onclick={handleContainerClick}
-        role="presentation"
-    >
+    <div class="pagelink" ondblclick={handleDoubleClick} role="presentation">
         <div class="rows" class:no-scroll={isLayoutMode}>
             {#each links as link (link.pageId)}
                 {@render row(link)}
             {:else}
                 <div class="placeholder">
                     {#if isEditing}
-                        Hold to select pages
+                        Double click to select pages
                     {/if}
                 </div>
             {/each}
@@ -574,7 +543,6 @@
         background: rgba(0, 0, 0, 0.05);
         border: 1px dashed #888;
         box-sizing: border-box;
-        font-size: 0.75rem;
         color: #666;
         text-align: center;
     }

@@ -267,38 +267,19 @@
         },
     ];
 
-    let pressTimer = null;
-    let longPressTriggered = false;
-    const LONG_PRESS_MS = 1000;
-
-    function handlePointerDown() {
+    function handleDoubleClick() {
         if (!isEditing) return;
-        longPressTriggered = false;
-        pressTimer = setTimeout(() => {
-            longPressTriggered = true;
-            pageOptionsModal.open({
-                title: "Text Options",
-                schema: optionsSchema,
-                values: textOptions,
-                onChange: () => {
-                    onChange({
-                        text: content,
-                        textOptions: { ...textOptions },
-                    });
-                },
-            });
-        }, LONG_PRESS_MS);
-    }
-
-    function handlePointerUp() {
-        clearTimeout(pressTimer);
-    }
-
-    function handleClick(event) {
-        if (longPressTriggered) {
-            event.preventDefault();
-            longPressTriggered = false;
-        }
+        pageOptionsModal.open({
+            title: "Text Options",
+            schema: optionsSchema,
+            values: textOptions,
+            onChange: () => {
+                onChange({
+                    text: content,
+                    textOptions: { ...textOptions },
+                });
+            },
+        });
     }
 
     $effect(() => {
@@ -329,10 +310,7 @@
             textOptions.direction !== "horizontal"}
         style="font-size: calc(var(--reactive-font-size) * {textOptions.fontSize});
                 --fade-length: {textOptions.fadeLength}%;"
-        onpointerdown={handlePointerDown}
-        onpointerup={handlePointerUp}
-        onpointerleave={handlePointerUp}
-        onclick={handleClick}
+        ondblclick={handleDoubleClick}
         role="presentation"
     >
         <div
