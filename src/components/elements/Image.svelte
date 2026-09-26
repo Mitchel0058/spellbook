@@ -18,6 +18,8 @@
     let imageSrc = $state(null);
     let isEditing = $derived(appState.mode === AppMode.EDITING);
     let fileInput;
+    let imageBounds = $state(null);
+    let boundsSize = $state({ width: 0, height: 0 });
     let uploadTimer = null;
 
     let imageOptions = $state({
@@ -27,6 +29,7 @@
         mirrorY: false,
         skew: 0,
         rotation: 0,
+        fitRotation: false,
         border: false,
         borderColor: "#000000",
         showPatterns: true,
@@ -50,6 +53,48 @@
     $effect(() => {
         imageSrc = imageFile ? getObjectUrl(imageFile) : null;
     });
+
+    $effect(() => {
+        if (!imageBounds) return;
+        const observer = new ResizeObserver(([entry]) => {
+            boundsSize = {
+                width: entry.contentRect.width,
+                height: entry.contentRect.height,
+            };
+        });
+        observer.observe(imageBounds);
+        return () => observer.disconnect();
+    });
+
+    let rotationFitScale = $derived.by(() => {
+        const { width, height } = boundsSize;
+        if (!imageOptions.fitRotation || !width || !height) return 1;
+
+        const rotation = (imageOptions.rotation * Math.PI) / 180;
+        const skew = Math.tan((imageOptions.skew * Math.PI) / 180);
+        const cos = Math.cos(rotation);
+        const sin = Math.sin(rotation);
+        const a = cos - sin * skew;
+        const b = cos * skew - sin;
+        const c = sin + cos * skew;
+        const d = sin * skew + cos;
+        const rotatedWidth = Math.abs(a) * width + Math.abs(b) * height;
+        const rotatedHeight = Math.abs(c) * width + Math.abs(d) * height;
+
+        return Math.min(1, width / rotatedWidth, height / rotatedHeight);
+    });
+
+    let imageTransform = $derived(
+        `rotate(${imageOptions.rotation}deg) skew(${imageOptions.skew}deg) scaleX(${imageOptions.mirrorX ? -1 : 1}) scaleY(${imageOptions.mirrorY ? -1 : 1})`,
+    );
+    let labelTransform = $derived(
+        imageOptions.fitRotation ? "none" : imageTransform,
+    );
+    let visualTransform = $derived(
+        imageOptions.fitRotation
+            ? `${imageTransform} scale(${rotationFitScale})`
+            : "none",
+    );
 
     const optionsSchema = [
         {
@@ -99,6 +144,12 @@
             max: 180,
             step: 1,
             default: 0,
+        },
+        {
+            key: "fitRotation",
+            label: "Fit Rotated Image",
+            type: "checkbox",
+            showIf: { key: "rotation", notValue: 0 },
         },
         {
             key: "border",
@@ -220,30 +271,36 @@
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
     <label
+        bind:this={imageBounds}
         class="editable-image"
         class:editable={isEditing}
         onclick={handleClick}
         ondblclick={handleDoubleClick}
         style="border-radius: {imageOptions.borderRadius}%;
-                transform: rotate({imageOptions.rotation}deg) skew({imageOptions.skew}deg) scaleX({imageOptions.mirrorX
-            ? -1
-            : 1}) scaleY({imageOptions.mirrorY ? -1 : 1});
+                transform: {labelTransform};
                 transform-origin: center;"
     >
-        {#if imageSrc}
-            <img
-                src={imageSrc}
-                {alt}
-                draggable="false"
-                style="object-fit: {imageOptions.fit};"
-            />
-        {:else}
-            <div class="placeholder">
-                {#if isEditing}
-                    Click to upload image, hold for options
-                {/if}
-            </div>
-        {/if}
+        <div
+            class="image-visual"
+            style="border-radius: {imageOptions.borderRadius}%;
+                transform: {visualTransform};
+                transform-origin: center;"
+        >
+            {#if imageSrc}
+                <img
+                    src={imageSrc}
+                    {alt}
+                    draggable="false"
+                    style="object-fit: {imageOptions.fit};"
+                />
+            {:else}
+                <div class="placeholder">
+                    {#if isEditing}
+                        Click to upload image, hold for options
+                    {/if}
+                </div>
+            {/if}
+        </div>
 
         {#if isEditing}
             <input
@@ -302,6 +359,13 @@
         height: 100%;
         pointer-events: none;
         display: block;
+    }
+
+    .image-visual {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
     }
 
     .placeholder {
