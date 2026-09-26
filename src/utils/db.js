@@ -567,6 +567,9 @@ export class PageDB {
     // Reverse of _serializeBlobs: walks a plain JS value looking for the
     // { __blob: true, ... } marker and reconstructs a File from its base64 data.
     static async _deserializeBlobs(value) {
+        if (value instanceof Blob) {
+            return value;
+        }
         if (value && typeof value === 'object' && value.__blob) {
             const res = await fetch(value.data);
             const blob = await res.blob();
@@ -644,19 +647,21 @@ export class PageDB {
 
         if (Array.isArray(data.spells)) {
             for (const spell of data.spells) {
+                const importedSpell = { ...spell };
+                const icon = importedSpell[spellOptions.ICONURL];
+                if (icon && typeof icon === 'object' && icon.data) {
+                    const response = await fetch(icon.data);
+                    const blob = await response.blob();
+                    importedSpell[spellOptions.ICONURL] = new File(
+                        [blob],
+                        icon.name || 'image',
+                        { type: icon.type || blob.type },
+                    );
+                }
+
                 legacyPages.push({
-                    sourcePage: spell[spellOptions.PAGE],
-                    page: {
-                        id: crypto.randomUUID(),
-                        elements: [
-                            {
-                                id: crypto.randomUUID(),
-                                type: 'legacy-spell',
-                                props: spell,
-                            },
-                        ],
-                        settings: { showOnOverview: false, name: '' },
-                    },
+                    sourcePage: spell[spellOptions.PAGE] ?? 0,
+                    page: this._buildPageFromSpell(importedSpell),
                 });
             }
         }
@@ -664,7 +669,7 @@ export class PageDB {
         if (Array.isArray(data.notes)) {
             for (const note of data.notes) {
                 legacyPages.push({
-                    sourcePage: note[noteOptions.PAGE],
+                    sourcePage: note.page ?? 0,
                     page: {
                         id: crypto.randomUUID(),
                         elements: [

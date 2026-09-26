@@ -97,6 +97,8 @@
             importFile = null;
             await refreshData();
             await settings.loadCustomFont();
+            window.location.href =
+                window.location.origin + window.location.pathname;
         } catch (error) {
             console.error("Import failed:", error);
         }
