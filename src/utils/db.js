@@ -383,6 +383,51 @@ export class PageDB {
         await db.put(this.PAGES_STORE, page);
     }
 
+    static async getSpellbookSnapshot() {
+        const [pages, font] = await Promise.all([
+            this.loadAllPagesInOrder(),
+            this.getFont(),
+        ]);
+        return { pages, font, name: this.activeDBName };
+    }
+
+    static async getSyncState() {
+        const db = await this.init();
+        return (await db.get(this.SETTINGS_STORE, 'cloudSync'))?.value ?? {
+            enabled: false,
+            provider: 'dropbox',
+        };
+    }
+
+    static async saveSyncState(value) {
+        const db = await this.init();
+        await db.put(this.SETTINGS_STORE, { key: 'cloudSync', value });
+    }
+
+    static async replaceSpellbookContents({ pages, font }) {
+        const db = await this.init();
+        const tx = db.transaction(
+            [this.PAGES_STORE, this.ORDER_STORE, this.SETTINGS_STORE],
+            'readwrite',
+        );
+        const pagesStore = tx.objectStore(this.PAGES_STORE);
+        const orderStore = tx.objectStore(this.ORDER_STORE);
+        const settingsStore = tx.objectStore(this.SETTINGS_STORE);
+
+        await Promise.all([
+            pagesStore.clear(),
+            orderStore.clear(),
+            font
+                ? settingsStore.put({ key: 'font', data: font.data, name: font.name })
+                : settingsStore.delete('font'),
+        ]);
+        for (const page of pages) {
+            await pagesStore.put(page);
+        }
+        await orderStore.put({ key: 'order', ids: pages.map((page) => page.id) });
+        await tx.done;
+    }
+
     // Shared internal primitive: writes the page record AND splices its id
     // into the order array, atomically, in one transaction. Both
     // insertPageAfter and ensureAtLeastOnePage go through this — nothing else
@@ -438,10 +483,12 @@ export class PageDB {
     }
 
     static async renameSpellbook(oldName, newName) {
-        const data = await this.exportSpellbookData();
+        const syncState = await this.getSyncState();
+        const data = await this.getSpellbookSnapshot();
 
         await this.createNewSpellbook(newName);
-        await this.importSpellbookData(data);
+        await this.replaceSpellbookContents(data);
+        await this.saveSyncState(syncState);
         await this.deleteSpellbook(oldName);
 
         const spellbookList = await this.listAllSpellbooks();

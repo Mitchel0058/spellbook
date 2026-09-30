@@ -98,6 +98,7 @@ class PageDataStore {
         const newPage = await buildPageFromTemplate(templateKey);
         await PageDB.insertPageAfter(afterIndex, newPage);
         this.pages.splice(afterIndex + 1, 0, newPage);
+        this.notifyLocalSaved();
         return afterIndex + 1;
     }
 
@@ -105,6 +106,7 @@ class PageDataStore {
         const [removed] = this.pages.splice(pageIndex, 1);
         if (removed) {
             await PageDB.deletePage(removed.id);
+            this.notifyLocalSaved();
         }
     }
 
@@ -142,6 +144,7 @@ class PageDataStore {
         const [moved] = this.pages.splice(fromIndex, 1);
         this.pages.splice(toIndex, 0, moved);
         await PageDB.saveOrder(this.pages.map((p) => p.id));
+        this.notifyLocalSaved();
     }
 
     async movePageForward(pageIndex) {
@@ -163,6 +166,7 @@ class PageDataStore {
         [this.pages[indexA], this.pages[indexB]] =
             [this.pages[indexB], this.pages[indexA]];
         await PageDB.saveOrder(this.pages.map((p) => p.id));
+        this.notifyLocalSaved();
     }
 
     updateElement(pageIndex, elementId, changes) {
@@ -204,6 +208,17 @@ class PageDataStore {
 
     async saveAll() {
         await Promise.all(this.pages.map((page) => this.savePage(page)));
+        this.notifyLocalSaved();
+    }
+
+    notifyLocalSaved() {
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+                new CustomEvent('spellbook-local-saved', {
+                    detail: { dbName: PageDB.activeDBName },
+                }),
+            );
+        }
     }
 
     async loadAllPages() {

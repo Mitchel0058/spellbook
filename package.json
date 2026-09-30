@@ -18,5 +18,9 @@
     "svelte": "^5.56.5",
     "vite": "^6.4.3",
     "vite-plugin-pwa": "^1.0.1"
+  },
+  "dependencies": {
+    "@azure/msal-browser": "^5.23.0",
+    "fflate": "^0.8.3"
   }
 }

@@ -26,6 +26,7 @@
     } from "./context/flipState.svelte.js";
     import { preloadPageImages } from "./lib/preloadImage.js";
     import { registerPageNavigator } from "./context/pageNav.svelte.js";
+    import { cloudSync } from "./context/cloudSync.svelte.js";
 
     const settings = createSettingsContext();
 
@@ -129,6 +130,26 @@
         pageData.loadAllPages();
         // console.log("maxPage", maxPage);
         // console.log("pageNumber", pageNumber);
+    });
+    $effect(() => {
+        if (!settings.loading && !pageData.loading) {
+            cloudSync.initialize().then(() => cloudSync.syncOnOpen());
+        }
+    });
+    $effect(() => {
+        const handleLocalSave = (event) =>
+            cloudSync.notifyLocalChange(event.detail?.dbName);
+        const handleCloudPull = async () => {
+            await pageData.loadAllPages();
+            await settings.loadCustomFont();
+        };
+
+        window.addEventListener("spellbook-local-saved", handleLocalSave);
+        window.addEventListener("spellbook-cloud-pulled", handleCloudPull);
+        return () => {
+            window.removeEventListener("spellbook-local-saved", handleLocalSave);
+            window.removeEventListener("spellbook-cloud-pulled", handleCloudPull);
+        };
     });
     $effect(() => {
         initScrollFade();

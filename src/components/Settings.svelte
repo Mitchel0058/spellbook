@@ -2,6 +2,17 @@
     import { getSettingsContext } from "../context/settings.svelte.js";
     import { settingsOptions } from "../constants/settingsOptions";
     import { PageDB } from "../utils/db";
+    import { cloudSync } from "../context/cloudSync.svelte.js";
+    import {
+        getCloudProviders,
+        connectCloudProvider,
+    } from "../lib/cloudProviders.js";
+    import {
+        createSpellbookArchive,
+        isSpellbookArchiveHeader,
+        readSpellbookArchive,
+    } from "../lib/spellbookArchive.js";
+    import { pageData } from "../context/pageData.svelte.js";
 
     const settings = getSettingsContext();
 
@@ -15,6 +26,8 @@
     let importData = $state(null);
     let importFile = $state(null);
     let currentFont = $state(null);
+    let cloudConfig = $state({ enabled: false, provider: "dropbox" });
+    const cloudProviders = getCloudProviders();
 
     // Keep local editable fields in sync whenever settings change elsewhere
     $effect(() => {
@@ -35,6 +48,7 @@
     $effect(() => {
         (async () => {
             currentFont = await PageDB.getFont();
+            cloudConfig = await PageDB.getSyncState();
         })();
     });
 
@@ -47,14 +61,13 @@
 
     async function handleExportSpellbook() {
         try {
-            const data = await PageDB.exportSpellbookData();
-            const blob = new Blob([JSON.stringify(data)], {
-                type: "application/json",
-            });
+            await pageData.saveAll();
+            const snapshot = await PageDB.getSpellbookSnapshot();
+            const { blob } = await createSpellbookArchive(snapshot);
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `${settings.values[settingsOptions.CURRENT_SPELLBOOK_DB]}.json.spellbook`;
+            a.download = `${settings.values[settingsOptions.CURRENT_SPELLBOOK_DB]}.spellbook`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -69,12 +82,10 @@
             const file = event.target.files[0];
             if (!file) return;
             importFile = file;
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                importData = JSON.parse(e.target.result);
-            };
-            reader.readAsText(file);
+            const header = new Uint8Array(await file.slice(0, 4).arrayBuffer());
+            importData = isSpellbookArchiveHeader(header)
+                ? await readSpellbookArchive(file)
+                : JSON.parse(await file.text());
         } catch (error) {
             console.error("Import failed:", error);
             importData = null;
@@ -198,6 +209,40 @@
             }
         }
     }
+
+    async function handleCloudConfigChange(changes) {
+        const previousProvider = cloudConfig.provider;
+        cloudConfig = { ...cloudConfig, ...changes };
+        if (changes.provider && changes.provider !== previousProvider) {
+            delete cloudConfig.remoteFileId;
+            delete cloudConfig.cloudFileName;
+            delete cloudConfig.remoteRevision;
+            delete cloudConfig.baselineLocalHash;
+            delete cloudConfig.baselineRemoteHash;
+        }
+        await PageDB.saveSyncState(cloudConfig);
+        if (cloudConfig.enabled) await cloudSync.syncCurrentBook();
+    }
+
+    async function handleCloudConnect() {
+        try {
+            await connectCloudProvider(cloudConfig.provider);
+            if (cloudConfig.enabled) await cloudSync.syncCurrentBook();
+        } catch (error) {
+            console.error("Cloud connection failed:", error);
+            cloudSync.status = "error";
+            cloudSync.message = error.message || "Cloud connection failed.";
+        }
+    }
+
+    async function handleCloudSyncNow() {
+        await pageData.saveAll();
+        await cloudSync.syncCurrentBook({ force: true });
+        if (cloudSync.status === "synced") {
+            await pageData.loadAllPages();
+            await settings.loadCustomFont();
+        }
+    }
 </script>
 
 <div class="text-overlay">Settings</div>
@@ -281,6 +326,57 @@
         >
     </div>
 
+    <section class="cloud-sync-section" aria-labelledby="cloudSyncTitle">
+        <div id="cloudSyncTitle">Cloud backup and sync</div>
+        <label class="cloud-sync-toggle">
+            <input
+                type="checkbox"
+                checked={cloudConfig.enabled}
+                onchange={(event) =>
+                    handleCloudConfigChange({ enabled: event.target.checked })}
+            />
+            Sync this spellbook
+        </label>
+        <label class="cloud-sync-provider">
+            Provider (w.i.p. only Dropbox works for now)
+            <select
+                value={cloudConfig.provider}
+                onchange={(event) =>
+                    handleCloudConfigChange({ provider: event.target.value })}
+                class="input"
+            >
+                {#each cloudProviders as provider (provider.id)}
+                    <option value={provider.id}>
+                        {provider.label}{provider.configured ? "" : " (setup required)"}
+                    </option>
+                {/each}
+            </select>
+        </label>
+        {#if !cloudProviders.find((provider) => provider.id === cloudConfig.provider)?.configured}
+            <p class="cloud-sync-note">
+                Add the provider client ID to the Vite environment and rebuild.
+                Setup steps are in NOTES.md.
+            </p>
+        {/if}
+        <div class="container-line">
+            <button
+                class="settings-button"
+                onclick={handleCloudConnect}
+                disabled={!cloudProviders.find((provider) => provider.id === cloudConfig.provider)?.configured}
+            >
+                Connect / reconnect
+            </button>
+            <button
+                class="settings-button"
+                onclick={handleCloudSyncNow}
+                disabled={!cloudConfig.enabled || cloudSync.isSyncing}
+            >
+                Sync now
+            </button>
+        </div>
+        <p class="cloud-sync-status" aria-live="polite">{cloudSync.message}</p>
+    </section>
+
     <div>
         <label for="exportSpellbook">Export Spellbook</label>
         <br />
@@ -295,7 +391,7 @@
         <label for="importSpellbook">Import Spellbook</label>
         <input
             type="file"
-            accept=".spellbook,.json"
+            accept=".spellbook,.json,.zip"
             id="importSpellbook"
             onchange={handleImportSpellbookSelect}
             class="file-input"
@@ -445,6 +541,38 @@
         gap: calc(var(--unit-width-px) * 2);
         justify-content: space-between;
         margin-bottom: calc(var(--unit-height-px) * 1);
+    }
+
+    .cloud-sync-section {
+        display: flex;
+        flex-direction: column;
+        gap: calc(var(--unit-height-px) * 1.5);
+        border-top: calc(var(--unit-width-px) * 0.25) solid #181818;
+        border-bottom: calc(var(--unit-width-px) * 0.25) solid #181818;
+        padding: calc(var(--unit-height-px) * 1.5) 0;
+    }
+
+    .cloud-sync-toggle,
+    .cloud-sync-provider {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: calc(var(--unit-width-px) * 2);
+    }
+
+    .cloud-sync-provider select {
+        min-width: 0;
+        max-width: 60%;
+    }
+
+    .cloud-sync-note,
+    .cloud-sync-status {
+        margin: 0;
+    }
+
+    .settings-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
     }
 
     .spellbook-button {
