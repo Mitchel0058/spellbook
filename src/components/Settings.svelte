@@ -220,7 +220,7 @@
             delete cloudConfig.baselineLocalHash;
             delete cloudConfig.baselineRemoteHash;
         }
-        await PageDB.saveSyncState(cloudConfig);
+        await PageDB.saveSyncState($state.snapshot(cloudConfig));
         if (cloudConfig.enabled) await cloudSync.syncCurrentBook();
     }
 

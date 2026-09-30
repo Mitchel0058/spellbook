@@ -3,7 +3,6 @@ import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 const ARCHIVE_FORMAT = 'spellbook-archive';
 const ARCHIVE_VERSION = 1;
 const MANIFEST_PATH = 'manifest.json';
-const EPOCH = new Date(0);
 const encoder = new TextEncoder();
 
 function stableStringify(value) {
@@ -59,7 +58,7 @@ async function serializeAssets(value, files) {
         const type = dataUrl?.type || value.type || 'application/octet-stream';
         const hash = await sha256(bytes);
         const path = `assets/${hash}.${extensionForType(type)}`;
-        files[path] = [bytes, { level: 0, mtime: EPOCH }];
+        files[path] = [bytes, { level: 0 }];
 
         return {
             __asset: path,
@@ -124,10 +123,10 @@ export async function createSpellbookArchive({ pages, font, name }) {
 
     files[MANIFEST_PATH] = [
         strToU8(JSON.stringify(manifest)),
-        { level: 6, mtime: EPOCH },
+        { level: 6 },
     ];
 
-    const bytes = zipSync(files, { level: 6, mtime: EPOCH });
+    const bytes = zipSync(files, { level: 6 });
     return {
         blob: new Blob([bytes], { type: 'application/vnd.spellbook+zip' }),
         contentHash,
