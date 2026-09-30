@@ -21,7 +21,8 @@ export default defineConfig({
                 background_color: '#200404',
                 start_url: '/spellbook/',
                 scope: '/spellbook/',
-                display: 'standalone',
+                display: 'fullscreen',
+                display_override: ['fullscreen', 'standalone'],
                 icons: [
                     { src: 'assets/img/cover_192.png', sizes: '192x192', type: 'image/png' },
                     { src: 'assets/img/cover_512.png', sizes: '512x512', type: 'image/png' },

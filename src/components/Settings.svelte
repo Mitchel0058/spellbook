@@ -12,6 +12,10 @@
         isSpellbookArchiveHeader,
         readSpellbookArchive,
     } from "../lib/spellbookArchive.js";
+    import {
+        promptPwaInstall,
+        subscribePwaInstall,
+    } from "../lib/pwaInstall.js";
     import { pageData } from "../context/pageData.svelte.js";
 
     const settings = getSettingsContext();
@@ -27,7 +31,31 @@
     let importFile = $state(null);
     let currentFont = $state(null);
     let cloudConfig = $state({ enabled: false, provider: "dropbox" });
+    let canInstall = $state(false);
+    let isInstalled = $state(false);
+    let installMessage = $state("");
     const cloudProviders = getCloudProviders();
+
+    $effect(() => {
+        return subscribePwaInstall((state) => {
+            canInstall = state.canInstall;
+            isInstalled = state.isInstalled;
+            if (state.isInstalled) installMessage = "Spellbook is installed.";
+        });
+    });
+
+    async function handleInstall() {
+        if (!canInstall) {
+            installMessage =
+                "Use your browser's menu to install or add Spellbook to your home screen.";
+            return;
+        }
+
+        const outcome = await promptPwaInstall();
+        installMessage = outcome === "accepted"
+            ? "Spellbook is installed."
+            : "Installation was canceled.";
+    }
 
     // Keep local editable fields in sync whenever settings change elsewhere
     $effect(() => {
@@ -410,6 +438,17 @@
         <hr class="hr-break" />
     </div>
 
+    <div>
+        <button
+            class="settings-button"
+            onclick={handleInstall}
+            disabled={isInstalled}
+        >
+            {isInstalled ? "Installed" : "Install Spellbook"}
+        </button>
+        <p class="install-status" aria-live="polite">{installMessage}</p>
+    </div>
+
     <label>
         Global Fontsize:
         <input
@@ -566,7 +605,8 @@
     }
 
     .cloud-sync-note,
-    .cloud-sync-status {
+    .cloud-sync-status,
+    .install-status {
         margin: 0;
     }
 
