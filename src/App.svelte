@@ -55,6 +55,7 @@
     );
     let page = $derived(pageData.getPage(pageNumber) ?? { elements: [] });
     let maxPage = $derived(pageData.pages.length);
+    let lastDoublePageNumber = $derived(maxPage + (maxPage % 2));
     let leftPageComponent = $state(null);
     let rightPageComponent = $state(null);
     let preloadSlot = $state(null);
@@ -91,12 +92,26 @@
             : null;
     }
 
-    // Resolves a slot number to what should render there:
-    // 0 -> overview, 1..maxPage -> real page (index slot-1), maxPage+1 -> settings
+    // Resolves a slot number to what should render there. In double-page mode,
+    // an extra blank slot keeps settings on the right when the page count is odd.
     function slotKind(slot) {
         if (slot === 0) return "overview";
         if (slot >= 1 && slot <= maxPage) return "page";
-        return "settings";
+        if (isDoublePage && maxPage % 2 === 1 && slot === maxPage + 1) {
+            return "blank";
+        }
+        const settingsSlot = maxPage + 1 + (isDoublePage ? maxPage % 2 : 0);
+        return slot === settingsSlot ? "settings" : "blank";
+    }
+
+    function setPageNumberDirect(targetSlot) {
+        const upperBound = isDoublePage ? lastDoublePageNumber : maxPage + 1;
+        const clampedSlot = Math.max(0, Math.min(targetSlot, upperBound));
+        pageNumber = isDoublePage
+            ? snapToPairedLeftSlot(clampedSlot)
+            : clampedSlot;
+        logicalPageNumber = pageNumber;
+        pendingNavTarget = null;
     }
 
     function slotPageType(slot) {
@@ -132,6 +147,18 @@
         // console.log("pageNumber", pageNumber);
     });
     $effect(() => {
+        if (pageData.loading) return;
+        const maxSlot = isDoublePage ? lastDoublePageNumber : maxPage + 1;
+        const clampedSlot = Math.max(0, Math.min(pageNumber, maxSlot));
+        const targetSlot = isDoublePage
+            ? snapToPairedLeftSlot(clampedSlot)
+            : clampedSlot;
+        if (targetSlot !== pageNumber) {
+            pageNumber = targetSlot;
+            logicalPageNumber = targetSlot;
+        }
+    });
+    $effect(() => {
         if (!settings.loading && !pageData.loading) {
             cloudSync.initialize().then(() => cloudSync.syncOnOpen());
         }
@@ -165,6 +192,8 @@
             isDoublePage = nowDouble;
             if (nowDouble) {
                 pageNumber = snapToPairedLeftSlot(pageNumber);
+                logicalPageNumber = pageNumber;
+                pendingNavTarget = null;
             }
         };
         window.addEventListener("resize", handleResize);
@@ -193,7 +222,7 @@
             return;
         }
         if (isDoublePage) {
-            pageNumber = Math.min(pageNumber + 2, maxPage);
+            pageNumber = Math.min(pageNumber + 2, lastDoublePageNumber);
         } else {
             pageNumber = Math.min(pageNumber + 1, maxPage + 1);
         }
@@ -228,7 +257,7 @@
         targetSlot,
         { totalMs = RAPID_NAV_TOTAL_MS } = {},
     ) {
-        const upperBound = isDoublePage ? maxPage : maxPage + 1;
+        const upperBound = isDoublePage ? lastDoublePageNumber : maxPage + 1;
         let clampedTarget = Math.max(0, Math.min(targetSlot, upperBound));
         if (isDoublePage) {
             clampedTarget = snapToPairedLeftSlot(clampedTarget);
@@ -269,7 +298,7 @@
         const oldLogical = logicalPageNumber;
         const newLogical =
             direction === "next"
-                ? Math.min(oldLogical + 2, maxPage)
+                ? Math.min(oldLogical + 2, lastDoublePageNumber)
                 : Math.max(oldLogical - 2, 0);
         if (newLogical === oldLogical) return;
         logicalPageNumber = newLogical;
@@ -413,7 +442,9 @@
             // Deferred: the flip's start face (blank) covers the real page
             // until the flip visually completes, so pageNumber only updates then.
             flip.onComplete = () => {
-                pageNumber = newLogical;
+                pageNumber = isDoublePage
+                    ? snapToPairedLeftSlot(newLogical)
+                    : newLogical;
                 flipState.flips = flipState.flips.filter(
                     (f) => f.id !== flip.id,
                 );
@@ -446,14 +477,14 @@
     // slot — using the same pairing rule as resize/URL navigation.
     function navigateToMovedPage(newIndex) {
         const targetSlot = newIndex + 1;
-        pageNumber = isDoublePage
-            ? snapToPairedLeftSlot(targetSlot)
-            : targetSlot;
+        setPageNumberDirect(targetSlot);
     }
 
-    async function callDeletePage(pageNumber) {
-        await pageData.deletePage(pageNumber);
-        pageNumber = Math.max(pageNumber - 1, 0);
+    async function callDeletePage(pageIndex) {
+        await pageData.deletePage(pageIndex);
+        const targetIndex = Math.min(pageIndex, maxPage - 1);
+        const targetSlot = targetIndex >= 0 ? targetIndex + 1 : 0;
+        setPageNumberDirect(targetSlot);
     }
 </script>
 
@@ -477,6 +508,16 @@
         {/if}
         <Settings />
     </Page>
+{:else if slotKind(leftSlot) === "blank"}
+    <Page pageType={PageType.BLANK} bind:this={leftPageComponent}>
+        {#if leftSlot > 0 && appState.mode == AppMode.VIEWING}
+            <button
+                class="interact previous-page"
+                onclick={previousPage}
+                title="Previous Page"
+            ></button>
+        {/if}
+    </Page>
 {:else}
     <Page pageType={PageType.BLANK} bind:this={leftPageComponent}>
         {#if leftSlot > 0 && appState.mode == AppMode.VIEWING}
@@ -488,12 +529,12 @@
         {/if}
 
         {#if slotKind(leftSlot) === "overview"}
-            <Overview onSelectPage={(slot) => (pageNumber = slot)} />
+            <Overview onSelectPage={setPageNumberDirect} />
         {:else}
             <PageLayout
                 bind:this={leftPageLayout}
                 pageNumber={leftSlot - 1}
-                onPageAdded={(newIndex) => (pageNumber = newIndex + 1)}
+                onPageAdded={navigateToMovedPage}
                 onPageDeleted={callDeletePage}
                 onPageMoved={navigateToMovedPage}
             />
@@ -521,6 +562,12 @@
         >
             <Settings />
         </Page>
+    {:else if slotKind(rightSlot) === "blank"}
+        <Page
+            pageType={PageType.BLANK_RIGHT}
+            rightPage="true"
+            bind:this={rightPageComponent}
+        />
     {:else}
         <Page
             pageType={PageType.BLANK_RIGHT}
@@ -529,12 +576,12 @@
             bind:this={rightPageComponent}
         >
             {#if slotKind(rightSlot) === "overview"}
-                <Overview onSelectPage={(slot) => (pageNumber = slot)} />
+                <Overview onSelectPage={setPageNumberDirect} />
             {:else}
                 <PageLayout
                     bind:this={rightPageLayout}
                     pageNumber={rightSlot - 1}
-                    onPageAdded={(newIndex) => (pageNumber = newIndex)}
+                    onPageAdded={navigateToMovedPage}
                     onPageDeleted={callDeletePage}
                     onPageMoved={navigateToMovedPage}
                     rightPage={true}
@@ -562,4 +609,4 @@
     </div>
 {/if}
 
-<PageFlip />
+<PageFlip {isDoublePage} />

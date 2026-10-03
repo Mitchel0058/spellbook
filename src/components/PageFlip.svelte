@@ -11,6 +11,8 @@
     import Overview from "./Overview.svelte";
     import Settings from "./Settings.svelte";
 
+    let { isDoublePage } = $props();
+
     const PERSPECTIVE_PX = 1600;
 
     let maxPage = $derived(pageData.pages.length);
@@ -18,7 +20,11 @@
     function slotKind(slot) {
         if (slot === 0) return "overview";
         if (slot >= 1 && slot <= maxPage) return "page";
-        return "settings";
+        if (isDoublePage && maxPage % 2 === 1 && slot === maxPage + 1) {
+            return "blank";
+        }
+        const settingsSlot = maxPage + 1 + (isDoublePage ? maxPage % 2 : 0);
+        return slot === settingsSlot ? "settings" : "blank";
     }
 
     function rotationFor(flip) {
@@ -126,6 +132,14 @@
                 >
                     <Overview onSelectPage={() => {}} />
                 </Page>
+            {:else if slotKind(content.slot) === "blank"}
+                <Page
+                    pageType={content.rightPage
+                        ? PageType.BLANK_RIGHT
+                        : PageType.BLANK}
+                    rightPage={content.rightPage}
+                    showBackground={false}
+                />
             {:else}
                 <Page
                     pageType={PageType.TITLE_RIGHT}
