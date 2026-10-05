@@ -529,7 +529,7 @@
         {/if}
 
         {#if slotKind(leftSlot) === "overview"}
-            <Overview onSelectPage={setPageNumberDirect} />
+            <Overview onSelectPage={navigateToSlot} />
         {:else}
             <PageLayout
                 bind:this={leftPageLayout}
@@ -576,7 +576,7 @@
             bind:this={rightPageComponent}
         >
             {#if slotKind(rightSlot) === "overview"}
-                <Overview onSelectPage={setPageNumberDirect} />
+                <Overview onSelectPage={navigateToSlot} />
             {:else}
                 <PageLayout
                     bind:this={rightPageLayout}
