@@ -74,6 +74,8 @@
     // reusing the same signal this effect already used to resync logicalPageNumber,
     // so the correction never races an in-progress flip's own pageNumber assignment.
     let pendingNavTarget = null;
+    // Ignore stale preload completions that arrive after a newer flip.
+    let lastDoubleFlipPageUpdateId = 0;
     $effect(() => {
         if (flipState.flips.length === 0) {
             if (pendingNavTarget !== null) {
@@ -314,9 +316,13 @@
                 : leftPageComponent.getElement();
         const rect = sourceEl.getBoundingClientRect();
 
+        const flipId = nextFlipId();
         const hinge = direction === "next" ? "left" : "right";
         const holdSide = direction === "next" ? "left" : "right";
-        const oldHeldSlot = holdSide === "left" ? leftSlot : rightSlot;
+        // Each flip pins its own starting spread so completion reveals the
+        // next intermediate spread instead of keeping the oldest one visible.
+        const holdSlot =
+            holdSide === "left" ? oldLogical : oldLogical + 1;
 
         let startSlot, startRightPage, endSlot, endRightPage;
         if (direction === "next") {
@@ -337,7 +343,7 @@
         ]);
 
         const flip = $state({
-            id: nextFlipId(),
+            id: flipId,
             hinge,
             rect: {
                 top: rect.top,
@@ -360,8 +366,11 @@
             flipState.flips = flipState.flips.filter((f) => f.id !== flip.id);
         };
 
-        pushHold(holdSide, flip.id, oldHeldSlot);
-        pageNumber = newLogical;
+        pushHold(holdSide, flip.id, holdSlot);
+        if (flip.id > lastDoubleFlipPageUpdateId) {
+            lastDoubleFlipPageUpdateId = flip.id;
+            pageNumber = newLogical;
+        }
         flipState.flips = [...flipState.flips, flip];
         scheduleFlipFailsafe(flip);
 
@@ -386,6 +395,7 @@
         }
 
         const rect = leftPageComponent.getElement().getBoundingClientRect();
+        const flipId = nextFlipId();
         const hinge = "right"; // single-page mode always hinges on the right edge
         const flipAngle = flipAngleForHinge(hinge);
 
@@ -419,7 +429,7 @@
         ]);
 
         const flip = $state({
-            id: nextFlipId(),
+            id: flipId,
             hinge,
             rect: {
                 top: rect.top,

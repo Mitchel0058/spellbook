@@ -7,8 +7,8 @@ export function flipAngleForHinge(hinge) {
 // flips: every currently-animating panel, rendered independently in PageFlip.
 // holds: per-side pins ("left"/"right", double-page only) so the container
 // NOT covered by a given panel keeps showing old content until that panel's
-// own animation finishes. Multiple flips can pin the same side at once;
-// whichever pinned it first stays authoritative until all of them clear.
+// own animation finishes. Releasing each hold reveals the next intermediate
+// slot when multiple flips overlap on the same side.
 export const flipState = $state({
     flips: [],
     holds: { left: [], right: [] },
@@ -25,7 +25,9 @@ export function heldSlot(side, rawSlot) {
 }
 
 export function pushHold(side, flipId, slot) {
-    flipState.holds[side] = [...flipState.holds[side], { flipId, slot }];
+    flipState.holds[side] = [...flipState.holds[side], { flipId, slot }].sort(
+        (a, b) => a.flipId - b.flipId,
+    );
 }
 
 export function releaseHold(side, flipId) {
