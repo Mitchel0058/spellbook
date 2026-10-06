@@ -106,11 +106,16 @@ async function deserializeAssets(value, files) {
     return value;
 }
 
-export async function createSpellbookArchive({ pages, font, name }) {
+export async function createSpellbookArchive({
+    pages,
+    font,
+    fontAddition = 0,
+    name,
+}) {
     const files = {};
     const serializedPages = await serializeAssets(pages, files);
     const serializedFont = await serializeAssets(font, files);
-    const content = { pages: serializedPages, font: serializedFont };
+    const content = { pages: serializedPages, font: serializedFont, fontAddition };
     const contentHash = await sha256(new TextEncoder().encode(stableStringify(content)));
     const manifest = {
         format: ARCHIVE_FORMAT,
@@ -155,6 +160,7 @@ export async function readSpellbookArchive(file) {
         contentHash: manifest.contentHash,
         pages,
         font,
+        fontAddition: manifest.fontAddition ?? 0,
     };
 }
 

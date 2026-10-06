@@ -107,7 +107,8 @@
         position: relative;
         width: 100%;
         --reactive-font-size: calc(
-            var(--unit-width-px) * 7 + var(--font-size-addition, 0rem)
+            var(--unit-width-px) * 7 + var(--font-size-addition, 0rem) +
+                var(--book-font-size-addition, 0rem)
         );
     }
 

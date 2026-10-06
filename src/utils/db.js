@@ -384,11 +384,28 @@ export class PageDB {
     }
 
     static async getSpellbookSnapshot() {
-        const [pages, font] = await Promise.all([
+        const [pages, font, fontAddition] = await Promise.all([
             this.loadAllPagesInOrder(),
             this.getFont(),
+            this.getFontSizeAddition(),
         ]);
-        return { pages, font, name: this.activeDBName };
+        return {
+            pages,
+            font,
+            fontAddition: fontAddition ?? 0,
+            name: this.activeDBName,
+        };
+    }
+
+    static async getFontSizeAddition() {
+        const db = await this.init();
+        const setting = await db.get(this.SETTINGS_STORE, 'fontSizeAddition');
+        return setting?.value ?? null;
+    }
+
+    static async setFontSizeAddition(value) {
+        const db = await this.init();
+        await db.put(this.SETTINGS_STORE, { key: 'fontSizeAddition', value });
     }
 
     static async getSyncState() {
@@ -404,7 +421,7 @@ export class PageDB {
         await db.put(this.SETTINGS_STORE, { key: 'cloudSync', value });
     }
 
-    static async replaceSpellbookContents({ pages, font }) {
+    static async replaceSpellbookContents({ pages, font, fontAddition = 0 }) {
         const db = await this.init();
         const tx = db.transaction(
             [this.PAGES_STORE, this.ORDER_STORE, this.SETTINGS_STORE],
@@ -420,6 +437,7 @@ export class PageDB {
             font
                 ? settingsStore.put({ key: 'font', data: font.data, name: font.name })
                 : settingsStore.delete('font'),
+            settingsStore.put({ key: 'fontSizeAddition', value: fontAddition }),
         ]);
         for (const page of pages) {
             await pagesStore.put(page);
@@ -653,6 +671,7 @@ export class PageDB {
             name: this.activeDBName,
             exportDate: new Date().toISOString(),
             font: fontData,
+            fontAddition: (await this.getFontSizeAddition()) ?? 0,
         };
     }
 
@@ -661,6 +680,9 @@ export class PageDB {
     static async importSpellbookData(data) {
         if (data.font) {
             await this.saveFont(data.font);
+        }
+        if (data.fontAddition !== undefined) {
+            await this.setFontSizeAddition(data.fontAddition);
         }
 
         if (data.pages && Array.isArray(data.pages)) {

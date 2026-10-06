@@ -6,6 +6,7 @@ const SETTINGS_CONTEXT_KEY = Symbol('settings');
 
 class SettingsStore {
     values = $state({ ...DEFAULT_SETTINGS });
+    bookFontAddition = $state(0);
     loading = $state(true);
     error = $state(null);
 
@@ -26,6 +27,9 @@ class SettingsStore {
         try {
             await SettingsDB.set(key, value);
             this.values = { ...this.values, [key]: value };
+            if (key === settingsOptions.FONTADDITION) {
+                this.applyFontSizeAdditions();
+            }
             return true;
         } catch (err) {
             console.error('Error updating setting:', err);
@@ -52,14 +56,35 @@ class SettingsStore {
                 document.body.style.fontFamily = 'MagicSchool, sans-serif';
             }
 
-            // Update font size
-            // TODO: change how font size works
-            const fontAddition = this.values[settingsOptions.FONTADDITION] || 0;
-            const fontSize = (fontAddition / 10);
-            document.documentElement.style.setProperty('--font-size-addition', `${fontSize}rem`);
+            this.bookFontAddition = (await PageDB.getFontSizeAddition()) ?? 0;
+            this.applyFontSizeAdditions();
         } catch (error) {
             console.error('Error loading font:', error);
         }
+    }
+
+    async setBookFontAddition(value) {
+        await PageDB.setFontSizeAddition(value);
+        this.bookFontAddition = value;
+        this.applyFontSizeAdditions();
+        window.dispatchEvent(
+            new CustomEvent('spellbook-local-saved', {
+                detail: { dbName: PageDB.activeDBName },
+            }),
+        );
+    }
+
+    applyFontSizeAdditions() {
+        const globalFontSize = (this.values[settingsOptions.FONTADDITION] || 0) / 10;
+        const bookFontSize = this.bookFontAddition / 10;
+        document.documentElement.style.setProperty(
+            '--font-size-addition',
+            `${globalFontSize}rem`,
+        );
+        document.documentElement.style.setProperty(
+            '--book-font-size-addition',
+            `${bookFontSize}rem`,
+        );
     }
 }
 

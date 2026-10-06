@@ -24,9 +24,10 @@
     let spellbookName = $state(
         settings.values[settingsOptions.CURRENT_SPELLBOOK_DB],
     );
-    let fontAddition = $state(
+    let globalFontAddition = $state(
         settings.values[settingsOptions.FONTADDITION] || 0,
     );
+    let bookFontAddition = $state(settings.bookFontAddition);
     let importData = $state(null);
     let importFile = $state(null);
     let currentFont = $state(null);
@@ -60,7 +61,8 @@
     // Keep local editable fields in sync whenever settings change elsewhere
     $effect(() => {
         spellbookName = settings.values[settingsOptions.CURRENT_SPELLBOOK_DB];
-        fontAddition = settings.values[settingsOptions.FONTADDITION] || 0;
+        globalFontAddition = settings.values[settingsOptions.FONTADDITION] || 0;
+        bookFontAddition = settings.bookFontAddition;
     });
 
     // Double page detection
@@ -203,6 +205,7 @@
             );
             newSpellbookName = "";
             await refreshData();
+            window.location.href = window.location.origin + window.location.pathname;
         } catch (error) {
             console.error("Failed to create new spellbook:", error);
         }
@@ -210,9 +213,14 @@
 
     async function handleFontAdditionChange(value) {
         const newValue = parseInt(value) || 0;
-        fontAddition = newValue;
+        globalFontAddition = newValue;
         await settings.set(settingsOptions.FONTADDITION, newValue);
-        await settings.loadCustomFont();
+    }
+
+    async function handleBookFontAdditionChange(value) {
+        const newValue = parseInt(value) || 0;
+        bookFontAddition = newValue;
+        await settings.setBookFontAddition(newValue);
     }
 
     async function handleAnimationToggle(checked) {
@@ -303,6 +311,16 @@
         </label>
         <button class="settings-button" onclick={handleRemoveFont}>X</button>
     </div>
+
+    <label>
+        Spellbook Fontsize adjustment
+        <input
+            type="number"
+            value={bookFontAddition}
+            oninput={(e) => handleBookFontAdditionChange(e.target.value)}
+            class="input"
+        />
+    </label>
 
     <div>
         Change Spellbook
@@ -450,10 +468,10 @@
     </div>
 
     <label>
-        Global Fontsize:
+        Global Fontsize adjustment:
         <input
             type="number"
-            value={fontAddition}
+            value={globalFontAddition}
             oninput={(e) => handleFontAdditionChange(e.target.value)}
             class="input"
         />
