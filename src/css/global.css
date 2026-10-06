@@ -52,21 +52,6 @@ html {
     max-height: 100svh;
 }
 
-.next-page {
-    width: calc(var(--unit-width) * 16);
-    height: 100%;
-    top: 0%;
-    right: 0%;
-    z-index: 1 !important;
-}
-
-.previous-page {
-    width: calc(var(--unit-width) * 16);
-    height: 100%;
-    top: 0%;
-    left: 0%;
-}
-
 .interact {
     position: absolute;
     cursor: pointer;

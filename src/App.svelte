@@ -176,8 +176,14 @@
         window.addEventListener("spellbook-local-saved", handleLocalSave);
         window.addEventListener("spellbook-cloud-pulled", handleCloudPull);
         return () => {
-            window.removeEventListener("spellbook-local-saved", handleLocalSave);
-            window.removeEventListener("spellbook-cloud-pulled", handleCloudPull);
+            window.removeEventListener(
+                "spellbook-local-saved",
+                handleLocalSave,
+            );
+            window.removeEventListener(
+                "spellbook-cloud-pulled",
+                handleCloudPull,
+            );
         };
     });
     $effect(() => {
@@ -321,8 +327,7 @@
         const holdSide = direction === "next" ? "left" : "right";
         // Each flip pins its own starting spread so completion reveals the
         // next intermediate spread instead of keeping the oldest one visible.
-        const holdSlot =
-            holdSide === "left" ? oldLogical : oldLogical + 1;
+        const holdSlot = holdSide === "left" ? oldLogical : oldLogical + 1;
 
         let startSlot, startRightPage, endSlot, endRightPage;
         if (direction === "next") {
@@ -510,6 +515,12 @@
     >
         {#if !isDoublePage && appState.mode == AppMode.VIEWING}
             <button
+                class="interact home-page"
+                onclick={() => navigateToSlot(0)}
+                title="Home Page"
+            >
+            </button>
+            <button
                 class="interact previous-page"
                 onclick={previousPage}
                 title="Previous Page"
@@ -522,6 +533,12 @@
     <Page pageType={PageType.BLANK} bind:this={leftPageComponent}>
         {#if leftSlot > 0 && appState.mode == AppMode.VIEWING}
             <button
+                class="interact home-page"
+                onclick={() => navigateToSlot(0)}
+                title="Home Page"
+            >
+            </button>
+            <button
                 class="interact previous-page"
                 onclick={previousPage}
                 title="Previous Page"
@@ -531,6 +548,12 @@
 {:else}
     <Page pageType={PageType.BLANK} bind:this={leftPageComponent}>
         {#if leftSlot > 0 && appState.mode == AppMode.VIEWING}
+            <button
+                class="interact home-page"
+                onclick={() => navigateToSlot(0)}
+                title="Home Page"
+            >
+            </button>
             <button
                 class="interact previous-page"
                 onclick={previousPage}
@@ -554,6 +577,12 @@
             {settings.values[settingsOptions.CURRENT_SPELLBOOK_DB]}
         </div>
         {#if !isDoublePage && appState.mode == AppMode.VIEWING}
+            <button
+                class="interact settings-page"
+                onclick={() => navigateToSlot(maxPage + 1)}
+                title="Settings Page"
+            >
+            </button>
             <button
                 class="interact next-page"
                 onclick={nextPage}
@@ -599,6 +628,12 @@
             {/if}
             {#if isDoublePage && appState.mode == AppMode.VIEWING}
                 <button
+                    class="interact settings-page"
+                    onclick={() => navigateToSlot(maxPage + 1)}
+                    title="Settings Page"
+                >
+                </button>
+                <button
                     class="interact next-page"
                     onclick={nextPage}
                     title="Next Page"
@@ -620,3 +655,35 @@
 {/if}
 
 <PageFlip {isDoublePage} />
+
+<style>
+    .next-page {
+        width: calc(var(--unit-width) * 16);
+        height: 100%;
+        top: 0%;
+        right: 0%;
+        z-index: 1 !important;
+    }
+
+    .previous-page {
+        width: calc(var(--unit-width) * 16);
+        height: 100%;
+        top: 0%;
+        left: 0%;
+        z-index: 1 !important;
+    }
+    .home-page {
+        width: calc(var(--unit-width) * 16);
+        height: calc(var(--unit-height) * 16);
+        bottom: 0;
+        left: 0;
+        z-index: 2 !important;
+    }
+    .settings-page {
+        width: calc(var(--unit-width) * 16);
+        height: calc(var(--unit-height) * 16);
+        bottom: 0;
+        right: 0;
+        z-index: 2 !important;
+    }
+</style>
