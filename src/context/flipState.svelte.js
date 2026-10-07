@@ -1,17 +1,14 @@
 export const DURATION_MS = 600;
+export const EASING = "cubic-bezier(0.45, 0, 0.55, 1)";
+export const PERSPECTIVE_PX = 1600;
 
-export function flipAngleForHinge(hinge) {
-    return hinge === "left" ? -180 : 180;
-}
-
-// flips: every currently-animating panel, rendered independently in PageFlip.
-// holds: per-side pins ("left"/"right", double-page only) so the container
-// NOT covered by a given panel keeps showing old content until that panel's
-// own animation finishes. Releasing each hold reveals the next intermediate
-// slot when multiple flips overlap on the same side.
+// flips: every panel currently on screen (animating, waiting, or landed and
+//        waiting to be removed). Always in creation (id) order.
+// holds: per-side slot the static page layer keeps showing for the duration
+//        of a burst of flips. Double-page only. null = follow pageNumber.
 export const flipState = $state({
     flips: [],
-    holds: { left: [], right: [] },
+    holds: { left: null, right: null },
 });
 
 let idCounter = 1;
@@ -19,45 +16,34 @@ export function nextFlipId() {
     return idCounter++;
 }
 
-export function heldSlot(side, rawSlot) {
-    const list = flipState.holds[side];
-    return list.length > 0 ? list[0].slot : rawSlot;
+export function flipAngleForHinge(hinge) {
+    return hinge === "left" ? -180 : 180;
 }
 
-export function pushHold(side, flipId, slot) {
-    flipState.holds[side] = [...flipState.holds[side], { flipId, slot }].sort(
-        (a, b) => a.flipId - b.flipId,
-    );
+export function findFlip(id) {
+    return flipState.flips.find((f) => f.id === id);
 }
 
-export function releaseHold(side, flipId) {
-    flipState.holds[side] = flipState.holds[side].filter((h) => h.flipId !== flipId);
+export function addFlip(flip) {
+    flipState.flips.push(flip);
 }
 
-export function removeFlip(flipId) {
-    flipState.flips = flipState.flips.filter((f) => f.id !== flipId);
+export function removeFlip(id) {
+    const index = flipState.flips.findIndex((f) => f.id === id);
+    if (index !== -1) flipState.flips.splice(index, 1);
 }
 
-// Safety net: if transitionend never fires (e.g. a browser paint race
-// swallows the transition), the flip would sit in flipState.flips forever,
-// holding a pinned side and freezing that slot. This forces the same
-// completion path once the animation should long since have finished, and
-// logs so we can tell how often it's actually happening.
-export function finishFlip(flip) {
-    if (flip.completed) return;
-    flip.completed = true;
-    flip.onComplete?.();
+export function releaseHolds() {
+    flipState.holds.left = null;
+    flipState.holds.right = null;
 }
 
-export function scheduleFlipFailsafe(flip, graceMs = 300) {
-    setTimeout(() => {
-        if (flip.completed) return;
-        console.warn("[flip] failsafe triggered - transitionend never fired", {
-            id: flip.id,
-            hinge: flip.hinge,
-            startSlot: flip.startSlot,
-            endSlot: flip.endSlot,
-        });
-        finishFlip(flip);
-    }, DURATION_MS + graceMs);
+export function clearFlips() {
+    flipState.flips = [];
+    releaseHolds();
+}
+
+export function heldSlot(side, fallback) {
+    const held = flipState.holds[side];
+    return held == null ? fallback : held;
 }
