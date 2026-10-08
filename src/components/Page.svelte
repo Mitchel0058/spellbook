@@ -96,6 +96,7 @@
                 : "assets/img/page_left.svg"}
             alt={`${pageType} page of DnD book`}
             draggable="false"
+            oncontextmenu={(event) => event.preventDefault()}
         />
         <OptionsModal modal={pageOptionsModal} {rightPage} />
         {@render children?.()}
