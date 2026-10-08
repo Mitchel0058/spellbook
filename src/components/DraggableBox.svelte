@@ -2,7 +2,6 @@
     import { untrack } from "svelte";
     import { appState, AppMode } from "../context/appState.svelte.js";
     import { elementRegistry } from "../constants/elementTypes.js";
-    import { getPageOptionsModal } from "../context/pageOptionsModal.svelte.js";
 
     const styles = getComputedStyle(document.documentElement);
     const unitWidthPercent = parseFloat(
@@ -31,14 +30,23 @@
         onPropsChange = () => {},
         rightPage = false,
         isFocused = false,
+        groupId = null,
+        groupColor = null,
+        groupBounds = null, // { top, left, bottom, right, minW, minH } of the whole group
+        groupDelta = null, // { l, t, r, b } live edge deltas while a member is dragged
+        onGroupDelta = () => {},
+        onGroupDeltaEnd = () => {},
+        onOpenOptions = () => {},
     } = $props();
 
-    const pageOptionsModal = getPageOptionsModal();
+    const ZERO = { l: 0, t: 0, r: 0, b: 0 };
+    let liveDelta = $state(null); // this box's own gesture (ungrouped)
+    let delta = $derived((groupId ? groupDelta : liveDelta) ?? ZERO);
 
-    let posTop = $state(untrack(() => top));
-    let posLeft = $state(untrack(() => left));
-    let unitsWide = $state(untrack(() => widthUnits));
-    let unitsTall = $state(untrack(() => heightUnits));
+    let posTop = $derived(top + delta.t);
+    let posLeft = $derived(left + delta.l);
+    let unitsWide = $derived(widthUnits + delta.r - delta.l);
+    let unitsTall = $derived(heightUnits + delta.b - delta.t);
 
     let cssTop = $derived(`${posTop * unitHeightPercent}%`);
     let cssLeft = $derived(`${posLeft * unitWidthPercent}%`);
@@ -47,36 +55,14 @@
 
     const ElementComponent = $derived(elementRegistry[elementType]?.component);
 
-    function openElementOptions() {
-        if (!isLayoutMode) return;
-        pageOptionsModal.open({
-            title: "Element Options",
-            schema: [
-                {
-                    key: "zIndex",
-                    label: "Z-Index",
-                    type: "range",
-                    min: 40,
-                    max: 60,
-                    step: 1,
-                    default: 50,
-                },
-            ],
-            values: { zIndex: zIndex ?? 50 },
-            onChange: (values) => onChange({ zIndex: values.zIndex }),
-        });
-    }
-
     // --- Drag state (not reactive UI, just tracking during a gesture) ---
-    let dragMode = null; // null | 'move' | 'top' | 'right' | 'bottom' | 'left' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+    let dragMode = null; // null | 'move' | 'top' | 'right' | ... | 'bottom-right'
     let startPointerX = 0;
     let startPointerY = 0;
-    let startTop = 0;
-    let startLeft = 0;
-    let startWidth = 0;
-    let startHeight = 0;
     let containerWidthPx = 0;
     let containerHeightPx = 0;
+    let startBounds = null;
+    let lastDelta = ZERO;
 
     let boxEl = $state(null);
 
@@ -91,6 +77,16 @@
         return Math.round(value);
     }
 
+    function clamp(value, lo, hi) {
+        return Math.max(lo, Math.min(hi, value));
+    }
+
+    function setDelta(d) {
+        lastDelta = d;
+        if (groupId) onGroupDelta(d);
+        else liveDelta = d;
+    }
+
     function startDrag(mode, event) {
         if (!isLayoutMode) return;
         event.preventDefault();
@@ -98,10 +94,17 @@
 
         startPointerX = event.clientX;
         startPointerY = event.clientY;
-        startTop = posTop;
-        startLeft = posLeft;
-        startWidth = unitsWide;
-        startHeight = unitsTall;
+        lastDelta = ZERO;
+
+        // Bounds of the whole group, or of this box alone.
+        startBounds = groupBounds ?? {
+            top,
+            left,
+            bottom: top + heightUnits,
+            right: left + widthUnits,
+            minW: widthUnits,
+            minH: heightUnits,
+        };
 
         const { w, h } = getContainerSize();
         containerWidthPx = w;
@@ -117,63 +120,39 @@
         const dxPx = event.clientX - startPointerX;
         const dyPx = event.clientY - startPointerY;
 
-        // Convert pixel delta -> unit delta based on container size
         const unitPxWidth = (containerWidthPx * unitWidthPercent) / 100;
         const unitPxHeight = (containerHeightPx * unitHeightPercent) / 100;
 
-        const dUnitsX = unitPxWidth ? dxPx / unitPxWidth : 0;
-        const dUnitsY = unitPxHeight ? dyPx / unitPxHeight : 0;
+        const dx = unitPxWidth ? snap(dxPx / unitPxWidth) : 0;
+        const dy = unitPxHeight ? snap(dyPx / unitPxHeight) : 0;
+        const b = startBounds;
+
+        let l = 0,
+            t = 0,
+            r = 0,
+            bt = 0;
 
         if (dragMode === "move") {
-            posLeft = Math.max(
-                minLeft,
-                Math.min(maxLeft - unitsWide, snap(startLeft + dUnitsX)),
-            );
-            posTop = Math.max(
-                minTop,
-                Math.min(maxTop - unitsTall, snap(startTop + dUnitsY)),
-            );
-            return;
+            const mx = clamp(dx, minLeft - b.left, maxLeft - b.right);
+            const my = clamp(dy, minTop - b.top, maxTop - b.bottom);
+            l = r = mx;
+            t = bt = my;
+        } else {
+            if (dragMode.includes("right")) {
+                r = clamp(dx, 1 - b.minW, maxLeft - b.right);
+            }
+            if (dragMode.includes("left")) {
+                l = clamp(dx, minLeft - b.left, b.minW - 1);
+            }
+            if (dragMode.includes("bottom")) {
+                bt = clamp(dy, 1 - b.minH, maxTop - b.bottom);
+            }
+            if (dragMode.includes("top")) {
+                t = clamp(dy, minTop - b.top, b.minH - 1);
+            }
         }
 
-        // Resize logic per handle
-        const involvesTop = dragMode.includes("top");
-        const involvesBottom = dragMode.includes("bottom");
-        const involvesLeft = dragMode.includes("left");
-        const involvesRight = dragMode.includes("right");
-
-        if (involvesRight) {
-            unitsWide = Math.max(
-                1,
-                Math.min(maxLeft - posLeft, snap(startWidth + dUnitsX)),
-            );
-        }
-        if (involvesLeft) {
-            const fixedRightEdge = startLeft + startWidth; // right edge doesn't move
-            const rawLeft = startLeft + dUnitsX;
-            const clampedLeft = Math.max(
-                minLeft,
-                Math.min(fixedRightEdge - 1, snap(rawLeft)),
-            );
-            unitsWide = fixedRightEdge - clampedLeft;
-            posLeft = clampedLeft;
-        }
-        if (involvesBottom) {
-            unitsTall = Math.max(
-                1,
-                Math.min(maxTop - posTop, snap(startHeight + dUnitsY)),
-            );
-        }
-        if (involvesTop) {
-            const fixedBottomEdge = startTop + startHeight;
-            const rawTop = startTop + dUnitsY;
-            const clampedTop = Math.max(
-                minTop,
-                Math.min(fixedBottomEdge - 1, snap(rawTop)),
-            );
-            unitsTall = fixedBottomEdge - clampedTop;
-            posTop = clampedTop;
-        }
+        setDelta({ l, t, r, b: bt });
     }
 
     function endDrag() {
@@ -181,12 +160,21 @@
         window.removeEventListener("pointermove", onDrag);
         window.removeEventListener("pointerup", endDrag);
 
-        // Report the final position/size back to the shared store
+        const d = lastDelta;
+        lastDelta = ZERO;
+
+        if (groupId) {
+            // The parent applies the delta to every member in the store.
+            onGroupDeltaEnd(d);
+            return;
+        }
+
+        liveDelta = null;
         onChange({
-            top: posTop,
-            left: posLeft,
-            widthUnits: unitsWide,
-            heightUnits: unitsTall,
+            top: top + d.t,
+            left: left + d.l,
+            widthUnits: widthUnits + d.r - d.l,
+            heightUnits: heightUnits + d.b - d.t,
         });
     }
 </script>
@@ -196,10 +184,13 @@
     class="draggable-box"
     class:layout-mode={isLayoutMode}
     class:focused={isFocused}
-    style="top: {cssTop}; left: {cssLeft}; width: {cssWidth}; height: {cssHeight}; z-index: {isFocused ? 200 : zIndex};"
+    class:grouped={!!groupId}
+    style="top: {cssTop}; left: {cssLeft}; width: {cssWidth}; height: {cssHeight}; z-index: {isFocused
+        ? 200
+        : zIndex}; --group-color: {groupColor ?? 'var(--dark-red)'};"
     role="application"
     onpointerdown={(e) => startDrag("move", e)}
-    ondblclick={openElementOptions}
+    ondblclick={() => isLayoutMode && onOpenOptions()}
     class:right-page-offset-px-layout={rightPage}
 >
     <div
@@ -304,6 +295,10 @@
         background: rgba(100, 100, 100, 0.15);
         pointer-events: auto; /* only capture pointer events in layout mode */
         touch-action: none;
+    }
+
+    .draggable-box.layout-mode.grouped:not(.focused) {
+        outline: var(--group-color) 2px dashed;
     }
 
     .draggable-box.focused {

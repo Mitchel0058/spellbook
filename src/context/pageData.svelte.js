@@ -44,6 +44,13 @@ async function buildPageFromTemplate(templateKey) {
         return makeBlankPage();
     }
 
+    const groupIdMap = new Map();
+    const remapGroupId = (gid) => {
+        if (!gid) return null;
+        if (!groupIdMap.has(gid)) groupIdMap.set(gid, makeId());
+        return groupIdMap.get(gid);
+    };
+
     const elements = (sourcePage.elements ?? []).map((el) => {
         const def = elementRegistry[el.type];
         const props = def?.templateProps
@@ -58,6 +65,7 @@ async function buildPageFromTemplate(templateKey) {
             widthUnits: el.widthUnits,
             heightUnits: el.heightUnits,
             zIndex: el.zIndex,
+            groupId: remapGroupId(el.groupId),
             props,
         };
     });
@@ -120,6 +128,7 @@ class PageDataStore {
             widthUnits: defaultSize.widthUnits,
             heightUnits: defaultSize.heightUnits,
             zIndex: 50,
+            groupId: null,
             props: { ...defaultProps },
         };
         page.elements.push(element);
@@ -130,6 +139,87 @@ class PageDataStore {
     deleteElement(pageIndex, elementId) {
         const page = this.getPageOrThrow(pageIndex);
         page.elements = page.elements.filter((el) => el.id !== elementId);
+        this.normalizeGroups(page);
+        this.scheduleSave();
+    }
+
+    // Dissolves any group with fewer than 2 members.
+    normalizeGroups(page) {
+        const counts = new Map();
+        for (const el of page.elements) {
+            if (el.groupId) {
+                counts.set(el.groupId, (counts.get(el.groupId) ?? 0) + 1);
+            }
+        }
+        for (const el of page.elements) {
+            if (el.groupId && counts.get(el.groupId) < 2) {
+                el.groupId = null;
+            }
+        }
+    }
+
+    // Makes anchor + otherIds one group. Members of the anchor's group that
+    // aren't listed are removed; elements from other groups are moved over.
+    setGroupMembers(pageIndex, anchorId, otherIds) {
+        const page = this.getPageOrThrow(pageIndex);
+        const anchor = page.elements.find((e) => e.id === anchorId);
+        if (!anchor) return;
+        if (!anchor.groupId && otherIds.length === 0) return;
+
+        const desired = new Set([anchorId, ...otherIds]);
+        const gid = anchor.groupId ?? makeId();
+        let changed = false;
+
+        for (const el of page.elements) {
+            if (desired.has(el.id)) {
+                if (el.groupId !== gid) {
+                    el.groupId = gid;
+                    changed = true;
+                }
+            } else if (el.groupId === gid) {
+                el.groupId = null;
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            this.normalizeGroups(page);
+            this.scheduleSave();
+        }
+    }
+
+    removeFromGroup(pageIndex, elementId) {
+        const page = this.getPageOrThrow(pageIndex);
+        const el = page.elements.find((e) => e.id === elementId);
+        if (!el || !el.groupId) return;
+        el.groupId = null;
+        this.normalizeGroups(page);
+        this.scheduleSave();
+    }
+
+    ungroup(pageIndex, elementId) {
+        const page = this.getPageOrThrow(pageIndex);
+        const el = page.elements.find((e) => e.id === elementId);
+        if (!el || !el.groupId) return;
+        const gid = el.groupId;
+        for (const member of page.elements) {
+            if (member.groupId === gid) member.groupId = null;
+        }
+        this.scheduleSave();
+    }
+
+    // d = { l, t, r, b }: how far each edge moved, in units.
+    // Move: l = r = dx, t = b = dy. Resize right edge: only r. Etc.
+    applyGroupDelta(pageIndex, groupId, d) {
+        const page = this.getPageOrThrow(pageIndex);
+        for (const el of page.elements) {
+            if (el.groupId === groupId) {
+                el.left += d.l;
+                el.top += d.t;
+                el.widthUnits += d.r - d.l;
+                el.heightUnits += d.b - d.t;
+            }
+        }
         this.scheduleSave();
     }
 

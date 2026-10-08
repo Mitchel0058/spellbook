@@ -26,6 +26,129 @@
         pageNumber;
         focusedElementId = null;
     });
+    // Live edge deltas shared by all members while one member is dragged.
+    let groupDrag = $state(null); // { groupId, delta: { l, t, r, b } }
+
+    function colorForGroup(groupId) {
+        if (!groupId) return null;
+        let hash = 0;
+        for (let i = 0; i < groupId.length; i++) {
+            hash = (hash * 31 + groupId.charCodeAt(i)) | 0;
+        }
+        return `hsl(${Math.abs(hash) % 360} 80% 40%)`;
+    }
+
+    let groupBoundsById = $derived.by(() => {
+        const map = {};
+        for (const el of page.elements) {
+            if (!el.groupId) continue;
+            const b = (map[el.groupId] ??= {
+                top: Infinity,
+                left: Infinity,
+                bottom: -Infinity,
+                right: -Infinity,
+                minW: Infinity,
+                minH: Infinity,
+            });
+            b.top = Math.min(b.top, el.top);
+            b.left = Math.min(b.left, el.left);
+            b.bottom = Math.max(b.bottom, el.top + el.heightUnits);
+            b.right = Math.max(b.right, el.left + el.widthUnits);
+            b.minW = Math.min(b.minW, el.widthUnits);
+            b.minH = Math.min(b.minH, el.heightUnits);
+        }
+        return map;
+    });
+
+    function openElementOptions(element) {
+        const others = page.elements
+            .map((e, i) => ({ e, i }))
+            .filter(({ e }) => e.id !== element.id);
+
+        const schema = [
+            {
+                key: "zIndex",
+                label: "Z-Index",
+                type: "range",
+                min: 40,
+                max: 60,
+                step: 1,
+                default: 50,
+            },
+        ];
+
+        if (others.length > 0) {
+            schema.push(
+                {
+                    key: "groupMembers",
+                    label: "Group With",
+                    type: "page-select",
+                    choices: others.map(({ e, i }) => ({
+                        value: e.id,
+                        label: `${i + 1}. ${elementRegistry[e.type]?.label ?? e.type}${
+                            e.groupId && e.groupId !== element.groupId
+                                ? " (in another group)"
+                                : ""
+                        }`,
+                    })),
+                },
+                {
+                    key: "groupActions",
+                    label: "Group",
+                    type: "choice-group",
+                    choices: [
+                        {
+                            value: "removeFromGroup",
+                            label: "Remove This From Group",
+                            onClick: () => {
+                                pageData.removeFromGroup(
+                                    pageNumber,
+                                    element.id,
+                                );
+                                pageOptionsModal.close();
+                            },
+                        },
+                        {
+                            value: "ungroupAll",
+                            label: "Ungroup All",
+                            onClick: () => {
+                                pageData.ungroup(pageNumber, element.id);
+                                pageOptionsModal.close();
+                            },
+                        },
+                    ],
+                },
+            );
+        }
+
+        pageOptionsModal.open({
+            title: "Element Options",
+            schema,
+            values: {
+                zIndex: element.zIndex ?? 50,
+                groupMembers: element.groupId
+                    ? others
+                          .filter(({ e }) => e.groupId === element.groupId)
+                          .map(({ e }) => e.id)
+                    : [],
+            },
+            onChange: (values) => {
+                if (
+                    values.zIndex !== undefined &&
+                    values.zIndex !== element.zIndex
+                ) {
+                    pageData.updateElement(pageNumber, element.id, {
+                        zIndex: values.zIndex,
+                    });
+                }
+                if (values.groupMembers) {
+                    pageData.setGroupMembers(pageNumber, element.id, [
+                        ...values.groupMembers,
+                    ]);
+                }
+            },
+        });
+    }
 
     function toggleLayoutMode() {
         appState.mode =
@@ -361,6 +484,23 @@
         onPropsChange={(props) =>
             pageData.updateElement(pageNumber, element.id, { props })}
         {rightPage}
+        groupId={element.groupId ?? null}
+        groupColor={colorForGroup(element.groupId)}
+        groupBounds={element.groupId ? groupBoundsById[element.groupId] : null}
+        groupDelta={groupDrag &&
+        element.groupId &&
+        groupDrag.groupId === element.groupId
+            ? groupDrag.delta
+            : null}
+        onGroupDelta={(delta) =>
+            (groupDrag = { groupId: element.groupId, delta })}
+        onGroupDeltaEnd={(delta) => {
+            if (delta.l || delta.t || delta.r || delta.b) {
+                pageData.applyGroupDelta(pageNumber, element.groupId, delta);
+            }
+            groupDrag = null;
+        }}
+        onOpenOptions={() => openElementOptions(element)}
     />
 {/each}
 
