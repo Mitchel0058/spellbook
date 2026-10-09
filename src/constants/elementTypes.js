@@ -1,4 +1,3 @@
-// src/constants/elementTypes.js
 import Text from '../components/elements/Text.svelte';
 import Image from '../components/elements/Image.svelte';
 import PageLink from '../components/elements/PageLink.svelte';

@@ -32,7 +32,7 @@
 
     const settings = createSettingsContext();
 
-    // ───────────────────────── Tunables ─────────────────────────
+    // ------------------------- Tunables -------------------------
     // Clicking
     const START_DELAY_FRAMES = 0; // 0 = a flip starts the instant you click.
     //                               If you see the wrong page flash, try 2
@@ -157,7 +157,7 @@
         setSlotInstantly(logicalPageNumber);
     }
 
-    // ───────────────────────── Flip lifecycle ─────────────────────────
+    // ------------------------- Flip lifecycle -------------------------
     //   request → panel is mounted at its start pose, and the side the leaf
     //             lands on is pinned (hold) so it doesn't change underneath
     //   arm     → the static layer commits the new page and the animation
@@ -338,7 +338,7 @@
         return true;
     }
 
-    // ───────────────────────── Navigation ─────────────────────────
+    // ------------------------- Navigation -------------------------
     function nextPage() {
         navToken++;
         const target = logicalPageNumber + (isDoublePage ? 2 : 1);

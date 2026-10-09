@@ -1,5 +1,6 @@
 import { PageDB } from '../utils/db.js';
 import { pageTemplates } from '../constants/pageTemplates.js';
+import { TemplateKind } from '../utils/templates.js';
 
 function makeId() {
     return crypto.randomUUID();
@@ -76,6 +77,75 @@ async function buildPageFromTemplate(templateKey) {
         // Drawings are never copied from a template, same as page settings.
         settings: { showOnOverview: false, name: '' },
         drawing: null,
+    };
+}
+
+// ---------- Saved (user) templates ----------
+
+function createGroupRemapper() {
+    const map = new Map();
+    return (gid) => {
+        if (!gid) return null;
+        if (!map.has(gid)) map.set(gid, makeId());
+        return map.get(gid);
+    };
+}
+
+// Plain, storable copy of one element. With keepData off, props are reduced
+// to settings only, using the same rules as the built-in templates.
+function templateElementFrom(el, keepData, elementRegistry) {
+    const snap = $state.snapshot(el);
+    const def = elementRegistry[snap.type];
+
+    let props;
+    if (keepData) {
+        props = snap.props ?? {};
+    } else if (def?.templateProps) {
+        props = def.templateProps(snap.props ?? {});
+    } else {
+        props = { ...(def?.defaultProps ?? {}) };
+    }
+
+    return {
+        type: snap.type,
+        top: snap.top,
+        left: snap.left,
+        widthUnits: snap.widthUnits,
+        heightUnits: snap.heightUnits,
+        zIndex: snap.zIndex,
+        groupId: snap.groupId ?? null,
+        props,
+    };
+}
+
+// Page-ready elements (fresh ids and group ids) from stored template
+// elements. Unknown element types are skipped silently.
+function elementsFromTemplate(templateElements, elementRegistry, shift = { top: 0, left: 0 }) {
+    const remapGroupId = createGroupRemapper();
+    return templateElements
+        .filter((el) => elementRegistry[el.type])
+        .map((el) => ({
+            id: makeId(),
+            type: el.type,
+            top: el.top + shift.top,
+            left: el.left + shift.left,
+            widthUnits: el.widthUnits,
+            heightUnits: el.heightUnits,
+            zIndex: el.zIndex,
+            groupId: remapGroupId(el.groupId),
+            props: structuredClone(el.props ?? {}),
+        }));
+}
+
+async function buildPageFromSavedTemplate(template) {
+    const { elementRegistry } = await import('../constants/elementTypes.js');
+    return {
+        id: makeId(),
+        elements: elementsFromTemplate(template.elements ?? [], elementRegistry),
+        settings: template.settings
+            ? structuredClone(template.settings)
+            : { showOnOverview: false, name: '' },
+        drawing: template.drawing ?? null,
     };
 }
 
@@ -278,6 +348,101 @@ class PageDataStore {
         const page = this.getPageOrThrow(pageIndex);
         Object.assign(page.settings, changes);
         this.scheduleSave();
+    }
+
+    async insertPageFromTemplate(afterIndex, template) {
+        const newPage = await buildPageFromSavedTemplate(template);
+        await PageDB.insertPageAfter(afterIndex, newPage);
+        this.pages.splice(afterIndex + 1, 0, newPage);
+        this.notifyLocalSaved();
+        return afterIndex + 1;
+    }
+
+    // Builds the storable record for a page template. Saves nothing itself.
+    async buildPageTemplate(
+        pageIndex,
+        { name, keepData, keepPageSettings, includeDrawing },
+    ) {
+        const { elementRegistry } = await import('../constants/elementTypes.js');
+        const page = this.getPageOrThrow(pageIndex);
+        return {
+            id: makeId(),
+            kind: TemplateKind.PAGE,
+            name,
+            keepData,
+            createdAt: Date.now(),
+            elements: page.elements.map((el) =>
+                templateElementFrom(el, keepData, elementRegistry),
+            ),
+            settings: keepPageSettings ? $state.snapshot(page.settings) : null,
+            drawing: includeDrawing ? ($state.snapshot(page.drawing) ?? null) : null,
+        };
+    }
+
+    // If the element is grouped, the whole group becomes the template.
+    async buildElementTemplate(pageIndex, elementId, { name, keepData, keepPosition }) {
+        const { elementRegistry } = await import('../constants/elementTypes.js');
+        const page = this.getPageOrThrow(pageIndex);
+        const anchor = page.elements.find((e) => e.id === elementId);
+        if (!anchor) return null;
+
+        const members = anchor.groupId
+            ? page.elements.filter((e) => e.groupId === anchor.groupId)
+            : [anchor];
+
+        return {
+            id: makeId(),
+            kind: TemplateKind.ELEMENT,
+            name,
+            keepData,
+            keepPosition,
+            createdAt: Date.now(),
+            elements: members.map((el) =>
+                templateElementFrom(el, keepData, elementRegistry),
+            ),
+        };
+    }
+
+    async insertElementTemplate(pageIndex, template) {
+        const { elementRegistry } = await import('../constants/elementTypes.js');
+        const page = this.getPageOrThrow(pageIndex);
+        const source = (template.elements ?? []).filter(
+            (el) => elementRegistry[el.type],
+        );
+        if (source.length === 0) return [];
+
+        // Without "keep position", the group's bounding box goes to the
+        // page centre and the members keep their relative layout.
+        let shift = { top: 0, left: 0 };
+        if (!template.keepPosition) {
+            const top = Math.min(...source.map((el) => el.top));
+            const left = Math.min(...source.map((el) => el.left));
+            const bottom = Math.max(...source.map((el) => el.top + el.heightUnits));
+            const right = Math.max(...source.map((el) => el.left + el.widthUnits));
+            const height = bottom - top;
+            const width = right - left;
+
+            const targetTop = Math.max(
+                LAYOUT_MIN_TOP,
+                Math.min(
+                    LAYOUT_MAX_TOP - height,
+                    Math.round((LAYOUT_MIN_TOP + LAYOUT_MAX_TOP - height) / 2),
+                ),
+            );
+            const targetLeft = Math.max(
+                LAYOUT_MIN_LEFT,
+                Math.min(
+                    LAYOUT_MAX_LEFT - width,
+                    Math.round((LAYOUT_MIN_LEFT + LAYOUT_MAX_LEFT - width) / 2),
+                ),
+            );
+            shift = { top: targetTop - top, left: targetLeft - left };
+        }
+
+        const created = elementsFromTemplate(source, elementRegistry, shift);
+        page.elements.push(...created);
+        this.scheduleSave();
+        return created;
     }
 
     scheduleSave() {

@@ -209,7 +209,8 @@ export class PageDB {
     static PAGES_STORE = 'pages';
     static ORDER_STORE = 'pageOrder';
     static SETTINGS_STORE = 'spellbookSettings';
-    static VERSION = 2;
+    static TEMPLATES_STORE = 'templates';
+    static VERSION = 3;
 
     static activeDB = null;
     static activeDBName = null;
@@ -245,8 +246,8 @@ export class PageDB {
                     db.createObjectStore(this.ORDER_STORE, { keyPath: 'key' });
                 }
 
-                if (!db.objectStoreNames.contains(this.SETTINGS_STORE)) {
-                    db.createObjectStore(this.SETTINGS_STORE, { keyPath: 'key' });
+                if (!db.objectStoreNames.contains(this.TEMPLATES_STORE)) {
+                    db.createObjectStore(this.TEMPLATES_STORE, { keyPath: 'id' });
                 }
 
                 await this._migrateSpellsToPages(db, oldVersion, transaction);
@@ -503,9 +504,13 @@ export class PageDB {
     static async renameSpellbook(oldName, newName) {
         const syncState = await this.getSyncState();
         const data = await this.getSpellbookSnapshot();
+        const templates = await this.getTemplates();
 
         await this.createNewSpellbook(newName);
         await this.replaceSpellbookContents(data);
+        for (const template of templates) {
+            await this.putTemplate(template);
+        }
         await this.saveSyncState(syncState);
         await this.deleteSpellbook(oldName);
 
@@ -756,6 +761,23 @@ export class PageDB {
 
         legacyPages.sort((a, b) => a.sourcePage - b.sourcePage);
         await this._importNewFormat(legacyPages.map((entry) => entry.page));
+    }
+
+    /* TEMPLATES (spellbook-specific) */
+
+    static async getTemplates() {
+        const db = await this.init();
+        return db.getAll(this.TEMPLATES_STORE);
+    }
+
+    static async putTemplate(template) {
+        const db = await this.init();
+        await db.put(this.TEMPLATES_STORE, template);
+    }
+
+    static async deleteTemplate(id) {
+        const db = await this.init();
+        await db.delete(this.TEMPLATES_STORE, id);
     }
 
     /* FONT (unchanged from SpellbookDB) */

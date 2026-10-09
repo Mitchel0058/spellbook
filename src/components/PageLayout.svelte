@@ -3,11 +3,18 @@
     import { elementRegistry } from "../constants/elementTypes.js";
     import { getPageOptionsModal } from "../context/pageOptionsModal.svelte.js";
     import DraggableBox from "./DraggableBox.svelte";
-    import SquareButton from "./SquareButton.svelte";
-    import { ButtonType } from "../constants/buttonType.js";
     import { pageTemplates } from "../constants/pageTemplates.js";
     import { appState, AppMode } from "../context/appState.svelte.js";
     import DrawingLayer from "./DrawingLayer.svelte";
+    import {
+        TemplateKind,
+        TemplateScope,
+        listTemplates,
+        findTemplate,
+        saveTemplate,
+        deleteTemplate,
+        renameTemplate,
+    } from "../utils/templates.js";
 
     let {
         pageNumber,
@@ -121,6 +128,21 @@
             );
         }
 
+        schema.push({
+            key: "templateActions",
+            label: "Template",
+            type: "choice-group",
+            choices: [
+                {
+                    value: "saveAsTemplate",
+                    label: element.groupId
+                        ? "Save Group As Template…"
+                        : "Save As Template…",
+                    onClick: () => openSaveElementTemplateModal(element),
+                },
+            ],
+        });
+
         pageOptionsModal.open({
             title: "Element Options",
             schema,
@@ -168,60 +190,304 @@
                 : AppMode.EDITING;
     }
 
-    export function openAddElementPicker() {
+    function savedTemplateChoices(templates, onPick, reopen) {
+        return templates.map((t) => ({
+            value: t.id,
+            label:
+                t.scope === TemplateScope.GLOBAL
+                    ? `${t.name} (global)`
+                    : t.name,
+            onClick: () => onPick(t),
+            onRename: async () => {
+                const newName = window
+                    .prompt("Rename template", t.name)
+                    ?.trim();
+                if (!newName || newName === t.name) return;
+                if (await findTemplate(t.kind, t.scope, newName)) {
+                    window.alert(
+                        `A template named "${newName}" already exists.`,
+                    );
+                    return;
+                }
+                await renameTemplate(t, newName);
+                reopen();
+            },
+            onDelete: async () => {
+                if (
+                    !window.confirm(
+                        `Delete template "${t.name}"? This cannot be undone.`,
+                    )
+                ) {
+                    return;
+                }
+                await deleteTemplate(t);
+                reopen();
+            },
+        }));
+    }
+
+    // Warns on a same-name template (same kind + scope) before saving.
+    async function confirmAndSave(template, scope) {
+        try {
+            const existing = await findTemplate(
+                template.kind,
+                scope,
+                template.name,
+            );
+            if (existing) {
+                if (
+                    !window.confirm(
+                        `A template named "${template.name}" already exists. Replace it?`,
+                    )
+                ) {
+                    return false;
+                }
+                template.id = existing.id;
+            }
+            await saveTemplate(template, scope);
+            return true;
+        } catch (error) {
+            console.error("Saving template failed:", error);
+            window.alert(
+                "Could not save the template. See the console for details.",
+            );
+            return false;
+        }
+    }
+
+    function openSavePageTemplateModal() {
         pageOptionsModal.open({
-            title: "Add Element",
+            title: "Save Page As Template",
             schema: [
+                { key: "name", label: "Template Name", type: "text" },
                 {
-                    key: "elementType",
-                    label: "Choose Element Type",
+                    key: "global",
+                    label: "Available In All Spellbooks",
+                    type: "checkbox",
+                },
+                {
+                    key: "keepData",
+                    label: "Keep Data (text, images)",
+                    type: "checkbox",
+                },
+                {
+                    key: "keepPageSettings",
+                    label: "Keep Page Settings",
+                    type: "checkbox",
+                },
+                {
+                    key: "includeDrawing",
+                    label: "Include Drawing",
+                    type: "checkbox",
+                },
+                {
+                    key: "save",
+                    label: "Save",
                     type: "choice-group",
-                    choices: Object.entries(elementRegistry).map(
-                        ([type, def]) => ({
-                            value: type,
-                            label: def.label,
-                            onClick: () => {
-                                pageData.addElement(pageNumber, {
-                                    type,
-                                    defaultProps: def.defaultProps,
-                                    defaultSize: def.defaultSize,
-                                });
-                                pageOptionsModal.close();
+                    choices: [
+                        {
+                            value: "save",
+                            label: "Save Template",
+                            onClick: async () => {
+                                const v = pageOptionsModal.state.values;
+                                const name = (v.name ?? "").trim();
+                                if (!name) {
+                                    window.alert(
+                                        "Please enter a template name.",
+                                    );
+                                    return;
+                                }
+                                const template =
+                                    await pageData.buildPageTemplate(
+                                        pageNumber,
+                                        {
+                                            name,
+                                            keepData: !!v.keepData,
+                                            keepPageSettings:
+                                                !!v.keepPageSettings,
+                                            includeDrawing: !!v.includeDrawing,
+                                        },
+                                    );
+                                const scope = v.global
+                                    ? TemplateScope.GLOBAL
+                                    : TemplateScope.SPELLBOOK;
+                                if (await confirmAndSave(template, scope)) {
+                                    pageOptionsModal.close();
+                                }
                             },
-                        }),
-                    ),
+                        },
+                    ],
                 },
             ],
-            values: {},
+            values: {
+                name: page.settings?.name ?? "",
+                global: false,
+                keepData: false,
+                keepPageSettings: false,
+                includeDrawing: false,
+            },
         });
     }
 
-    export function openAddPagePicker() {
+    function openSaveElementTemplateModal(element) {
         pageOptionsModal.open({
-            title: "Add Page",
+            title: element.groupId
+                ? "Save Group As Template"
+                : "Save Element As Template",
             schema: [
+                { key: "name", label: "Template Name", type: "text" },
                 {
-                    key: "template",
-                    label: "Choose Template",
+                    key: "global",
+                    label: "Available In All Spellbooks",
+                    type: "checkbox",
+                },
+                {
+                    key: "keepData",
+                    label: "Keep Data (text, images)",
+                    type: "checkbox",
+                },
+                {
+                    key: "keepPosition",
+                    label: "Keep Original Position",
+                    type: "checkbox",
+                },
+                {
+                    key: "save",
+                    label: "Save",
                     type: "choice-group",
-                    choices: Object.entries(pageTemplates).map(
-                        ([key, def]) => ({
-                            value: key,
-                            label: def.label,
+                    choices: [
+                        {
+                            value: "save",
+                            label: "Save Template",
                             onClick: async () => {
-                                const newIndex = await pageData.insertPageAfter(
-                                    pageNumber,
-                                    key,
-                                );
-                                onPageAdded(newIndex);
-                                pageOptionsModal.close();
+                                const v = pageOptionsModal.state.values;
+                                const name = (v.name ?? "").trim();
+                                if (!name) {
+                                    window.alert(
+                                        "Please enter a template name.",
+                                    );
+                                    return;
+                                }
+                                const template =
+                                    await pageData.buildElementTemplate(
+                                        pageNumber,
+                                        element.id,
+                                        {
+                                            name,
+                                            keepData: !!v.keepData,
+                                            keepPosition: !!v.keepPosition,
+                                        },
+                                    );
+                                if (!template) return;
+                                const scope = v.global
+                                    ? TemplateScope.GLOBAL
+                                    : TemplateScope.SPELLBOOK;
+                                if (await confirmAndSave(template, scope)) {
+                                    pageOptionsModal.close();
+                                }
                             },
-                        }),
-                    ),
+                        },
+                    ],
                 },
             ],
-            values: {},
+            values: {
+                name: elementRegistry[element.type]?.label ?? "",
+                global: false,
+                keepData: false,
+                keepPosition: false,
+            },
         });
+    }
+
+    export async function openAddElementPicker() {
+        const templates = await listTemplates(TemplateKind.ELEMENT);
+
+        const schema = [
+            {
+                key: "elementType",
+                label: "Choose Element Type",
+                type: "choice-group",
+                choices: Object.entries(elementRegistry).map(([type, def]) => ({
+                    value: type,
+                    label: def.label,
+                    onClick: () => {
+                        pageData.addElement(pageNumber, {
+                            type,
+                            defaultProps: def.defaultProps,
+                            defaultSize: def.defaultSize,
+                        });
+                        pageOptionsModal.close();
+                    },
+                })),
+            },
+        ];
+
+        if (templates.length > 0) {
+            schema.push({
+                key: "savedTemplates",
+                label: "Saved Templates",
+                type: "choice-group",
+                choices: savedTemplateChoices(
+                    templates,
+                    async (template) => {
+                        await pageData.insertElementTemplate(
+                            pageNumber,
+                            template,
+                        );
+                        pageOptionsModal.close();
+                    },
+                    openAddElementPicker,
+                ),
+            });
+        }
+
+        pageOptionsModal.open({ title: "Add Element", schema, values: {} });
+    }
+
+    export async function openAddPagePicker() {
+        const templates = await listTemplates(TemplateKind.PAGE);
+
+        const schema = [
+            {
+                key: "template",
+                label: "Built-in Templates",
+                type: "choice-group",
+                choices: Object.entries(pageTemplates).map(([key, def]) => ({
+                    value: key,
+                    label: def.label,
+                    onClick: async () => {
+                        const newIndex = await pageData.insertPageAfter(
+                            pageNumber,
+                            key,
+                        );
+                        onPageAdded(newIndex);
+                        pageOptionsModal.close();
+                    },
+                })),
+            },
+        ];
+
+        if (templates.length > 0) {
+            schema.push({
+                key: "savedTemplates",
+                label: "Saved Templates",
+                type: "choice-group",
+                choices: savedTemplateChoices(
+                    templates,
+                    async (template) => {
+                        const newIndex = await pageData.insertPageFromTemplate(
+                            pageNumber,
+                            template,
+                        );
+                        onPageAdded(newIndex);
+                        pageOptionsModal.close();
+                    },
+                    openAddPagePicker,
+                ),
+            });
+        }
+
+        pageOptionsModal.open({ title: "Add Page", schema, values: {} });
     }
 
     export function openMovePagePicker() {
@@ -355,6 +621,18 @@
                             value: "swapWith",
                             label: "Swap With…",
                             onClick: openSwapPagePicker,
+                        },
+                    ],
+                },
+                {
+                    key: "template",
+                    label: "Template",
+                    type: "choice-group",
+                    choices: [
+                        {
+                            value: "saveAsTemplate",
+                            label: "Save As Template…",
+                            onClick: openSavePageTemplateModal,
                         },
                     ],
                 },

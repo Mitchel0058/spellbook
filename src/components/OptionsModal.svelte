@@ -96,7 +96,8 @@
                             class:option-row-range={option.type === "range"}
                             class:option-row-stacked={option.type ===
                                 "page-select" ||
-                                option.type === "symbol-select"}
+                                option.type === "symbol-select" ||
+                                option.type === "choice-group"}
                         >
                             <label for={option.key}>{option.label}</label>
 
@@ -207,8 +208,8 @@
                                     />
                                 </div>
                             {:else if option.type === "choice-group"}
-                                <div class="choice-group">
-                                    {#each option.choices as choice (choice.value)}
+                                {#each option.choices as choice (choice.value)}
+                                    <div class="choice-row">
                                         <button
                                             type="button"
                                             class="choice-button"
@@ -217,8 +218,28 @@
                                         >
                                             {choice.label}
                                         </button>
-                                    {/each}
-                                </div>
+                                        {#if choice.onRename}
+                                            <button
+                                                type="button"
+                                                class="choice-action"
+                                                title="Rename"
+                                                onclick={choice.onRename}
+                                            >
+                                                ✎
+                                            </button>
+                                        {/if}
+                                        {#if choice.onDelete}
+                                            <button
+                                                type="button"
+                                                class="choice-action"
+                                                title="Delete"
+                                                onclick={choice.onDelete}
+                                            >
+                                                ✕
+                                            </button>
+                                        {/if}
+                                    </div>
+                                {/each}
                             {:else if option.type === "delete-button"}
                                 <button
                                     type="button"
@@ -488,6 +509,24 @@
         all: unset;
         cursor: pointer;
         text-align: center;
+    }
+    .choice-row {
+        display: flex;
+        align-items: center;
+        gap: calc(var(--unit-width-px) * 2);
+    }
+
+    .choice-row .choice-button {
+        flex: 1;
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .choice-action {
+        all: unset;
+        cursor: pointer;
+        flex: 0 0 auto;
+        padding: 0 calc(var(--unit-width-px) * 2);
     }
 
     .options-header-actions {
