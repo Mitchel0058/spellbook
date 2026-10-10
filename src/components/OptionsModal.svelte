@@ -1,13 +1,19 @@
 <script>
     let { modal, rightPage } = $props();
 
-    function isVisible(option) {
-        if (!option.showIf) return true;
-        const { key, value, values, notValue } = option.showIf;
+    function matchesCondition(condition) {
+        if (condition.all) return condition.all.every(matchesCondition);
+
+        const { key, value, values, notValue } = condition;
         const current = modal.state.values[key];
         if (values) return values.includes(current);
         if (notValue !== undefined) return current !== notValue;
         return current === value;
+    }
+
+    function isVisible(option) {
+        if (!option.showIf) return true;
+        return matchesCondition(option.showIf);
     }
 
     function getDefaultValue(option) {

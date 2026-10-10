@@ -36,7 +36,8 @@
         mirrorY: false,
         direction: "horizontal",
         showPageNumber: true,
-        border: false,
+        borderStyle: "none",
+        diamondPlacement: "inside",
         borderColor: "#000000",
         showPatterns: true,
         showCorners: true,
@@ -50,6 +51,10 @@
         outerOverlayOpacity: 0.25,
         ...initialTextOptions,
     });
+
+    if (initialTextOptions.border && !initialTextOptions.borderStyle) {
+        textOptions.borderStyle = "pattern";
+    }
 
     // -- page lookups (dynamic: pages can be added/removed/reordered) --
 
@@ -199,66 +204,120 @@
             },
             { key: "mirrorX", label: "Mirror Horizontally", type: "checkbox" },
             { key: "mirrorY", label: "Mirror Vertically", type: "checkbox" },
-            { key: "border", label: "Show Border", type: "checkbox" },
+            {
+                key: "borderStyle",
+                label: "Border Style",
+                type: "select",
+                choices: [
+                    { value: "none", label: "None" },
+                    { value: "pattern", label: "Square" },
+                    { value: "diamond", label: "Diamond" },
+                ],
+            },
+            {
+                key: "diamondPlacement",
+                label: "Diamond Placement",
+                type: "select",
+                choices: [
+                    { value: "outside", label: "Outside (around element)" },
+                    { value: "inside", label: "Inside (within element)" },
+                ],
+                showIf: { key: "borderStyle", value: "diamond" },
+            },
             {
                 key: "borderColor",
                 label: "Border Color",
                 type: "color",
-                showIf: { key: "border", value: true },
+                showIf: {
+                    key: "borderStyle",
+                    values: ["pattern", "diamond"],
+                },
             },
             {
                 key: "showPatterns",
                 label: "Show Patterns",
                 type: "checkbox",
-                showIf: { key: "border", value: true },
+                showIf: { key: "borderStyle", value: "pattern" },
             },
             {
                 key: "showCorners",
                 label: "Show Corners",
                 type: "checkbox",
-                showIf: { key: "border", value: true },
+                showIf: { key: "borderStyle", value: "pattern" },
             },
             {
                 key: "inside",
                 label: "Show Inside Border",
                 type: "checkbox",
-                showIf: { key: "border", value: true },
+                showIf: {
+                    key: "borderStyle",
+                    values: ["pattern", "diamond"],
+                },
             },
             {
                 key: "insideColor",
                 label: "Inside Border Color",
                 type: "color",
-                showIf: { key: "border", value: true },
+                showIf: {
+                    all: [
+                        {
+                            key: "borderStyle",
+                            values: ["pattern", "diamond"],
+                        },
+                        { key: "inside", value: true },
+                    ],
+                },
             },
             {
                 key: "insideColor2",
                 label: "Inside Border Color 2",
                 type: "color",
-                showIf: { key: "border", value: true },
+                showIf: {
+                    all: [
+                        { key: "borderStyle", value: "pattern" },
+                        { key: "inside", value: true },
+                    ],
+                },
             },
             {
                 key: "fill",
                 label: "Fill Border",
                 type: "checkbox",
-                showIf: { key: "border", value: true },
+                showIf: {
+                    key: "borderStyle",
+                    values: ["pattern", "diamond"],
+                },
             },
             {
                 key: "insideFillColor",
                 label: "Inside Fill Color",
                 type: "color",
-                showIf: { key: "border", value: true },
+                showIf: {
+                    all: [
+                        {
+                            key: "borderStyle",
+                            values: ["pattern", "diamond"],
+                        },
+                        { key: "fill", value: true },
+                    ],
+                },
             },
             {
                 key: "outerOverlay",
                 label: "Show Outer Overlay",
                 type: "checkbox",
-                showIf: { key: "border", value: true },
+                showIf: { key: "borderStyle", value: "pattern" },
             },
             {
                 key: "outerOverlayColor",
                 label: "Outer Overlay Color",
                 type: "color",
-                showIf: { key: "border", value: true },
+                showIf: {
+                    all: [
+                        { key: "borderStyle", value: "pattern" },
+                        { key: "outerOverlay", value: true },
+                    ],
+                },
             },
             {
                 key: "outerOverlayOpacity",
@@ -268,7 +327,12 @@
                 max: 1,
                 step: 0.01,
                 default: 0.25,
-                showIf: { key: "border", value: true },
+                showIf: {
+                    all: [
+                        { key: "borderStyle", value: "pattern" },
+                        { key: "outerOverlay", value: true },
+                    ],
+                },
             },
             {
                 key: "delete",
@@ -398,8 +462,10 @@
     </div>
 {/snippet}
 
-{#if textOptions.border}
+{#if textOptions.borderStyle !== "none"}
     <BorderFrame
+        variant={textOptions.borderStyle}
+        diamondPlacement={textOptions.diamondPlacement}
         color={textOptions.borderColor}
         showPatterns={textOptions.showPatterns}
         showCorners={textOptions.showCorners}

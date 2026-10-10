@@ -8,6 +8,8 @@
     let {
         color = "#000000",
         children,
+        variant = "pattern",
+        diamondPlacement = "outside",
 
         showPatterns = true,
         showCorners = true,
@@ -209,11 +211,134 @@
     // enough room regardless of which pattern actually gets chosen there.
     const MAX_DEPTH_UNITS = PATTERN_UNIT_HEIGHT.large;
 
-    let marginX = $derived(unitX * (1 + MAX_DEPTH_UNITS)); // reserved for left/right border + pattern depth
-    let marginY = $derived(unitY * (1 + MAX_DEPTH_UNITS)); // reserved for top/bottom border + pattern depth
+    const DIAMOND_PAD_UNITS = 1; // clearance between content corners and the fill edge
+    const DIAMOND_INSIDE_UNITS = 2; // min horizontal thickness of the inside band
+    const DIAMOND_BORDER_UNITS = 2; // min horizontal thickness of the border band
+
+    let diamond = $derived.by(() => {
+        const wCells = contentWidthPx / unitX;
+        const hCells = contentHeightPx / unitY;
+        if (wCells <= 0 || hCells <= 0) {
+            return { valid: false, extX: 0, extY: 0 };
+        }
+        const inwards = diamondPlacement === "inside";
+
+        // Edge steepness decides how thick the bands must be (in cells) to
+        // keep the staircase connected on very wide or very tall elements.
+        const ratio = inwards
+            ? wCells / hCells
+            : (wCells + 2 * DIAMOND_PAD_UNITS) /
+              (hCells + 2 * DIAMOND_PAD_UNITS);
+        const stepX = Math.ceil(ratio - 1e-6); // columns the edge moves per row
+        const stepY = Math.ceil(1 / ratio - 1e-6); // rows the edge moves per column
+
+        const inX = Math.max(DIAMOND_INSIDE_UNITS, stepX);
+        const inY = Math.max(DIAMOND_INSIDE_UNITS, stepY);
+        const borX = Math.max(DIAMOND_BORDER_UNITS, stepX);
+        const borY = Math.max(DIAMOND_BORDER_UNITS, stepY);
+
+        // a / b = half-width / half-height of the FILL diamond, in cells
+        let a, b;
+        if (inwards) {
+            // outer edge of the border lands exactly on the element's box
+            a = wCells / 2 - inX - borX;
+            b = hCells / 2 - inY - borY;
+        } else {
+            // smallest diamond that fully encloses the element
+            a = wCells + 2 * DIAMOND_PAD_UNITS;
+            b = hCells + 2 * DIAMOND_PAD_UNITS;
+        }
+
+        return {
+            valid: a > 0 && b > 0,
+            a,
+            b,
+            inX,
+            inY,
+            borX,
+            borY,
+            extX: (a + inX + borX) * unitX, // outer half-width in px
+            extY: (b + inY + borY) * unitY, // outer half-height in px
+        };
+    });
+
+    let marginX = $derived(
+        variant === "diamond"
+            ? unitX *
+                  (Math.max(
+                      0,
+                      Math.ceil((diamond.extX - contentWidthPx / 2) / unitX),
+                  ) +
+                      2)
+            : unitX * (1 + MAX_DEPTH_UNITS),
+    );
+    let marginY = $derived(
+        variant === "diamond"
+            ? unitY *
+                  (Math.max(
+                      0,
+                      Math.ceil((diamond.extY - contentHeightPx / 2) / unitY),
+                  ) +
+                      2)
+            : unitY * (1 + MAX_DEPTH_UNITS),
+    );
 
     let svgWidth = $derived(contentWidthPx + marginX * 2);
     let svgHeight = $derived(contentHeightPx + marginY * 2);
+
+    let diamondRects = $derived.by(() => {
+        const out = { border: [], inside: [], fill: [] };
+        if (variant !== "diamond" || !diamond.valid) return out;
+
+        const { a, b, inX, inY, borX, borY } = diamond;
+        const a2 = a + inX;
+        const b2 = b + inY;
+        const a3 = a2 + borX;
+        const b3 = b2 + borY;
+
+        // Snap the centre to a grid line so all four tips come out identical.
+        const cx = Math.round((marginX + contentWidthPx / 2) / unitX) * unitX;
+        const cy = Math.round((marginY + contentHeightPx / 2) / unitY) * unitY;
+
+        const halfCols = Math.ceil(a3) + 1;
+        const halfRows = Math.ceil(b3) + 1;
+
+        // Same rule in every direction: which diamond is this cell centre inside?
+        const kindOf = (u, v) => {
+            if (u / a + v / b <= 1) return "fill";
+            if (u / a2 + v / b2 <= 1) return "inside";
+            if (u / a3 + v / b3 <= 1) return "border";
+            return null;
+        };
+
+        for (let r = -halfRows; r < halfRows; r++) {
+            const v = Math.abs(r + 0.5);
+            let kind = null;
+            let start = 0;
+
+            const flush = (end) => {
+                if (kind) {
+                    out[kind].push({
+                        x: cx + start * unitX,
+                        y: cy + r * unitY,
+                        w: (end - start) * unitX,
+                        h: unitY,
+                    });
+                }
+            };
+
+            for (let c = -halfCols; c < halfCols; c++) {
+                const k = kindOf(Math.abs(c + 0.5), v);
+                if (k !== kind) {
+                    flush(c);
+                    kind = k;
+                    start = c;
+                }
+            }
+            flush(halfCols);
+        }
+        return out;
+    });
 
     // Rotate an axis-aligned local rect (lx,ly,lw,lh) by an angle that's a
     // multiple of 90deg, around local origin (0,0), then translate by (ox,oy).
@@ -447,174 +572,249 @@
         width={svgWidth}
         height={svgHeight}
     >
-        <!-- fill fill (only if both inside and fill are enabled) -->
-        {#if inside && fill}
-            <rect
-                x={insideFillRect.x}
-                y={insideFillRect.y}
-                width={insideFillRect.w}
-                height={insideFillRect.h}
-                fill={insideFillColor}
-            />
-        {/if}
+        {#if variant === "diamond"}
+            {#if fill}
+                {#each diamondRects.fill as r}
+                    <rect
+                        x={r.x}
+                        y={r.y}
+                        width={r.w}
+                        height={r.h}
+                        fill={insideFillColor}
+                    />
+                {/each}
+            {/if}
+            {#if inside}
+                {#each diamondRects.inside as r}
+                    <rect
+                        x={r.x}
+                        y={r.y}
+                        width={r.w}
+                        height={r.h}
+                        fill={insideColor1}
+                    />
+                {/each}
+            {/if}
+            {#each diamondRects.border as r}
+                <rect x={r.x} y={r.y} width={r.w} height={r.h} fill={color} />
+            {/each}
+        {:else}
+            {#if fill}
+                <rect
+                    x={insideFillRect.x}
+                    y={insideFillRect.y}
+                    width={insideFillRect.w}
+                    height={insideFillRect.h}
+                    fill={insideFillColor}
+                />
+            {/if}
 
-        <!-- inside rings -->
-        {#if inside}
+            <!-- inside rings -->
+            {#if inside}
+                <rect
+                    x={insideRing2.top.x}
+                    y={insideRing2.top.y}
+                    width={insideRing2.top.w}
+                    height={insideRing2.top.h}
+                    fill={insideColor2}
+                />
+                <rect
+                    x={insideRing2.bottom.x}
+                    y={insideRing2.bottom.y}
+                    width={insideRing2.bottom.w}
+                    height={insideRing2.bottom.h}
+                    fill={insideColor2}
+                />
+                <rect
+                    x={insideRing2.left.x}
+                    y={insideRing2.left.y}
+                    width={insideRing2.left.w}
+                    height={insideRing2.left.h}
+                    fill={insideColor2}
+                />
+                <rect
+                    x={insideRing2.right.x}
+                    y={insideRing2.right.y}
+                    width={insideRing2.right.w}
+                    height={insideRing2.right.h}
+                    fill={insideColor2}
+                />
+
+                <rect
+                    x={insideRing1.top.x}
+                    y={insideRing1.top.y}
+                    width={insideRing1.top.w}
+                    height={insideRing1.top.h}
+                    fill={insideColor1}
+                />
+                <rect
+                    x={insideRing1.bottom.x}
+                    y={insideRing1.bottom.y}
+                    width={insideRing1.bottom.w}
+                    height={insideRing1.bottom.h}
+                    fill={insideColor1}
+                />
+                <rect
+                    x={insideRing1.left.x}
+                    y={insideRing1.left.y}
+                    width={insideRing1.left.w}
+                    height={insideRing1.left.h}
+                    fill={insideColor1}
+                />
+                <rect
+                    x={insideRing1.right.x}
+                    y={insideRing1.right.y}
+                    width={insideRing1.right.w}
+                    height={insideRing1.right.h}
+                    fill={insideColor1}
+                />
+            {/if}
+
+            <!-- base border -->
             <rect
-                x={insideRing2.top.x}
-                y={insideRing2.top.y}
-                width={insideRing2.top.w}
-                height={insideRing2.top.h}
-                fill={insideColor2}
+                x={baseTop.x}
+                y={baseTop.y}
+                width={baseTop.w}
+                height={baseTop.h}
+                fill={color}
             />
             <rect
-                x={insideRing2.bottom.x}
-                y={insideRing2.bottom.y}
-                width={insideRing2.bottom.w}
-                height={insideRing2.bottom.h}
-                fill={insideColor2}
+                x={baseBottom.x}
+                y={baseBottom.y}
+                width={baseBottom.w}
+                height={baseBottom.h}
+                fill={color}
             />
             <rect
-                x={insideRing2.left.x}
-                y={insideRing2.left.y}
-                width={insideRing2.left.w}
-                height={insideRing2.left.h}
-                fill={insideColor2}
+                x={baseLeft.x}
+                y={baseLeft.y}
+                width={baseLeft.w}
+                height={baseLeft.h}
+                fill={color}
             />
             <rect
-                x={insideRing2.right.x}
-                y={insideRing2.right.y}
-                width={insideRing2.right.w}
-                height={insideRing2.right.h}
-                fill={insideColor2}
+                x={baseRight.x}
+                y={baseRight.y}
+                width={baseRight.w}
+                height={baseRight.h}
+                fill={color}
             />
 
-            <rect
-                x={insideRing1.top.x}
-                y={insideRing1.top.y}
-                width={insideRing1.top.w}
-                height={insideRing1.top.h}
-                fill={insideColor1}
-            />
-            <rect
-                x={insideRing1.bottom.x}
-                y={insideRing1.bottom.y}
-                width={insideRing1.bottom.w}
-                height={insideRing1.bottom.h}
-                fill={insideColor1}
-            />
-            <rect
-                x={insideRing1.left.x}
-                y={insideRing1.left.y}
-                width={insideRing1.left.w}
-                height={insideRing1.left.h}
-                fill={insideColor1}
-            />
-            <rect
-                x={insideRing1.right.x}
-                y={insideRing1.right.y}
-                width={insideRing1.right.w}
-                height={insideRing1.right.h}
-                fill={insideColor1}
-            />
-        {/if}
+            <!-- patterns -->
+            {#if showPatterns}
+                {#each topRects as r}
+                    <rect
+                        x={r.x}
+                        y={r.y}
+                        width={r.w}
+                        height={r.h}
+                        fill={color}
+                    />
+                {/each}
+                {#each rightRects as r}
+                    <rect
+                        x={r.x}
+                        y={r.y}
+                        width={r.w}
+                        height={r.h}
+                        fill={color}
+                    />
+                {/each}
+                {#each bottomRects as r}
+                    <rect
+                        x={r.x}
+                        y={r.y}
+                        width={r.w}
+                        height={r.h}
+                        fill={color}
+                    />
+                {/each}
+                {#each leftRects as r}
+                    <rect
+                        x={r.x}
+                        y={r.y}
+                        width={r.w}
+                        height={r.h}
+                        fill={color}
+                    />
+                {/each}
+            {/if}
 
-        <!-- base border -->
-        <rect
-            x={baseTop.x}
-            y={baseTop.y}
-            width={baseTop.w}
-            height={baseTop.h}
-            fill={color}
-        />
-        <rect
-            x={baseBottom.x}
-            y={baseBottom.y}
-            width={baseBottom.w}
-            height={baseBottom.h}
-            fill={color}
-        />
-        <rect
-            x={baseLeft.x}
-            y={baseLeft.y}
-            width={baseLeft.w}
-            height={baseLeft.h}
-            fill={color}
-        />
-        <rect
-            x={baseRight.x}
-            y={baseRight.y}
-            width={baseRight.w}
-            height={baseRight.h}
-            fill={color}
-        />
+            <!-- corners -->
+            {#if showCorners}
+                {#each cornerTLRects as r}
+                    <rect
+                        x={r.x}
+                        y={r.y}
+                        width={r.w}
+                        height={r.h}
+                        fill={color}
+                    />
+                {/each}
+                {#each cornerTRRects as r}
+                    <rect
+                        x={r.x}
+                        y={r.y}
+                        width={r.w}
+                        height={r.h}
+                        fill={color}
+                    />
+                {/each}
+                {#each cornerBRRects as r}
+                    <rect
+                        x={r.x}
+                        y={r.y}
+                        width={r.w}
+                        height={r.h}
+                        fill={color}
+                    />
+                {/each}
+                {#each cornerBLRects as r}
+                    <rect
+                        x={r.x}
+                        y={r.y}
+                        width={r.w}
+                        height={r.h}
+                        fill={color}
+                    />
+                {/each}
+            {/if}
 
-        <!-- patterns -->
-        {#if showPatterns}
-            {#each topRects as r}
-                <rect x={r.x} y={r.y} width={r.w} height={r.h} fill={color} />
-            {/each}
-            {#each rightRects as r}
-                <rect x={r.x} y={r.y} width={r.w} height={r.h} fill={color} />
-            {/each}
-            {#each bottomRects as r}
-                <rect x={r.x} y={r.y} width={r.w} height={r.h} fill={color} />
-            {/each}
-            {#each leftRects as r}
-                <rect x={r.x} y={r.y} width={r.w} height={r.h} fill={color} />
-            {/each}
-        {/if}
-
-        <!-- corners -->
-        {#if showCorners}
-            {#each cornerTLRects as r}
-                <rect x={r.x} y={r.y} width={r.w} height={r.h} fill={color} />
-            {/each}
-            {#each cornerTRRects as r}
-                <rect x={r.x} y={r.y} width={r.w} height={r.h} fill={color} />
-            {/each}
-            {#each cornerBRRects as r}
-                <rect x={r.x} y={r.y} width={r.w} height={r.h} fill={color} />
-            {/each}
-            {#each cornerBLRects as r}
-                <rect x={r.x} y={r.y} width={r.w} height={r.h} fill={color} />
-            {/each}
-        {/if}
-
-        <!-- semi-transparent outer overlay, drawn last so it blends over the patterns -->
-        {#if outerOverlay}
-            <rect
-                x={outerOverlayRects.top.x}
-                y={outerOverlayRects.top.y}
-                width={outerOverlayRects.top.w}
-                height={outerOverlayRects.top.h}
-                fill={outerOverlayColor}
-                opacity={outerOverlayOpacity}
-            />
-            <rect
-                x={outerOverlayRects.bottom.x}
-                y={outerOverlayRects.bottom.y}
-                width={outerOverlayRects.bottom.w}
-                height={outerOverlayRects.bottom.h}
-                fill={outerOverlayColor}
-                opacity={outerOverlayOpacity}
-            />
-            <rect
-                x={outerOverlayRects.left.x}
-                y={outerOverlayRects.left.y}
-                width={outerOverlayRects.left.w}
-                height={outerOverlayRects.left.h}
-                fill={outerOverlayColor}
-                opacity={outerOverlayOpacity}
-            />
-            <rect
-                x={outerOverlayRects.right.x}
-                y={outerOverlayRects.right.y}
-                width={outerOverlayRects.right.w}
-                height={outerOverlayRects.right.h}
-                fill={outerOverlayColor}
-                opacity={outerOverlayOpacity}
-            />
+            <!-- semi-transparent outer overlay, drawn last so it blends over the patterns -->
+            {#if outerOverlay}
+                <rect
+                    x={outerOverlayRects.top.x}
+                    y={outerOverlayRects.top.y}
+                    width={outerOverlayRects.top.w}
+                    height={outerOverlayRects.top.h}
+                    fill={outerOverlayColor}
+                    opacity={outerOverlayOpacity}
+                />
+                <rect
+                    x={outerOverlayRects.bottom.x}
+                    y={outerOverlayRects.bottom.y}
+                    width={outerOverlayRects.bottom.w}
+                    height={outerOverlayRects.bottom.h}
+                    fill={outerOverlayColor}
+                    opacity={outerOverlayOpacity}
+                />
+                <rect
+                    x={outerOverlayRects.left.x}
+                    y={outerOverlayRects.left.y}
+                    width={outerOverlayRects.left.w}
+                    height={outerOverlayRects.left.h}
+                    fill={outerOverlayColor}
+                    opacity={outerOverlayOpacity}
+                />
+                <rect
+                    x={outerOverlayRects.right.x}
+                    y={outerOverlayRects.right.y}
+                    width={outerOverlayRects.right.w}
+                    height={outerOverlayRects.right.h}
+                    fill={outerOverlayColor}
+                    opacity={outerOverlayOpacity}
+                />
+            {/if}
         {/if}
     </svg>
 
